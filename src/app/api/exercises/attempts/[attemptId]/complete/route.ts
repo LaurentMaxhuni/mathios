@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { asApplicationError } from "@/domain/errors/application-error";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getExerciseRepository } from "@/infrastructure/database/repositories/exercise-repository";
+import { getMasteryRepository } from "@/infrastructure/database/repositories/mastery-repository";
 import { completeExerciseAttempt, requireExerciseLearner } from "@/features/exercises/service";
 import { completeAttemptSchema } from "@/features/exercises/schemas";
 
@@ -32,6 +33,7 @@ export async function POST(
     const attempt = await completeExerciseAttempt(
       { attemptId, profileId: principal.profileId },
       getExerciseRepository(),
+      getMasteryRepository(),
     );
     return NextResponse.json({ attempt });
   } catch (error) {

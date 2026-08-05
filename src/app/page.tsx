@@ -67,7 +67,9 @@ function StartupPage({ profiles }: { profiles: ReturnType<typeof toPublicProfile
           />
           <div className="relative max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="success">Phase 6 - Assessments, diagnostics, and placement</Badge>
+              <Badge variant="success">
+                Phase 7 - Concept mastery and learning recommendations
+              </Badge>
               <span className="text-xs text-muted-foreground">
                 Local profiles, roles, settings, onboarding, and a structured learning studio
               </span>

@@ -6,6 +6,7 @@ import { actionStateFromError, actionStateFromZod, type ActionState } from "@/li
 import { formBoolean, formNumber, formString } from "@/lib/form-data";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getExerciseRepository } from "@/infrastructure/database/repositories/exercise-repository";
+import { getMasteryRepository } from "@/infrastructure/database/repositories/mastery-repository";
 import {
   completeExerciseAttempt,
   createExerciseSet,
@@ -306,6 +307,7 @@ export async function completeExerciseAttemptAction(
     const attempt = await completeExerciseAttempt(
       { attemptId: parsed.data.attemptId, profileId: principal.profileId },
       getExerciseRepository(),
+      getMasteryRepository(),
     );
     return {
       ok: true,

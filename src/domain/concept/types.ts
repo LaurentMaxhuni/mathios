@@ -1,3 +1,5 @@
+import type { MasteryState } from "@/domain/mastery/types";
+
 export const CONCEPT_DIFFICULTIES = ["gentle", "balanced", "challenging"] as const;
 export type ConceptDifficulty = (typeof CONCEPT_DIFFICULTIES)[number];
 
@@ -16,7 +18,7 @@ export const CONCEPT_RELATIONSHIP_TYPES = [
 ] as const;
 export type ConceptRelationshipType = (typeof CONCEPT_RELATIONSHIP_TYPES)[number];
 
-export type ConceptMasteryState = "unassessed";
+export type ConceptMasteryState = "unassessed" | MasteryState;
 
 export interface ConceptRecord {
   id: string;

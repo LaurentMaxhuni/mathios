@@ -24,8 +24,10 @@ import type {
   UpdateQuestionInput,
 } from "@/domain/exercise/types";
 import type { ExerciseRepository } from "@/domain/ports/exercise-repository";
+import type { MasteryRepository } from "@/domain/ports/mastery-repository";
 import type { AuthSession, AuthenticatedPrincipal } from "@/infrastructure/auth/auth-provider";
 import { requirePermission, requireSession } from "@/features/auth/authorization";
+import { recordExerciseCompletion } from "@/features/mastery/service";
 
 const editorRoles = new Set(["administrator", "content-creator", "teacher"]);
 
@@ -365,6 +367,7 @@ export async function submitQuestionAnswer(
 export async function completeExerciseAttempt(
   input: { attemptId: string; profileId: string },
   repository: ExerciseRepository,
+  masteryRepository?: MasteryRepository,
 ): Promise<ExerciseAttemptRecord> {
   const attempt = ensure(
     await repository.getExerciseAttempt(input.attemptId, input.profileId),
@@ -374,13 +377,17 @@ export async function completeExerciseAttempt(
   if (attempt.status !== "in-progress") return attempt;
   const questionAttempts = await repository.listQuestionAttempts(attempt.id);
   const score = questionAttempts.reduce((total, item) => total + item.score, 0);
-  return repository.completeExerciseAttempt({
+  const completed = await repository.completeExerciseAttempt({
     id: attempt.id,
     profileId: input.profileId,
     score,
     maxScore: attempt.maxScore,
     status: "completed",
   });
+  if (masteryRepository) {
+    await recordExerciseCompletion(input, masteryRepository);
+  }
+  return completed;
 }
 
 export async function getLearnerExerciseSet(
