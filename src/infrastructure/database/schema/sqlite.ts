@@ -2046,6 +2046,184 @@ export const personalizedPaths = sqliteTable(
   }),
 );
 
+export const simulations = sqliteTable(
+  "simulations",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    subjectId: text("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "restrict" }),
+    status: text("status").notNull().default("draft"),
+    estimatedDurationMinutes: integer("estimated_duration_minutes").notNull().default(0),
+    currentVersionNumber: integer("current_version_number").notNull().default(0),
+    publishedVersionId: text("published_version_id"),
+    createdByProfileId: text("created_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    subjectStatusIdx: index("simulations_subject_status_idx").on(
+      table.subjectId,
+      table.status,
+      table.title,
+    ),
+  }),
+);
+
+export const simulationVersions = sqliteTable(
+  "simulation_versions",
+  {
+    id: text("id").primaryKey(),
+    simulationId: text("simulation_id")
+      .notNull()
+      .references(() => simulations.id, { onDelete: "cascade" }),
+    versionNumber: integer("version_number").notNull(),
+    status: text("status").notNull().default("draft"),
+    definition: text("definition").notNull().default("{}"),
+    changeSummary: text("change_summary").notNull().default(""),
+    createdByProfileId: text("created_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    publishedAt: text("published_at"),
+  },
+  (table) => ({
+    versionIdx: uniqueIndex("simulation_versions_simulation_version_idx").on(
+      table.simulationId,
+      table.versionNumber,
+    ),
+  }),
+);
+
+export const simulationInputs = sqliteTable(
+  "simulation_inputs",
+  {
+    simulationVersionId: text("simulation_version_id")
+      .notNull()
+      .references(() => simulationVersions.id, { onDelete: "cascade" }),
+    inputKey: text("input_key").notNull(),
+    label: text("label").notNull(),
+    inputType: text("input_type").notNull(),
+    configuration: text("configuration").notNull().default("{}"),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+  (table) => ({ primaryKey: primaryKey({ columns: [table.simulationVersionId, table.inputKey] }) }),
+);
+
+export const simulationPresets = sqliteTable(
+  "simulation_presets",
+  {
+    id: text("id").primaryKey(),
+    simulationId: text("simulation_id")
+      .notNull()
+      .references(() => simulations.id, { onDelete: "cascade" }),
+    profileId: text("profile_id").references(() => profiles.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    values: text("values").notNull().default("{}"),
+    isDefault: integer("is_default", { mode: "boolean" }).notNull().default(false),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    lookupIdx: index("simulation_presets_lookup_idx").on(
+      table.simulationId,
+      table.profileId,
+      table.isDefault,
+    ),
+  }),
+);
+
+export const lessonSimulations = sqliteTable(
+  "lesson_simulations",
+  {
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lessons.id, { onDelete: "cascade" }),
+    simulationId: text("simulation_id")
+      .notNull()
+      .references(() => simulations.id, { onDelete: "cascade" }),
+    instructions: text("instructions").notNull().default(""),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isRequired: integer("is_required", { mode: "boolean" }).notNull().default(false),
+  },
+  (table) => ({ primaryKey: primaryKey({ columns: [table.lessonId, table.simulationId] }) }),
+);
+
+export const userSimulationSessions = sqliteTable(
+  "user_simulation_sessions",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    simulationId: text("simulation_id")
+      .notNull()
+      .references(() => simulations.id, { onDelete: "restrict" }),
+    simulationVersionId: text("simulation_version_id")
+      .notNull()
+      .references(() => simulationVersions.id, { onDelete: "restrict" }),
+    status: text("status").notNull().default("active"),
+    inputs: text("inputs").notNull().default("{}"),
+    state: text("state").notNull().default("{}"),
+    elapsedSeconds: integer("elapsed_seconds").notNull().default(0),
+    startedAt: text("started_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    pausedAt: text("paused_at"),
+    completedAt: text("completed_at"),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    profileIdx: index("user_simulation_sessions_profile_idx").on(
+      table.profileId,
+      table.simulationId,
+      table.updatedAt,
+    ),
+  }),
+);
+
+export const simulationResults = sqliteTable(
+  "simulation_results",
+  {
+    id: text("id").primaryKey(),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => userSimulationSessions.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    simulationId: text("simulation_id")
+      .notNull()
+      .references(() => simulations.id, { onDelete: "restrict" }),
+    result: text("result").notNull().default("{}"),
+    completionPercentage: integer("completion_percentage").notNull().default(0),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    profileIdx: index("simulation_results_profile_idx").on(
+      table.profileId,
+      table.simulationId,
+      table.createdAt,
+    ),
+  }),
+);
+
 export type Roadmap = typeof roadmaps.$inferSelect;
 export type NewRoadmap = typeof roadmaps.$inferInsert;
 export type RoadmapVersion = typeof roadmapVersions.$inferSelect;
@@ -2064,6 +2242,20 @@ export type UserRoadmapProgress = typeof userRoadmapProgress.$inferSelect;
 export type NewUserRoadmapProgress = typeof userRoadmapProgress.$inferInsert;
 export type PersonalizedPath = typeof personalizedPaths.$inferSelect;
 export type NewPersonalizedPath = typeof personalizedPaths.$inferInsert;
+export type Simulation = typeof simulations.$inferSelect;
+export type NewSimulation = typeof simulations.$inferInsert;
+export type SimulationVersion = typeof simulationVersions.$inferSelect;
+export type NewSimulationVersion = typeof simulationVersions.$inferInsert;
+export type SimulationInput = typeof simulationInputs.$inferSelect;
+export type NewSimulationInput = typeof simulationInputs.$inferInsert;
+export type SimulationPreset = typeof simulationPresets.$inferSelect;
+export type NewSimulationPreset = typeof simulationPresets.$inferInsert;
+export type LessonSimulation = typeof lessonSimulations.$inferSelect;
+export type NewLessonSimulation = typeof lessonSimulations.$inferInsert;
+export type UserSimulationSession = typeof userSimulationSessions.$inferSelect;
+export type NewUserSimulationSession = typeof userSimulationSessions.$inferInsert;
+export type SimulationResult = typeof simulationResults.$inferSelect;
+export type NewSimulationResult = typeof simulationResults.$inferInsert;
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

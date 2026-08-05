@@ -1,14 +1,27 @@
 import Database from "better-sqlite3";
 import postgres from "postgres";
 import { DEFAULT_MASTERY_RULES, DEFAULT_RECOMMENDATION_RULES } from "@/domain/mastery/types";
+import { publicSimulationDefinition, simulationRegistry } from "@/domain/simulation/registry";
 import { env } from "@/lib/env";
 import { resolveSqliteFilename } from "@/infrastructure/database/client";
 import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-8"],
+  ["seed_version", "phase-9"],
 ] as const;
+
+export const simulationSeed = simulationRegistry.map((simulation) => ({
+  id: simulation.id,
+  slug: simulation.slug,
+  title: simulation.title,
+  description: simulation.description,
+  subjectId: `subject-${simulation.subject}`,
+  estimatedDurationMinutes: simulation.estimatedDurationMinutes,
+  versionId: `${simulation.id}-version-1`,
+  definition: publicSimulationDefinition(simulation),
+  presets: simulation.presets,
+}));
 
 export const masteryRuleSeed = [
   {
@@ -2675,6 +2688,21 @@ export async function runSeed(
       const insertRoadmapEdge = database.prepare(
         "INSERT INTO roadmap_edges (id, roadmap_version_id, source_node_id, target_node_id, edge_type, sort_order) VALUES (@id, @roadmapVersionId, @sourceNodeId, @targetNodeId, @type, @sortOrder) ON CONFLICT(id) DO UPDATE SET roadmap_version_id = excluded.roadmap_version_id, source_node_id = excluded.source_node_id, target_node_id = excluded.target_node_id, edge_type = excluded.edge_type, sort_order = excluded.sort_order",
       );
+      const insertSimulation = database.prepare(
+        "INSERT INTO simulations (id, slug, title, description, subject_id, status, estimated_duration_minutes, current_version_number, published_version_id) VALUES (@id, @slug, @title, @description, @subjectId, 'published', @estimatedDurationMinutes, 1, @versionId) ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, title = excluded.title, description = excluded.description, subject_id = excluded.subject_id, status = 'published', estimated_duration_minutes = excluded.estimated_duration_minutes, current_version_number = 1, published_version_id = excluded.published_version_id, updated_at = CURRENT_TIMESTAMP",
+      );
+      const insertSimulationVersion = database.prepare(
+        "INSERT INTO simulation_versions (id, simulation_id, version_number, status, definition, change_summary, published_at) VALUES (@id, @simulationId, 1, 'published', @definition, 'Initial published simulation.', CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET definition = excluded.definition, status = 'published', published_at = excluded.published_at",
+      );
+      const insertSimulationInput = database.prepare(
+        "INSERT INTO simulation_inputs (simulation_version_id, input_key, label, input_type, configuration, sort_order) VALUES (@versionId, @key, @label, @type, @configuration, @sortOrder) ON CONFLICT(simulation_version_id, input_key) DO UPDATE SET label = excluded.label, input_type = excluded.input_type, configuration = excluded.configuration, sort_order = excluded.sort_order",
+      );
+      const insertSimulationPreset = database.prepare(
+        'INSERT INTO simulation_presets (id, simulation_id, profile_id, name, "values", is_default) VALUES (@id, @simulationId, NULL, @name, @values, @isDefault) ON CONFLICT(id) DO UPDATE SET "values" = excluded."values", is_default = excluded.is_default',
+      );
+      const insertLessonSimulation = database.prepare(
+        "INSERT INTO lesson_simulations (lesson_id, simulation_id, instructions, sort_order, is_required) VALUES (@lessonId, @simulationId, @instructions, @sortOrder, 0) ON CONFLICT(lesson_id, simulation_id) DO UPDATE SET instructions = excluded.instructions, sort_order = excluded.sort_order",
+      );
       const seedStructure = database.transaction(() => {
         for (const curriculum of curriculumSeed)
           insertCurriculum.run({ ...curriculum, isSystem: curriculum.isSystem ? 1 : 0 });
@@ -2907,6 +2935,38 @@ export async function runSeed(
           });
         for (const edge of roadmapEdgeSeed)
           insertRoadmapEdge.run({ ...edge, roadmapVersionId: `${edge.roadmapId}-version-1` });
+        for (const simulation of simulationSeed) {
+          insertSimulation.run(simulation);
+          insertSimulationVersion.run({
+            id: simulation.versionId,
+            simulationId: simulation.id,
+            definition: JSON.stringify(simulation.definition),
+          });
+          for (const [sortOrder, input] of simulation.definition.inputs.entries())
+            insertSimulationInput.run({
+              versionId: simulation.versionId,
+              key: input.key,
+              label: input.label,
+              type: input.type,
+              configuration: JSON.stringify(input),
+              sortOrder,
+            });
+          for (const [sortOrder, preset] of simulation.presets.entries())
+            insertSimulationPreset.run({
+              id: `${simulation.id}-preset-${sortOrder}`,
+              simulationId: simulation.id,
+              name: preset.name,
+              values: JSON.stringify(preset.values),
+              isDefault: preset.isDefault ? 1 : 0,
+            });
+        }
+        insertLessonSimulation.run({
+          lessonId: "lesson-constant-acceleration",
+          simulationId: "simulation-one-dimensional-motion",
+          instructions:
+            "Change acceleration and time, then compare the predicted position and velocity.",
+          sortOrder: 0,
+        });
       });
       seedStructure();
     } finally {
@@ -3459,6 +3519,55 @@ export async function runSeed(
             edge.sortOrder,
           ],
         );
+      for (const simulation of simulationSeed) {
+        await transaction.unsafe(
+          "INSERT INTO simulations (id, slug, title, description, subject_id, status, estimated_duration_minutes, current_version_number, published_version_id) VALUES ($1, $2, $3, $4, $5, 'published', $6, 1, $7) ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, description = EXCLUDED.description, subject_id = EXCLUDED.subject_id, status = 'published', estimated_duration_minutes = EXCLUDED.estimated_duration_minutes, current_version_number = 1, published_version_id = EXCLUDED.published_version_id, updated_at = NOW()",
+          [
+            simulation.id,
+            simulation.slug,
+            simulation.title,
+            simulation.description,
+            simulation.subjectId,
+            simulation.estimatedDurationMinutes,
+            simulation.versionId,
+          ],
+        );
+        await transaction.unsafe(
+          "INSERT INTO simulation_versions (id, simulation_id, version_number, status, definition, change_summary, published_at) VALUES ($1, $2, 1, 'published', $3, 'Initial published simulation.', NOW()) ON CONFLICT (id) DO UPDATE SET definition = EXCLUDED.definition, status = 'published', published_at = EXCLUDED.published_at",
+          [simulation.versionId, simulation.id, JSON.stringify(simulation.definition)],
+        );
+        for (const [sortOrder, input] of simulation.definition.inputs.entries())
+          await transaction.unsafe(
+            "INSERT INTO simulation_inputs (simulation_version_id, input_key, label, input_type, configuration, sort_order) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (simulation_version_id, input_key) DO UPDATE SET label = EXCLUDED.label, input_type = EXCLUDED.input_type, configuration = EXCLUDED.configuration, sort_order = EXCLUDED.sort_order",
+            [
+              simulation.versionId,
+              input.key,
+              input.label,
+              input.type,
+              JSON.stringify(input),
+              sortOrder,
+            ],
+          );
+        for (const [sortOrder, preset] of simulation.presets.entries())
+          await transaction.unsafe(
+            'INSERT INTO simulation_presets (id, simulation_id, profile_id, name, "values", is_default) VALUES ($1, $2, NULL, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET "values" = EXCLUDED."values", is_default = EXCLUDED.is_default',
+            [
+              `${simulation.id}-preset-${sortOrder}`,
+              simulation.id,
+              preset.name,
+              JSON.stringify(preset.values),
+              preset.isDefault,
+            ],
+          );
+      }
+      await transaction.unsafe(
+        "INSERT INTO lesson_simulations (lesson_id, simulation_id, instructions, sort_order, is_required) VALUES ($1, $2, $3, 0, FALSE) ON CONFLICT (lesson_id, simulation_id) DO UPDATE SET instructions = EXCLUDED.instructions",
+        [
+          "lesson-constant-acceleration",
+          "simulation-one-dimensional-motion",
+          "Change acceleration and time, then compare the predicted position and velocity.",
+        ],
+      );
     });
   } finally {
     await database.end({ timeout: 5 });

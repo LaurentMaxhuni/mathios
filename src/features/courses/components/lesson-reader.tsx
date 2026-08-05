@@ -204,6 +204,28 @@ export function LessonReader({ data }: { data: LessonReaderData }) {
             ))}
           </section>
         ))}
+        {data.simulationLinks?.length ? (
+          <section className="mb-10" aria-labelledby="lesson-simulations">
+            <h2 id="lesson-simulations" className="text-2xl font-semibold tracking-tight">
+              Explore with a simulation
+            </h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {data.simulationLinks.map((simulation) => (
+                <Link
+                  key={simulation.simulationId}
+                  href={`/simulations/${simulation.simulationId}` as never}
+                  className="rounded-xl border p-4 transition-colors hover:border-accent"
+                >
+                  <p className="font-semibold">{simulation.simulationTitle}</p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    {simulation.instructions ||
+                      "Open the interactive model and record what you observe."}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
         <div className="mt-10 border-t pt-5 text-sm text-muted-foreground">
           <Link
             href={`/courses/${data.course.id}/modules/${data.module.id}`}

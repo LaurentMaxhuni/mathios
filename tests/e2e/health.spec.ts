@@ -367,3 +367,43 @@ test("Phase 8 roadmaps, prerequisite progress, personalized paths, and APIs are 
   await expect(page.getByText("Why this order?")).toBeVisible();
   await expect(page.getByText("Describing motion")).toBeVisible();
 });
+
+test("Phase 9 simulation catalog, interactive player, lesson link, and session API are usable", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/simulations");
+  await expect(page.getByRole("heading", { name: "Simulations" })).toBeVisible();
+  await expect(page.getByText("One-dimensional motion")).toBeVisible();
+  const catalogResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/simulations");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(catalogResponse.ok).toBeTruthy();
+  expect(catalogResponse.body.simulations).toHaveLength(17);
+
+  await page.getByRole("link", { name: /One-dimensional motion/ }).click();
+  await expect(page).toHaveURL(/\/simulations\/simulation-one-dimensional-motion$/);
+  await expect(page.locator("h1").filter({ hasText: "One-dimensional motion" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Explore with a simulation" })).toHaveCount(0);
+  await expect(page.getByLabel("Simulation controls")).toBeVisible();
+  await expect(page.getByRole("img", { name: "Simulation graph" })).toBeVisible();
+  await page.getByLabel("Acceleration").fill("2");
+  await page.getByRole("button", { name: "Run" }).click();
+  await expect(page.getByRole("button", { name: "Pause" })).toBeVisible();
+  await page.getByRole("button", { name: "Pause" }).click();
+  await page.getByRole("button", { name: "Complete" }).click();
+  await expect(page.getByText("Result saved to your learning history.")).toBeVisible();
+
+  await page.goto("/lessons/lesson-constant-acceleration");
+  await expect(page.getByRole("heading", { name: "Explore with a simulation" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "One-dimensional motion" })).toHaveAttribute(
+    "href",
+    "/simulations/simulation-one-dimensional-motion",
+  );
+});

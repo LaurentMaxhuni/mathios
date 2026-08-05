@@ -273,6 +273,11 @@ export interface LessonReaderData {
   subjectName: string;
   version: LessonVersionRecord;
   progress: LessonProgressRecord | null;
+  simulationLinks?: readonly {
+    simulationId: string;
+    simulationTitle: string;
+    instructions: string;
+  }[];
 }
 
 export interface CreateCourseInput {
