@@ -773,6 +773,146 @@ export const userLessonProgress = pgTable(
   }),
 );
 
+export const concepts = pgTable(
+  "concepts",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    description: text("description").notNull().default(""),
+    subjectId: text("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "restrict" }),
+    domainId: text("domain_id").references(() => domains.id, { onDelete: "set null" }),
+    gradeMinId: text("grade_min_id").references(() => grades.id, { onDelete: "set null" }),
+    gradeMaxId: text("grade_max_id").references(() => grades.id, { onDelete: "set null" }),
+    difficulty: text("difficulty").notNull().default("balanced"),
+    masteryThreshold: integer("mastery_threshold").notNull().default(70),
+    isArchived: boolean("is_archived").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("concepts_slug_idx").on(table.slug),
+    subjectIdx: index("concepts_subject_idx").on(table.subjectId),
+    domainIdx: index("concepts_domain_idx").on(table.domainId),
+    gradeRangeIdx: index("concepts_grade_range_idx").on(table.gradeMinId, table.gradeMaxId),
+    difficultyIdx: index("concepts_difficulty_idx").on(table.difficulty),
+    archivedIdx: index("concepts_archived_idx").on(table.isArchived),
+  }),
+);
+
+export const lessonConcepts = pgTable(
+  "lesson_concepts",
+  {
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lessons.id, { onDelete: "cascade" }),
+    conceptId: text("concept_id")
+      .notNull()
+      .references(() => concepts.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.lessonId, table.conceptId] }),
+    conceptIdx: index("lesson_concepts_concept_idx").on(table.conceptId, table.sortOrder),
+  }),
+);
+
+export const conceptRelationships = pgTable(
+  "concept_relationships",
+  {
+    id: text("id").primaryKey(),
+    sourceConceptId: text("source_concept_id")
+      .notNull()
+      .references(() => concepts.id, { onDelete: "cascade" }),
+    targetConceptId: text("target_concept_id")
+      .notNull()
+      .references(() => concepts.id, { onDelete: "cascade" }),
+    relationshipType: text("relationship_type").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    uniqueRelationship: uniqueIndex("concept_relationships_unique_idx").on(
+      table.sourceConceptId,
+      table.targetConceptId,
+      table.relationshipType,
+    ),
+    sourceIdx: index("concept_relationships_source_idx").on(
+      table.sourceConceptId,
+      table.relationshipType,
+    ),
+    targetIdx: index("concept_relationships_target_idx").on(
+      table.targetConceptId,
+      table.relationshipType,
+    ),
+  }),
+);
+
+export const conceptLearningObjectives = pgTable(
+  "concept_learning_objectives",
+  {
+    conceptId: text("concept_id")
+      .notNull()
+      .references(() => concepts.id, { onDelete: "cascade" }),
+    objectiveId: text("objective_id")
+      .notNull()
+      .references(() => learningObjectives.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.conceptId, table.objectiveId] }),
+    objectiveIdx: index("concept_learning_objectives_objective_idx").on(table.objectiveId),
+  }),
+);
+
+export const conceptApplications = pgTable(
+  "concept_applications",
+  {
+    id: text("id").primaryKey(),
+    conceptId: text("concept_id")
+      .notNull()
+      .references(() => concepts.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    conceptIdx: index("concept_applications_concept_idx").on(table.conceptId, table.sortOrder),
+  }),
+);
+
+export const conceptMisconceptions = pgTable(
+  "concept_misconceptions",
+  {
+    id: text("id").primaryKey(),
+    conceptId: text("concept_id")
+      .notNull()
+      .references(() => concepts.id, { onDelete: "cascade" }),
+    misconception: text("misconception").notNull(),
+    correction: text("correction").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    conceptIdx: index("concept_misconceptions_concept_idx").on(table.conceptId, table.sortOrder),
+  }),
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Profile = typeof profiles.$inferSelect;
@@ -841,3 +981,15 @@ export type LessonVersion = typeof lessonVersions.$inferSelect;
 export type NewLessonVersion = typeof lessonVersions.$inferInsert;
 export type UserLessonProgress = typeof userLessonProgress.$inferSelect;
 export type NewUserLessonProgress = typeof userLessonProgress.$inferInsert;
+export type Concept = typeof concepts.$inferSelect;
+export type NewConcept = typeof concepts.$inferInsert;
+export type LessonConcept = typeof lessonConcepts.$inferSelect;
+export type NewLessonConcept = typeof lessonConcepts.$inferInsert;
+export type ConceptRelationship = typeof conceptRelationships.$inferSelect;
+export type NewConceptRelationship = typeof conceptRelationships.$inferInsert;
+export type ConceptLearningObjective = typeof conceptLearningObjectives.$inferSelect;
+export type NewConceptLearningObjective = typeof conceptLearningObjectives.$inferInsert;
+export type ConceptApplication = typeof conceptApplications.$inferSelect;
+export type NewConceptApplication = typeof conceptApplications.$inferInsert;
+export type ConceptMisconception = typeof conceptMisconceptions.$inferSelect;
+export type NewConceptMisconception = typeof conceptMisconceptions.$inferInsert;

@@ -48,6 +48,7 @@ test("Phase 2 curriculum, grade, subject, and management explorers are usable", 
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
 
   await page.goto("/curricula");
   await expect(
@@ -131,4 +132,50 @@ test("Phase 3 course catalog, lesson reader, progress, and authoring surfaces ar
   await expect(page.getByLabel("Payload JSON").first()).toBeVisible();
   await page.goto("/lessons/lesson-describing-motion/versions");
   await expect(page.getByRole("heading", { name: "Describing motion" })).toBeVisible();
+});
+
+test("Phase 4 concepts, prerequisite graph, and authoring surfaces are usable", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/concepts");
+  await expect(
+    page.getByRole("heading", { name: "Concepts that connect the curriculum." }),
+  ).toBeVisible();
+  await expect(page.getByText("Velocity").first()).toBeVisible();
+  await page
+    .getByRole("link", { name: /Velocity/ })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/\/concepts\/concept-velocity$/);
+  await expect(page.getByRole("heading", { name: "Velocity" })).toBeVisible();
+  await expect(page.getByText("Position").first()).toBeVisible();
+  await expect(page.getByText("Describing motion").first()).toBeVisible();
+
+  await page.goto("/knowledge-graph");
+  await page.waitForLoadState("networkidle");
+  await expect(page.getByRole("heading", { name: "The knowledge graph" })).toBeVisible();
+  await expect(page.getByLabel("Search concepts")).toBeVisible();
+  await page.getByLabel("Search concepts").pressSequentially("velocity");
+  await expect(page.locator("p").filter({ hasText: "Showing" }).first()).toContainText(
+    "Showing 1 concepts",
+  );
+  const graphResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/knowledge-graph");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(graphResponse.ok).toBeTruthy();
+  expect(graphResponse.body).toMatchObject({
+    graph: { nodes: expect.any(Array) },
+  });
+
+  await page.goto("/concepts/manage");
+  await expect(page.getByRole("heading", { name: "Concept and graph studio" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Graph validation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Relationship ledger" })).toBeVisible();
 });
