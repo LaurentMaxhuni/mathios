@@ -30,8 +30,8 @@ export function ProfileDashboard({
             Welcome back, {principal.displayName}.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-            Your personal science workspace is ready. Set your learning direction now; content
-            modules will build on this identity foundation one phase at a time.
+            Your personal science workspace is ready. Set your learning direction, then explore the
+            curriculum and grade structure that will anchor the content phases ahead.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link
@@ -83,11 +83,15 @@ export function ProfileDashboard({
         <Card>
           <CardHeader>
             <BookOpen className="h-5 w-5 text-accent" aria-hidden="true" />
-            <CardTitle className="mt-3">Content foundation</CardTitle>
-            <CardDescription>Learning content arrives in the next planned phase.</CardDescription>
+            <CardTitle className="mt-3">Curriculum structure</CardTitle>
+            <CardDescription>
+              Browse the reusable grades, subjects, domains, and objectives.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Badge variant="outline">Phase 1 foundation</Badge>
+            <Link href="/curricula" className="text-sm font-medium text-accent hover:underline">
+              Explore curricula <ArrowRight className="inline h-3.5 w-3.5" aria-hidden="true" />
+            </Link>
           </CardContent>
         </Card>
       </section>

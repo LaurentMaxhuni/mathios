@@ -2,13 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Atom, Home, IdCard, Route, Settings2, ShieldCheck, X } from "lucide-react";
+import {
+  Activity,
+  Atom,
+  BookOpen,
+  FlaskConical,
+  GraduationCap,
+  Home,
+  IdCard,
+  Route,
+  Settings2,
+  ShieldCheck,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { href: "/" as const, label: "Overview", icon: Home },
   { href: "/profiles" as const, label: "Profiles", icon: IdCard },
   { href: "/onboarding" as const, label: "Onboarding", icon: Route },
+  { href: "/curricula" as const, label: "Curricula", icon: BookOpen },
+  { href: "/grades" as const, label: "Grades", icon: GraduationCap },
+  { href: "/subjects" as const, label: "Subjects", icon: FlaskConical },
   { href: "/settings" as const, label: "Settings", icon: Settings2 },
   { href: "/settings/roles" as const, label: "Roles", icon: ShieldCheck },
 ];
@@ -95,7 +110,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             Profiles, permissions, settings, and onboarding stay available on this device.
           </p>
           <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Phase 1 · Profiles &amp; settings
+            Phase 2 · Curriculum structure
           </p>
         </div>
       </aside>
