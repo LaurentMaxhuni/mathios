@@ -27,6 +27,7 @@ describe("concept repository", () => {
       expect(detail?.prerequisites.map((item) => item.targetConcept.name)).toEqual(["Position"]);
       expect(detail?.lessons.map((lesson) => lesson.lessonTitle)).toContain("Describing motion");
       expect(detail?.courseIds).toContain("course-physics-motion");
+      expect(detail?.exerciseReferences).toContain("question-velocity-direction");
       const graph = await repository.getGraph();
       expect(graph.nodes).toHaveLength(9);
       expect(graph.edges).toHaveLength(8);

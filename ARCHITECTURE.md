@@ -69,3 +69,15 @@ independent concept types, validation, traversal, integrity reporting, and deter
 SQLite/PostgreSQL queries. Learner concept details include published lesson/course links only;
 authors may inspect draft links. Relationship direction and validation rules are documented in
 `docs/phase4-concepts-knowledge-graph.md`.
+
+## Phase 5 dependency direction
+
+The exercises feature owns question and exercise-set schemas, authoring actions, learner attempt
+flows, validation previews, publication, and reusable practice surfaces. src/domain/exercise
+contains framework-independent question records, safe expression parsing, answer validation,
+partial-credit scoring, and deterministic template generation. src/domain/ports/exercise-repository.ts
+defines persistence behavior, and src/infrastructure/database/repositories/exercise-repository.ts
+implements it with explicit SQLite/PostgreSQL queries. Learner reads are sanitized by the service
+layer so answer specifications, correct option flags, and solutions are not serialized to the
+frontend. Phase 5 exercise data and flows are documented in
+docs/phase5-exercises-answer-validation.md.

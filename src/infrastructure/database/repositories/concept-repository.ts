@@ -492,20 +492,41 @@ export class SqlConceptRepository implements ConceptRepository {
   ): Promise<ConceptDetail | null> {
     const concept = await this.getConcept(id);
     if (!concept) return null;
-    const [subject, grades, relationships, objectives, applications, misconceptions, lessons] =
-      await Promise.all([
-        this.one<{ name: string; slug: string }>(
-          "SELECT name, slug FROM subjects WHERE id = ?",
-          "SELECT name, slug FROM subjects WHERE id = $1",
-          [concept.subjectId],
-        ),
-        this.listGrades(),
-        this.listRelationships({ conceptId: id }),
-        this.listObjectives(id),
-        this.listApplications(id),
-        this.listMisconceptions(id),
-        this.listLessonLinks(id, options),
-      ]);
+    const [
+      subject,
+      grades,
+      relationships,
+      objectives,
+      applications,
+      misconceptions,
+      lessons,
+      exerciseReferences,
+    ] = await Promise.all([
+      this.one<{ name: string; slug: string }>(
+        "SELECT name, slug FROM subjects WHERE id = ?",
+        "SELECT name, slug FROM subjects WHERE id = $1",
+        [concept.subjectId],
+      ),
+      this.listGrades(),
+      this.listRelationships({ conceptId: id }),
+      this.listObjectives(id),
+      this.listApplications(id),
+      this.listMisconceptions(id),
+      this.listLessonLinks(id, options),
+      this.rows<{ id: string }>(
+        `SELECT DISTINCT q.id
+           FROM question_concepts qc
+           JOIN questions q ON q.id = qc.question_id
+           WHERE qc.concept_id = ? AND q.status = 'published'
+           ORDER BY q.id`,
+        `SELECT DISTINCT q.id
+           FROM question_concepts qc
+           JOIN questions q ON q.id = qc.question_id
+           WHERE qc.concept_id = $1 AND q.status = 'published'
+           ORDER BY q.id`,
+        [id],
+      ),
+    ]);
     const minimum = concept.gradeMinId
       ? grades.find((grade) => grade.id === concept.gradeMinId)?.sortOrder
       : undefined;
@@ -571,7 +592,7 @@ export class SqlConceptRepository implements ConceptRepository {
       lessons,
       curriculumIds: curricula.map((row) => row.curriculum_id),
       courseIds: [...new Set(lessons.map((lesson) => lesson.courseId))],
-      exerciseReferences: [],
+      exerciseReferences: exerciseReferences.map((row) => row.id),
       simulationReferences: [],
       masteryState: "unassessed" satisfies ConceptMasteryState,
     };
