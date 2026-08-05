@@ -20,12 +20,14 @@ describe("database migrations", () => {
         "0000_foundation.sql",
         "0001_phase1_identity.sql",
         "0002_phase2_curriculum_structure.sql",
+        "0003_phase3_courses_lessons.sql",
       ]);
       expect(second.applied).toEqual([]);
       expect(second.skipped).toEqual([
         "0000_foundation.sql",
         "0001_phase1_identity.sql",
         "0002_phase2_curriculum_structure.sql",
+        "0003_phase3_courses_lessons.sql",
       ]);
       expect(database.prepare("SELECT key FROM app_metadata").all()).toEqual([]);
       expect(
@@ -40,6 +42,13 @@ describe("database migrations", () => {
           )
           .get(),
       ).toEqual({ name: "grade_subject_domains" });
+      expect(
+        database
+          .prepare(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'lesson_versions'",
+          )
+          .get(),
+      ).toEqual({ name: "lesson_versions" });
     } finally {
       database?.close();
       await rm(directory, { recursive: true, force: true });

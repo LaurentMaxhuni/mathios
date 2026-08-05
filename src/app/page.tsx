@@ -67,9 +67,9 @@ function StartupPage({ profiles }: { profiles: ReturnType<typeof toPublicProfile
           />
           <div className="relative max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="success">Phase 2 · Curriculum structure</Badge>
+              <Badge variant="success">Phase 3 - Courses and authoring</Badge>
               <span className="text-xs text-muted-foreground">
-                Local profiles, roles, settings, onboarding, and learning maps
+                Local profiles, roles, settings, onboarding, and a structured learning studio
               </span>
             </div>
             <h1 className="mt-5 max-w-2xl text-balance text-3xl font-semibold tracking-tight sm:text-4xl">

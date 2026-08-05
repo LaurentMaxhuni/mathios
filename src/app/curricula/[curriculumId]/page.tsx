@@ -164,8 +164,8 @@ export default async function CurriculumExplorerPage({
         <CardHeader>
           <CardTitle>Structure contract</CardTitle>
           <CardDescription>
-            This view is the boundary for later course and lesson content. Phase 2 keeps it focused
-            on the reusable hierarchy.
+            This view is the foundation for course and lesson content. Phase 2 keeps it focused on
+            the reusable curriculum hierarchy used by the Phase 3 course studio.
           </CardDescription>
         </CardHeader>
         <CardContent>
