@@ -2,7 +2,7 @@ import { runSeed } from "@/infrastructure/database/seed";
 
 async function main(): Promise<void> {
   await runSeed();
-  console.log("Mathios foundation seed applied.");
+  console.log("Mathios Phase 1 identity seed applied.");
 }
 
 main().catch((error: unknown) => {

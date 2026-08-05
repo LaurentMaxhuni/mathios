@@ -71,6 +71,38 @@
       radial-gradient(circle at 100% 10%, hsl(var(--subject-astronomy) / 0.08), transparent 26rem);
   }
 
+  html[data-text-size="small"] {
+    font-size: 93.75%;
+  }
+
+  html[data-text-size="large"] {
+    font-size: 112.5%;
+  }
+
+  html[data-high-contrast="true"] {
+    --border: 222 18% 58%;
+    --muted-foreground: 220 15% 30%;
+  }
+
+  html.dark[data-high-contrast="true"] {
+    --border: 224 18% 52%;
+    --muted-foreground: 220 14% 82%;
+  }
+
+  html[data-underline-links="true"] a:not([class*="button"]):not([class*="bg-primary"]) {
+    text-decoration-line: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  html[data-reduced-motion="true"] *,
+  html[data-reduced-motion="true"] *::before,
+  html[data-reduced-motion="true"] *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
   ::selection {
     background: hsl(var(--accent) / 0.22);
   }

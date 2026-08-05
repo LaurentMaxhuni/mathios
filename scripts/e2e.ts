@@ -1,13 +1,27 @@
 import http from "node:http";
+import os from "node:os";
 import path from "node:path";
+import { mkdtemp, rm } from "node:fs/promises";
 import { spawn } from "node:child_process";
+import { runSeed } from "@/infrastructure/database/seed";
 
 const baseUrl = "http://127.0.0.1:3000";
 
 async function main(): Promise<void> {
+  const databaseDirectory = await mkdtemp(path.join(os.tmpdir(), "mathios-e2e-"));
+  const databaseUrl = `file:${path.join(databaseDirectory, "e2e.db")}`;
+  await runSeed({ provider: "sqlite", databaseUrl });
   const serverPath = path.resolve(".next/standalone/server.js");
   const server = spawn(process.execPath, [serverPath], {
-    env: { ...process.env, HOSTNAME: "127.0.0.1", PORT: "3000" },
+    env: {
+      ...process.env,
+      HOSTNAME: "127.0.0.1",
+      PORT: "3000",
+      APP_ENV: "test",
+      DATABASE_PROVIDER: "sqlite",
+      DATABASE_URL: databaseUrl,
+      SESSION_SECRET: "mathios-e2e-session-secret-please-change",
+    },
     stdio: "inherit",
   });
 
@@ -18,6 +32,10 @@ async function main(): Promise<void> {
     process.exitCode = result;
   } finally {
     if (!server.killed) server.kill();
+    if (server.exitCode === null) {
+      await new Promise<void>((resolve) => server.once("close", () => resolve()));
+    }
+    await rm(databaseDirectory, { recursive: true, force: true });
   }
 }
 

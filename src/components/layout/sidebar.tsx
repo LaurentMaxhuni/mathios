@@ -2,10 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Atom, Home, X } from "lucide-react";
+import { Activity, Atom, Home, IdCard, Route, Settings2, ShieldCheck, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navigation = [{ href: "/" as const, label: "Overview", icon: Home }];
+const navigation = [
+  { href: "/" as const, label: "Overview", icon: Home },
+  { href: "/profiles" as const, label: "Profiles", icon: IdCard },
+  { href: "/onboarding" as const, label: "Onboarding", icon: Route },
+  { href: "/settings" as const, label: "Settings", icon: Settings2 },
+  { href: "/settings/roles" as const, label: "Roles", icon: ShieldCheck },
+];
 
 interface SidebarProps {
   mobileOpen: boolean;
@@ -54,7 +60,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         </div>
 
         <div className="mt-10 px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Foundation
+          Workspace
         </div>
         <nav aria-label="Primary navigation" className="mt-3 space-y-1">
           {navigation.map((item) => {
@@ -83,13 +89,13 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         <div className="mt-auto rounded-xl border bg-muted/50 p-4">
           <div className="flex items-center gap-2 text-xs font-semibold">
             <Activity className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
-            Local-first foundation
+            Local-first identity
           </div>
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-            Offline storage and a portable database are ready for the next phase.
+            Profiles, permissions, settings, and onboarding stay available on this device.
           </p>
           <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Phase 0 · Architecture
+            Phase 1 · Profiles &amp; settings
           </p>
         </div>
       </aside>
