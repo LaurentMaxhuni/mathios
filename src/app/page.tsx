@@ -67,9 +67,9 @@ function StartupPage({ profiles }: { profiles: ReturnType<typeof toPublicProfile
           />
           <div className="relative max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="success">Phase 1 · Identity foundation</Badge>
+              <Badge variant="success">Phase 2 · Curriculum structure</Badge>
               <span className="text-xs text-muted-foreground">
-                Local profiles, roles, settings, and onboarding
+                Local profiles, roles, settings, onboarding, and learning maps
               </span>
             </div>
             <h1 className="mt-5 max-w-2xl text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -106,12 +106,12 @@ function FoundationMap() {
             Foundation map
           </p>
           <h2 id="systems-heading" className="mt-2 text-xl font-semibold tracking-tight">
-            The systems are in place.
+            The learning map is in place.
           </h2>
         </div>
         <p className="max-w-md text-sm leading-6 text-muted-foreground sm:text-right">
-          Create a profile first, then keep your personal settings ready for the learning phases
-          ahead.
+          Create a profile first, then browse the reusable curriculum, grade, subject, and domain
+          structure.
         </p>
       </div>
       <div className="mt-5 grid gap-4 md:grid-cols-2">

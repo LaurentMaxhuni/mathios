@@ -109,6 +109,14 @@
 }
 
 @layer utilities {
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.2em] text-accent;
+  }
+
+  .field-select {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  }
+
   .text-balance {
     text-wrap: balance;
   }

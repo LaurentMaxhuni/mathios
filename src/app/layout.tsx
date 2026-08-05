@@ -25,7 +25,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     principal = session?.principal ?? null;
     settings = principal ? await repository.getSettings(principal.profileId) : null;
   } catch (error) {
-    logger.warn("Identity context is unavailable until Phase 1 migrations run", {
+    logger.warn("Application context is unavailable until database migrations run", {
       error: error instanceof Error ? error.message : String(error),
     });
   }

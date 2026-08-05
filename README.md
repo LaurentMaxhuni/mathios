@@ -1,6 +1,6 @@
 # Mathios
 
-Mathios is a local-first science learning platform. The repository is being built incrementally from the phases in [PROJECT_PLAN.md](PROJECT_PLAN.md). The current implementation includes Phase 0 and Phase 1: local profiles, authentication, roles, settings, and onboarding. Learning-content structures intentionally remain out of scope until Phase 2.
+Mathios is a local-first science learning platform. The repository is being built incrementally from the phases in [PROJECT_PLAN.md](PROJECT_PLAN.md). The current implementation includes Phase 0, Phase 1, and Phase 2: local profiles, authentication, roles, settings, onboarding, and the curriculum/grade/subject structure that later content phases consume.
 
 ## Quick start
 
@@ -13,7 +13,7 @@ npm run dev
 
 Open <http://localhost:3000>. The health endpoint is available at <http://localhost:3000/api/health>.
 
-On first launch, create a local profile. The first profile receives the learner and administrator roles. Later profiles can be created by an administrator and start with the learner role. A profile PIN/password is optional and is hashed locally with Node's `scrypt` implementation.
+On first launch, create a local profile. The first profile receives the learner and administrator roles. Later profiles can be created by an administrator and start with the learner role. A profile PIN/password is optional and is hashed locally with Node's `scrypt` implementation. `db:seed` installs the three reference curricula, ten grade levels, five subjects, representative domains, mappings, and curriculum-specific learning objectives.
 
 ## Verification
 
@@ -38,10 +38,14 @@ The app health check is available at <http://localhost:3000/api/health>. The loc
 
 ## Database
 
-SQLite is the default for offline development. The migration runner applies checked-in SQL files from `drizzle/sqlite`. PostgreSQL compatibility is kept in parallel migrations under `drizzle/postgres`. Phase 1 adds the identity tables in `0001_phase1_identity.sql`; `npm run db:seed` also installs the canonical roles and permissions. Set `DATABASE_PROVIDER=postgres` and a PostgreSQL connection URL to use the PostgreSQL path.
+SQLite is the default for offline development. The migration runner applies checked-in SQL files from `drizzle/sqlite`. PostgreSQL compatibility is kept in parallel migrations under `drizzle/postgres`. Phase 1 adds the identity tables in `0001_phase1_identity.sql`; Phase 2 adds the educational structure in `0002_phase2_curriculum_structure.sql`. `npm run db:seed` installs the canonical roles and permissions plus idempotent Phase 2 reference data. Set `DATABASE_PROVIDER=postgres` and a PostgreSQL connection URL to use the PostgreSQL path.
 
 `AUTH_MODE=local-profile` is the default local profile selector. `AUTH_MODE=local-credential` uses the same provider-neutral local adapter and secret hash storage, leaving room for a dedicated credential UX later. `AUTH_MODE=hosted` is recognized by configuration but intentionally fails closed until a hosted provider is introduced in a later phase. Local sessions use an HttpOnly, signed cookie and do not require network access.
 
 ## Project boundaries
 
-The application follows the modular-monolith conventions documented in [ARCHITECTURE.md](ARCHITECTURE.md). Domain modules should depend on ports and application services, not on database drivers or framework details. Phase-specific entities are introduced only when their phase begins. Phase 1 owns `src/features/profiles`, `src/features/auth`, `src/features/settings`, and `src/features/onboarding`; these modules depend on the identity repository port rather than importing database drivers directly.
+The application follows the modular-monolith conventions documented in [ARCHITECTURE.md](ARCHITECTURE.md). Domain modules should depend on ports and application services, not on database drivers or framework details. Phase-specific entities are introduced only when their phase begins. Phase 1 owns `src/features/profiles`, `src/features/auth`, `src/features/settings`, and `src/features/onboarding`; Phase 2 owns `src/features/curricula` and its curriculum repository/domain port. These modules depend on repository ports rather than importing database drivers directly.
+
+## Phase 2 workspace
+
+Browse the structure from the sidebar or directly at `/curricula`, `/grades`, and `/subjects`. Curriculum, grade, subject, and domain dashboards show availability, required/optional placement, domain depth, and learning objectives. Administrators and content creators can use `/curricula/manage`, `/grades/manage`, `/subjects/manage`, and `/domains/manage` to edit the structure. Teachers retain their Phase 1 content-edit permission but do not receive structural management access unless they also hold the administrator or content-creator role.

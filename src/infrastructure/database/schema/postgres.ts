@@ -173,6 +173,277 @@ export const onboardingResponses = pgTable("onboarding_responses", {
     .default(sql`NOW()`),
 });
 
+export const curricula = pgTable(
+  "curricula",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    kind: text("kind").notNull().default("custom"),
+    description: text("description").notNull().default(""),
+    authority: text("authority"),
+    isSystem: boolean("is_system").notNull().default(false),
+    isArchived: boolean("is_archived").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("curricula_slug_idx").on(table.slug),
+    archiveIdx: index("curricula_archived_idx").on(table.isArchived),
+  }),
+);
+
+export const grades = pgTable(
+  "grades",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    shortName: text("short_name").notNull(),
+    description: text("description").notNull().default(""),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isArchived: boolean("is_archived").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("grades_slug_idx").on(table.slug),
+    sortIdx: index("grades_sort_order_idx").on(table.sortOrder),
+  }),
+);
+
+export const curriculumGrades = pgTable(
+  "curriculum_grades",
+  {
+    curriculumId: text("curriculum_id")
+      .notNull()
+      .references(() => curricula.id, { onDelete: "cascade" }),
+    gradeId: text("grade_id")
+      .notNull()
+      .references(() => grades.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isAvailable: boolean("is_available").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.curriculumId, table.gradeId] }),
+    gradeIdx: index("curriculum_grades_grade_idx").on(table.gradeId),
+  }),
+);
+
+export const subjects = pgTable(
+  "subjects",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    description: text("description").notNull().default(""),
+    icon: text("icon").notNull().default("book-open"),
+    accent: text("accent").notNull().default("accent"),
+    recommendedStudyHours: integer("recommended_study_hours").notNull().default(0),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isArchived: boolean("is_archived").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("subjects_slug_idx").on(table.slug),
+    sortIdx: index("subjects_sort_order_idx").on(table.sortOrder),
+  }),
+);
+
+export const curriculumSubjects = pgTable(
+  "curriculum_subjects",
+  {
+    curriculumId: text("curriculum_id")
+      .notNull()
+      .references(() => curricula.id, { onDelete: "cascade" }),
+    subjectId: text("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    isRequired: boolean("is_required").notNull().default(false),
+    isAvailable: boolean("is_available").notNull().default(true),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.curriculumId, table.subjectId] }),
+    subjectIdx: index("curriculum_subjects_subject_idx").on(table.subjectId),
+  }),
+);
+
+export const gradeSubjects = pgTable(
+  "grade_subjects",
+  {
+    curriculumId: text("curriculum_id")
+      .notNull()
+      .references(() => curricula.id, { onDelete: "cascade" }),
+    gradeId: text("grade_id")
+      .notNull()
+      .references(() => grades.id, { onDelete: "cascade" }),
+    subjectId: text("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    isRequired: boolean("is_required").notNull().default(false),
+    isAvailable: boolean("is_available").notNull().default(true),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.curriculumId, table.gradeId, table.subjectId] }),
+    gradeIdx: index("grade_subjects_grade_idx").on(table.curriculumId, table.gradeId),
+    subjectIdx: index("grade_subjects_subject_idx").on(table.subjectId),
+  }),
+);
+
+export const domains = pgTable(
+  "domains",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    description: text("description").notNull().default(""),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isArchived: boolean("is_archived").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("domains_slug_idx").on(table.slug),
+    sortIdx: index("domains_sort_order_idx").on(table.sortOrder),
+  }),
+);
+
+export const subjectDomains = pgTable(
+  "subject_domains",
+  {
+    subjectId: text("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    domainId: text("domain_id")
+      .notNull()
+      .references(() => domains.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.subjectId, table.domainId] }),
+    domainIdx: index("subject_domains_domain_idx").on(table.domainId),
+  }),
+);
+
+export const gradeSubjectDomains = pgTable(
+  "grade_subject_domains",
+  {
+    curriculumId: text("curriculum_id")
+      .notNull()
+      .references(() => curricula.id, { onDelete: "cascade" }),
+    gradeId: text("grade_id")
+      .notNull()
+      .references(() => grades.id, { onDelete: "cascade" }),
+    subjectId: text("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    domainId: text("domain_id")
+      .notNull()
+      .references(() => domains.id, { onDelete: "cascade" }),
+    isRequired: boolean("is_required").notNull().default(false),
+    isAvailable: boolean("is_available").notNull().default(true),
+    depth: integer("depth").notNull().default(1),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({
+      columns: [table.curriculumId, table.gradeId, table.subjectId, table.domainId],
+    }),
+    gradeIdx: index("grade_subject_domains_grade_idx").on(table.curriculumId, table.gradeId),
+    domainIdx: index("grade_subject_domains_domain_idx").on(table.domainId),
+  }),
+);
+
+export const learningObjectives = pgTable(
+  "learning_objectives",
+  {
+    id: text("id").primaryKey(),
+    curriculumId: text("curriculum_id")
+      .notNull()
+      .references(() => curricula.id, { onDelete: "cascade" }),
+    subjectId: text("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    domainId: text("domain_id").references(() => domains.id, { onDelete: "set null" }),
+    code: text("code").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    difficulty: text("difficulty").notNull().default("balanced"),
+    isRequired: boolean("is_required").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isArchived: boolean("is_archived").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    codeIdx: uniqueIndex("learning_objectives_curriculum_code_idx").on(
+      table.curriculumId,
+      table.code,
+    ),
+    curriculumIdx: index("learning_objectives_curriculum_idx").on(table.curriculumId),
+    subjectIdx: index("learning_objectives_subject_idx").on(table.subjectId),
+  }),
+);
+
+export const gradeLearningObjectives = pgTable(
+  "grade_learning_objectives",
+  {
+    curriculumId: text("curriculum_id")
+      .notNull()
+      .references(() => curricula.id, { onDelete: "cascade" }),
+    gradeId: text("grade_id")
+      .notNull()
+      .references(() => grades.id, { onDelete: "cascade" }),
+    objectiveId: text("objective_id")
+      .notNull()
+      .references(() => learningObjectives.id, { onDelete: "cascade" }),
+    isRequired: boolean("is_required").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.curriculumId, table.gradeId, table.objectiveId] }),
+    gradeIdx: index("grade_learning_objectives_grade_idx").on(table.curriculumId, table.gradeId),
+    objectiveIdx: index("grade_learning_objectives_objective_idx").on(table.objectiveId),
+  }),
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Profile = typeof profiles.$inferSelect;
@@ -189,3 +460,25 @@ export type UserSettings = typeof userSettings.$inferSelect;
 export type NewUserSettings = typeof userSettings.$inferInsert;
 export type OnboardingResponse = typeof onboardingResponses.$inferSelect;
 export type NewOnboardingResponse = typeof onboardingResponses.$inferInsert;
+export type Curriculum = typeof curricula.$inferSelect;
+export type NewCurriculum = typeof curricula.$inferInsert;
+export type Grade = typeof grades.$inferSelect;
+export type NewGrade = typeof grades.$inferInsert;
+export type CurriculumGrade = typeof curriculumGrades.$inferSelect;
+export type NewCurriculumGrade = typeof curriculumGrades.$inferInsert;
+export type Subject = typeof subjects.$inferSelect;
+export type NewSubject = typeof subjects.$inferInsert;
+export type CurriculumSubject = typeof curriculumSubjects.$inferSelect;
+export type NewCurriculumSubject = typeof curriculumSubjects.$inferInsert;
+export type GradeSubject = typeof gradeSubjects.$inferSelect;
+export type NewGradeSubject = typeof gradeSubjects.$inferInsert;
+export type Domain = typeof domains.$inferSelect;
+export type NewDomain = typeof domains.$inferInsert;
+export type SubjectDomain = typeof subjectDomains.$inferSelect;
+export type NewSubjectDomain = typeof subjectDomains.$inferInsert;
+export type GradeSubjectDomain = typeof gradeSubjectDomains.$inferSelect;
+export type NewGradeSubjectDomain = typeof gradeSubjectDomains.$inferInsert;
+export type LearningObjective = typeof learningObjectives.$inferSelect;
+export type NewLearningObjective = typeof learningObjectives.$inferInsert;
+export type GradeLearningObjective = typeof gradeLearningObjectives.$inferSelect;
+export type NewGradeLearningObjective = typeof gradeLearningObjectives.$inferInsert;
