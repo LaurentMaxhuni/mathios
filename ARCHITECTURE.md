@@ -30,7 +30,7 @@ The domain does not import Next.js, React, Drizzle, filesystem APIs, or provider
 
 Planned modules are `auth`, `profiles`, `curricula`, `grades`, `subjects`, `courses`, `lessons`, `concepts`, `roadmaps`, `assessments`, `mastery`, `simulations`, `notes`, `planner`, `analytics`, and `settings`. A module may expose public application contracts, but its internal schemas, queries, mutations, and repositories stay inside the module.
 
-Phase 1 adds the identity foundation through the `profiles`, `auth`, `settings`, and `onboarding` feature modules. Phase 2 adds the `curricula` module for reusable curricula, grades, subjects, domains, grade depth, and learning objectives. Phase 3 adds the `courses` feature for reusable course hierarchy, structured lessons, versioned authoring, publishing, and learner progress. Phase 4 adds the `concepts` feature for reusable concept entities, typed graph edges, prerequisite validation, traversal, lesson/objective linkage, and learner/author graph surfaces. Exercises, assessments, and mastery remain outside this phase.
+Phase 1 adds the identity foundation through the `profiles`, `auth`, `settings`, and `onboarding` feature modules. Phase 2 adds the `curricula` module for reusable curricula, grades, subjects, domains, grade depth, and learning objectives. Phase 3 adds the `courses` feature for reusable course hierarchy, structured lessons, versioned authoring, publishing, and learner progress. Phase 4 adds the `concepts` feature for reusable concept entities, typed graph edges, prerequisite validation, traversal, lesson/objective linkage, and learner/author graph surfaces. Phase 5 adds reusable questions, exercise sets, answer validation, and deterministic question templates. Phase 6 adds assessments, timed and untimed attempts, section/concept results, diagnostic analysis, and placement recommendations. Mastery and personalized recommendations remain later phases.
 
 ## Abstractions
 
@@ -49,7 +49,7 @@ Phase 1 uses a signed, HttpOnly local session cookie rather than a session table
 
 ## Data and migrations
 
-Phase 0 creates `app_metadata`, used for migration/seed bookkeeping and future installation metadata. Phase 1 adds the identity tables in `0001_phase1_identity.sql`. Phase 2 adds the educational structure in `0002_phase2_curriculum_structure.sql`, including the supporting `grade_subject_domains` join needed to model domain depth by curriculum and grade. Phase 3 adds the course hierarchy, lesson blocks, assets, version snapshots, and learner progress in `0003_phase3_courses_lessons.sql`. Phase 4 adds concepts and graph links in `0004_phase4_concepts_knowledge_graph.sql`. SQL migrations are checked in per dialect and applied transactionally by `src/infrastructure/database/migrations.ts`. Feature tables are added in their own phases rather than pre-created as placeholders. Required prerequisite cycles are an application-level invariant; self-references, duplicate edges, allowed relationship types, foreign keys, and threshold bounds are also constrained by the Phase 4 migration.
+Phase 0 creates `app_metadata`, used for migration/seed bookkeeping and future installation metadata. Phase 1 adds the identity tables in `0001_phase1_identity.sql`. Phase 2 adds the educational structure in `0002_phase2_curriculum_structure.sql`, including the supporting `grade_subject_domains` join needed to model domain depth by curriculum and grade. Phase 3 adds the course hierarchy, lesson blocks, assets, version snapshots, and learner progress in `0003_phase3_courses_lessons.sql`. Phase 4 adds concepts and graph links in `0004_phase4_concepts_knowledge_graph.sql`. Phase 5 adds question, version, answer, template, exercise-set, and practice-attempt tables in `0005_phase5_exercises_questions.sql`. Phase 6 adds assessment definitions, pools, attempts, section results, diagnostic results, placement results, and the shared assessment-answer parent in `0006_phase6_assessments.sql`. SQL migrations are checked in per dialect and applied transactionally by `src/infrastructure/database/migrations.ts`. Feature tables are added in their own phases rather than pre-created as placeholders. Required prerequisite cycles are an application-level invariant; self-references, duplicate edges, allowed relationship types, foreign keys, and threshold bounds are also constrained by the Phase 4 migration.
 
 ## Phase 2 dependency direction
 
@@ -81,3 +81,14 @@ implements it with explicit SQLite/PostgreSQL queries. Learner reads are sanitiz
 layer so answer specifications, correct option flags, and solutions are not serialized to the
 frontend. Phase 5 exercise data and flows are documented in
 docs/phase5-exercises-answer-validation.md.
+
+## Phase 6 dependency direction
+
+The assessments feature owns assessment schemas, authoring forms, publication invariants, learner attempt and
+resume flows, feedback visibility, result presentation, diagnostics, and placement output. `src/domain/assessment`
+contains framework-independent assessment records, seeded pool selection, scoring summaries, section/concept
+aggregation, mistake grouping, and explainable readiness recommendations. `src/domain/ports/assessment-repository.ts`
+defines persistence behavior, and `src/infrastructure/database/repositories/assessment-repository.ts` implements it
+with explicit SQLite/PostgreSQL queries. The service composes the Phase 5 exercise validator while sanitizing
+question instances before they reach the browser. Phase 6 assessment data and flows are documented in
+`docs/phase6-assessments-diagnostics-placement.md`.

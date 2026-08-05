@@ -233,7 +233,8 @@ export interface ExerciseAttemptRecord {
 
 export interface QuestionAttemptRecord {
   id: string;
-  exerciseAttemptId: string;
+  exerciseAttemptId: string | null;
+  assessmentAttemptId?: string | null;
   questionId: string;
   questionVersionId: string;
   templateId: string | null;

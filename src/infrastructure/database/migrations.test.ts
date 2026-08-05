@@ -23,6 +23,7 @@ describe("database migrations", () => {
         "0003_phase3_courses_lessons.sql",
         "0004_phase4_concepts_knowledge_graph.sql",
         "0005_phase5_exercises_questions.sql",
+        "0006_phase6_assessments.sql",
       ]);
       expect(second.applied).toEqual([]);
       expect(second.skipped).toEqual([
@@ -32,6 +33,7 @@ describe("database migrations", () => {
         "0003_phase3_courses_lessons.sql",
         "0004_phase4_concepts_knowledge_graph.sql",
         "0005_phase5_exercises_questions.sql",
+        "0006_phase6_assessments.sql",
       ]);
       expect(database.prepare("SELECT key FROM app_metadata").all()).toEqual([]);
       expect(
@@ -65,6 +67,25 @@ describe("database migrations", () => {
           .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'questions'")
           .get(),
       ).toEqual({ name: "questions" });
+      for (const name of [
+        "assessments",
+        "assessment_sections",
+        "assessment_questions",
+        "assessment_pools",
+        "assessment_attempts",
+        "assessment_section_results",
+        "diagnostic_results",
+        "placement_results",
+      ]) {
+        expect(
+          database
+            .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?")
+            .get(name),
+        ).toEqual({ name });
+      }
+      expect(database.prepare("PRAGMA table_info(question_attempts)").all()).toEqual(
+        expect.arrayContaining([expect.objectContaining({ name: "assessment_attempt_id" })]),
+      );
     } finally {
       database?.close();
       await rm(directory, { recursive: true, force: true });

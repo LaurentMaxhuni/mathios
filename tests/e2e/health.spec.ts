@@ -222,3 +222,42 @@ test("Phase 5 exercise player, validation APIs, and authoring surfaces are usabl
   await page.goto("/exercises/manage");
   await expect(page.getByRole("heading", { name: "Question and exercise studio." })).toBeVisible();
 });
+
+test("Phase 6 assessment catalog, timed workflow, and authoring surface are usable", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/assessments");
+  await expect(
+    page.getByRole("heading", { name: "Assessments that make readiness visible." }),
+  ).toBeVisible();
+  await expect(page.getByText("Motion module quiz")).toBeVisible();
+  await expect(page.getByText("Motion readiness diagnostic")).toBeVisible();
+
+  await page
+    .getByRole("link", { name: /Open assessment/ })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/\/assessments\/assessment-motion-quiz$/);
+  await expect(page.locator("h1").filter({ hasText: "Motion module quiz" })).toBeVisible();
+  await page.getByRole("button", { name: "Start assessment" }).click();
+  await expect(page.getByText("Question 1 of 4")).toBeVisible();
+
+  for (let question = 1; question <= 4; question += 1) {
+    await page
+      .getByRole("button", { name: question === 4 ? "Submit assessment" : "Save answer" })
+      .click();
+    if (question < 4) await expect(page.getByText(`Question ${question + 1} of 4`)).toBeVisible();
+  }
+  await expect(page.getByRole("heading", { name: "Assessment submitted" })).toBeVisible();
+  await expect(page.getByText("Mistakes to review")).toBeVisible();
+
+  await page.goto("/assessments/manage");
+  await expect(page.getByRole("heading", { name: "Assessment studio." })).toBeVisible();
+  await expect(page.getByText("Motion placement check")).toBeVisible();
+});
