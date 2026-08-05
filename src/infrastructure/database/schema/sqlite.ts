@@ -3,6 +3,7 @@ import {
   index,
   integer,
   primaryKey,
+  real,
   sqliteTable,
   text,
   uniqueIndex,
@@ -988,6 +989,316 @@ export const conceptMisconceptions = sqliteTable(
   },
   (table) => ({
     conceptIdx: index("concept_misconceptions_concept_idx").on(table.conceptId, table.sortOrder),
+  }),
+);
+
+export const questions = sqliteTable(
+  "questions",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    questionType: text("question_type").notNull(),
+    subjectId: text("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "restrict" }),
+    gradeMinId: text("grade_min_id").references(() => grades.id, { onDelete: "set null" }),
+    gradeMaxId: text("grade_max_id").references(() => grades.id, { onDelete: "set null" }),
+    difficulty: text("difficulty").notNull().default("balanced"),
+    estimatedTimeSeconds: integer("estimated_time_seconds").notNull().default(120),
+    source: text("source").notNull().default(""),
+    authorProfileId: text("author_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    tags: text("tags").notNull().default("[]"),
+    status: text("status").notNull().default("draft"),
+    currentVersionNumber: integer("current_version_number").notNull().default(1),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("questions_slug_idx").on(table.slug),
+    subjectIdx: index("questions_subject_idx").on(table.subjectId),
+    typeIdx: index("questions_type_idx").on(table.questionType),
+    statusIdx: index("questions_status_idx").on(table.status),
+  }),
+);
+
+export const questionVersions = sqliteTable(
+  "question_versions",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => questions.id, { onDelete: "cascade" }),
+    versionNumber: integer("version_number").notNull(),
+    status: text("status").notNull().default("draft"),
+    prompt: text("prompt").notNull(),
+    answerSpec: text("answer_spec").notNull().default("{}"),
+    explanation: text("explanation").notNull().default(""),
+    fullSolution: text("full_solution").notNull().default(""),
+    commonWrongAnswers: text("common_wrong_answers").notNull().default("[]"),
+    errorFeedback: text("error_feedback").notNull().default("{}"),
+    partialCreditRules: text("partial_credit_rules"),
+    changeSummary: text("change_summary").notNull().default(""),
+    createdByProfileId: text("created_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    publishedAt: text("published_at"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    versionIdx: uniqueIndex("question_versions_question_version_idx").on(
+      table.questionId,
+      table.versionNumber,
+    ),
+    questionIdx: index("question_versions_question_idx").on(table.questionId),
+  }),
+);
+
+export const questionOptions = sqliteTable(
+  "question_options",
+  {
+    id: text("id").primaryKey(),
+    questionVersionId: text("question_version_id")
+      .notNull()
+      .references(() => questionVersions.id, { onDelete: "cascade" }),
+    optionKey: text("option_key").notNull(),
+    label: text("label").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isCorrect: integer("is_correct", { mode: "boolean" }).notNull().default(false),
+  },
+  (table) => ({
+    uniqueOption: uniqueIndex("question_options_version_key_idx").on(
+      table.questionVersionId,
+      table.optionKey,
+    ),
+    orderIdx: index("question_options_version_order_idx").on(
+      table.questionVersionId,
+      table.sortOrder,
+    ),
+  }),
+);
+
+export const questionHints = sqliteTable(
+  "question_hints",
+  {
+    id: text("id").primaryKey(),
+    questionVersionId: text("question_version_id")
+      .notNull()
+      .references(() => questionVersions.id, { onDelete: "cascade" }),
+    level: integer("level").notNull().default(1),
+    content: text("content").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+  (table) => ({
+    uniqueLevel: uniqueIndex("question_hints_version_level_idx").on(
+      table.questionVersionId,
+      table.level,
+    ),
+    orderIdx: index("question_hints_version_order_idx").on(
+      table.questionVersionId,
+      table.sortOrder,
+    ),
+  }),
+);
+
+export const questionSolutions = sqliteTable(
+  "question_solutions",
+  {
+    id: text("id").primaryKey(),
+    questionVersionId: text("question_version_id")
+      .notNull()
+      .references(() => questionVersions.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+  (table) => ({
+    orderIdx: index("question_solutions_version_order_idx").on(
+      table.questionVersionId,
+      table.sortOrder,
+    ),
+  }),
+);
+
+export const questionConcepts = sqliteTable(
+  "question_concepts",
+  {
+    questionId: text("question_id")
+      .notNull()
+      .references(() => questions.id, { onDelete: "cascade" }),
+    conceptId: text("concept_id")
+      .notNull()
+      .references(() => concepts.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.questionId, table.conceptId] }),
+    conceptIdx: index("question_concepts_concept_idx").on(table.conceptId, table.sortOrder),
+  }),
+);
+
+export const questionLearningObjectives = sqliteTable(
+  "question_learning_objectives",
+  {
+    questionId: text("question_id")
+      .notNull()
+      .references(() => questions.id, { onDelete: "cascade" }),
+    objectiveId: text("objective_id")
+      .notNull()
+      .references(() => learningObjectives.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.questionId, table.objectiveId] }),
+    objectiveIdx: index("question_learning_objectives_objective_idx").on(table.objectiveId),
+  }),
+);
+
+export const questionTemplates = sqliteTable(
+  "question_templates",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id").references(() => questions.id, { onDelete: "set null" }),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    questionType: text("question_type").notNull(),
+    promptTemplate: text("prompt_template").notNull(),
+    variables: text("variables").notNull().default("[]"),
+    answerExpression: text("answer_expression").notNull().default(""),
+    validationSpec: text("validation_spec").notNull().default("{}"),
+    seed: integer("seed"),
+    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("question_templates_slug_idx").on(table.slug),
+    questionIdx: index("question_templates_question_idx").on(table.questionId),
+  }),
+);
+
+export const exerciseSets = sqliteTable(
+  "exercise_sets",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    kind: text("kind").notNull(),
+    subjectId: text("subject_id").references(() => subjects.id, { onDelete: "set null" }),
+    gradeId: text("grade_id").references(() => grades.id, { onDelete: "set null" }),
+    difficulty: text("difficulty").notNull().default("balanced"),
+    status: text("status").notNull().default("draft"),
+    estimatedTimeSeconds: integer("estimated_time_seconds").notNull().default(0),
+    createdByProfileId: text("created_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("exercise_sets_slug_idx").on(table.slug),
+    statusIdx: index("exercise_sets_status_idx").on(table.status),
+  }),
+);
+
+export const exerciseSetQuestions = sqliteTable(
+  "exercise_set_questions",
+  {
+    exerciseSetId: text("exercise_set_id")
+      .notNull()
+      .references(() => exerciseSets.id, { onDelete: "cascade" }),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => questions.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    points: real("points").notNull().default(1),
+    isRequired: integer("is_required", { mode: "boolean" }).notNull().default(true),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.exerciseSetId, table.questionId] }),
+    questionIdx: index("exercise_set_questions_question_idx").on(table.questionId, table.sortOrder),
+  }),
+);
+
+export const exerciseAttempts = sqliteTable(
+  "exercise_attempts",
+  {
+    id: text("id").primaryKey(),
+    exerciseSetId: text("exercise_set_id")
+      .notNull()
+      .references(() => exerciseSets.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("in-progress"),
+    seed: integer("seed").notNull(),
+    score: real("score").notNull().default(0),
+    maxScore: real("max_score").notNull().default(0),
+    startedAt: text("started_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    completedAt: text("completed_at"),
+  },
+  (table) => ({
+    profileIdx: index("exercise_attempts_profile_idx").on(table.profileId, table.startedAt),
+    setIdx: index("exercise_attempts_set_idx").on(table.exerciseSetId, table.status),
+  }),
+);
+
+export const questionAttempts = sqliteTable(
+  "question_attempts",
+  {
+    id: text("id").primaryKey(),
+    exerciseAttemptId: text("exercise_attempt_id")
+      .notNull()
+      .references(() => exerciseAttempts.id, { onDelete: "cascade" }),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => questions.id, { onDelete: "restrict" }),
+    questionVersionId: text("question_version_id")
+      .notNull()
+      .references(() => questionVersions.id, { onDelete: "restrict" }),
+    templateId: text("template_id").references(() => questionTemplates.id, {
+      onDelete: "set null",
+    }),
+    instanceSeed: integer("instance_seed"),
+    response: text("response").notNull().default("null"),
+    validationResult: text("validation_result").notNull().default("{}"),
+    score: real("score").notNull().default(0),
+    maxScore: real("max_score").notNull().default(0),
+    answeredAt: text("answered_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    uniqueQuestionAttempt: uniqueIndex("question_attempts_attempt_question_idx").on(
+      table.exerciseAttemptId,
+      table.questionId,
+    ),
+    questionIdx: index("question_attempts_question_idx").on(table.questionId, table.answeredAt),
   }),
 );
 

@@ -179,3 +179,46 @@ test("Phase 4 concepts, prerequisite graph, and authoring surfaces are usable", 
   await expect(page.getByRole("heading", { name: "Graph validation" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Relationship ledger" })).toBeVisible();
 });
+
+test("Phase 5 exercise player, validation APIs, and authoring surfaces are usable", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/exercises");
+  await expect(page.getByRole("heading", { name: "Practice that explains itself." })).toBeVisible();
+  await expect(page.getByText("Motion practice lab")).toBeVisible();
+  await page.getByRole("link", { name: /Start practice/ }).click();
+  await expect(page).toHaveURL(/\/exercise-sets\/exercise-set-motion-practice$/);
+  await page.getByRole("button", { name: "Start practice" }).click();
+  await page.locator('input[type="radio"][value="b"]').check();
+  await page.getByRole("button", { name: "Check answer" }).click();
+  await expect(page.getByRole("status")).toContainText("Correct.");
+
+  const validationResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/exercises/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "numeric-unit",
+        answerSpec: { expected: 12, unit: "N" },
+        response: "0.012 kN",
+      }),
+    });
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(validationResponse.ok).toBeTruthy();
+  expect(validationResponse.body).toMatchObject({ result: { status: "correct" } });
+
+  await page.goto("/exercises/questions");
+  await expect(page.getByRole("heading", { name: "Reusable question bank." })).toBeVisible();
+  await expect(page.getByText("Equivalent algebraic expressions")).toBeVisible();
+  await page.getByRole("link", { name: "Bulk import" }).click();
+  await expect(page.getByRole("heading", { name: "Bulk import reusable questions" })).toBeVisible();
+  await page.goto("/exercises/manage");
+  await expect(page.getByRole("heading", { name: "Question and exercise studio." })).toBeVisible();
+});

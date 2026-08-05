@@ -6,7 +6,7 @@ import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-4"],
+  ["seed_version", "phase-5"],
 ] as const;
 
 export const roleSeed = [
@@ -1092,6 +1092,402 @@ export const conceptMisconceptionSeed = [
   ],
 ] as const;
 
+export const questionSeed = [
+  {
+    id: "question-velocity-direction",
+    slug: "velocity-direction",
+    title: "Velocity includes direction",
+    type: "multiple-choice",
+    subjectId: "subject-physics",
+    gradeMinId: "grade-8",
+    gradeMaxId: "grade-9",
+    difficulty: "gentle",
+    estimatedTimeSeconds: 90,
+    source: "Mathios Phase 5 seed",
+    authorProfileId: null,
+    tags: ["motion", "velocity"],
+    status: "published",
+    prompt:
+      "A car travels 20 m east, then 20 m west. Which statement is true about its displacement?",
+    answerSpec: { correctOptionKeys: ["b"] },
+    explanation:
+      "Displacement compares the final position with the initial position, so the car ends where it started.",
+    fullSolution: "The eastward and westward movements cancel: 20 m - 20 m = 0 m.",
+    commonWrongAnswers: ["40 m"],
+    errorFeedback: { a: "That is the total distance, not displacement." },
+    partialCreditRules: null,
+    changeSummary: "Initial published question.",
+    options: [
+      {
+        id: "option-velocity-direction-a",
+        key: "a",
+        label: "40 m east",
+        sortOrder: 0,
+        isCorrect: false,
+      },
+      { id: "option-velocity-direction-b", key: "b", label: "0 m", sortOrder: 1, isCorrect: true },
+      {
+        id: "option-velocity-direction-c",
+        key: "c",
+        label: "20 m west",
+        sortOrder: 2,
+        isCorrect: false,
+      },
+    ],
+    hints: [
+      {
+        id: "hint-velocity-direction-1",
+        level: 1,
+        content: "Look only at the starting and ending positions.",
+        sortOrder: 0,
+      },
+    ],
+    solutions: [
+      {
+        id: "solution-velocity-direction",
+        title: "Displacement",
+        content: "The final position equals the initial position, so displacement is zero.",
+        sortOrder: 0,
+      },
+    ],
+    conceptIds: ["concept-velocity"],
+    learningObjectiveIds: ["objective-kosovo-grade-8-subject-physics"],
+  },
+  {
+    id: "question-acceleration-numeric",
+    slug: "acceleration-from-change-in-velocity",
+    title: "Acceleration from a velocity change",
+    type: "numeric-tolerance",
+    subjectId: "subject-physics",
+    gradeMinId: "grade-8",
+    gradeMaxId: "grade-10",
+    difficulty: "balanced",
+    estimatedTimeSeconds: 120,
+    source: "Mathios Phase 5 seed",
+    authorProfileId: null,
+    tags: ["motion", "acceleration"],
+    status: "published",
+    prompt:
+      "A cyclist changes velocity from 4 m/s to 10 m/s in 3 s. What is the average acceleration in m/s²?",
+    answerSpec: { expected: 2, tolerance: 0.05 },
+    explanation: "Average acceleration is change in velocity divided by elapsed time.",
+    fullSolution: "a = (10 - 4) / 3 = 2 m/s².",
+    commonWrongAnswers: ["14/3", "6"],
+    errorFeedback: {
+      "outside-tolerance": "Subtract the initial velocity before dividing by time.",
+    },
+    partialCreditRules: null,
+    options: [],
+    hints: [
+      {
+        id: "hint-acceleration-numeric-1",
+        level: 1,
+        content: "Use a = (v₂ - v₁) / t.",
+        sortOrder: 0,
+      },
+    ],
+    solutions: [
+      {
+        id: "solution-acceleration-numeric",
+        title: "Average acceleration",
+        content: "a = (10 m/s - 4 m/s) / 3 s = 2 m/s².",
+        sortOrder: 0,
+      },
+    ],
+    conceptIds: ["concept-acceleration"],
+    learningObjectiveIds: ["objective-international-grade-8-subject-physics"],
+  },
+  {
+    id: "question-force-unit",
+    slug: "force-from-mass-and-acceleration",
+    title: "Force with a unit",
+    type: "numeric-unit",
+    subjectId: "subject-physics",
+    gradeMinId: "grade-8",
+    gradeMaxId: "grade-10",
+    difficulty: "balanced",
+    estimatedTimeSeconds: 120,
+    source: "Mathios Phase 5 seed",
+    authorProfileId: null,
+    tags: ["force", "units"],
+    status: "published",
+    prompt: "What force accelerates a 3 kg object at 4 m/s²? Include the SI unit.",
+    answerSpec: { expected: 12, unit: "N", tolerance: 0 },
+    explanation: "Newton’s second law connects force, mass, and acceleration.",
+    fullSolution: "F = ma = 3 kg × 4 m/s² = 12 N.",
+    commonWrongAnswers: ["7 N", "0.75 N"],
+    errorFeedback: { "wrong-unit": "Force is measured in newtons (N)." },
+    partialCreditRules: null,
+    options: [],
+    hints: [
+      {
+        id: "hint-force-unit-1",
+        level: 1,
+        content: "Multiply mass by acceleration.",
+        sortOrder: 0,
+      },
+    ],
+    solutions: [
+      {
+        id: "solution-force-unit",
+        title: "Newton’s second law",
+        content: "F = ma = 3 × 4 = 12 N.",
+        sortOrder: 0,
+      },
+    ],
+    conceptIds: ["concept-acceleration"],
+    learningObjectiveIds: ["objective-kosovo-grade-8-subject-physics"],
+  },
+  {
+    id: "question-linear-equation-expression",
+    slug: "equivalent-linear-expression",
+    title: "Equivalent algebraic expressions",
+    type: "algebraic-expression",
+    subjectId: "subject-mathematics",
+    gradeMinId: "grade-8",
+    gradeMaxId: "grade-9",
+    difficulty: "balanced",
+    estimatedTimeSeconds: 150,
+    source: "Mathios Phase 5 seed",
+    authorProfileId: null,
+    tags: ["algebra", "equivalence"],
+    status: "published",
+    prompt: "Enter an expression equivalent to 2(x + 1).",
+    answerSpec: { acceptedAnswers: ["2*x+2"], variables: ["x"] },
+    explanation: "Distribute the factor 2 across both terms.",
+    fullSolution: "2(x + 1) = 2x + 2.",
+    commonWrongAnswers: ["2x + 1"],
+    errorFeedback: { "expression-mismatch": "Expand both terms inside the parentheses." },
+    partialCreditRules: null,
+    options: [],
+    hints: [
+      {
+        id: "hint-linear-expression-1",
+        level: 1,
+        content: "Use the distributive property.",
+        sortOrder: 0,
+      },
+    ],
+    solutions: [
+      {
+        id: "solution-linear-expression",
+        title: "Expand",
+        content: "Multiply 2 by x and by 1: 2x + 2.",
+        sortOrder: 0,
+      },
+    ],
+    conceptIds: ["concept-linear-equations"],
+    learningObjectiveIds: ["objective-kosovo-grade-8-subject-mathematics"],
+  },
+  {
+    id: "question-position-true-false",
+    slug: "position-is-not-motion",
+    title: "Position and motion",
+    type: "true-false",
+    subjectId: "subject-physics",
+    gradeMinId: "grade-8",
+    gradeMaxId: "grade-9",
+    difficulty: "gentle",
+    estimatedTimeSeconds: 60,
+    source: "Mathios Phase 5 seed",
+    authorProfileId: null,
+    tags: ["position", "motion"],
+    status: "published",
+    prompt: "True or false: An object can have a position even when it is not moving.",
+    answerSpec: { expected: true },
+    explanation: "Position describes location; motion describes how location changes.",
+    fullSolution: "True. A stationary object still has a location relative to a reference point.",
+    commonWrongAnswers: [],
+    errorFeedback: {},
+    partialCreditRules: null,
+    options: [],
+    hints: [],
+    solutions: [],
+    conceptIds: ["concept-position"],
+    learningObjectiveIds: ["objective-kosovo-grade-8-subject-physics"],
+  },
+  {
+    id: "question-motion-order",
+    slug: "motion-investigation-order",
+    title: "Order a motion investigation",
+    type: "ordering",
+    subjectId: "subject-physics",
+    gradeMinId: "grade-8",
+    gradeMaxId: "grade-10",
+    difficulty: "balanced",
+    estimatedTimeSeconds: 120,
+    source: "Mathios Phase 5 seed",
+    authorProfileId: null,
+    tags: ["method", "motion"],
+    status: "published",
+    prompt: "Put the investigation steps in a sensible order.",
+    answerSpec: { correctOrder: ["observe", "model", "calculate"] },
+    explanation: "Start with observations, choose a model, then calculate a prediction.",
+    fullSolution: "Observe → model → calculate.",
+    commonWrongAnswers: [],
+    errorFeedback: {},
+    partialCreditRules: { enabled: true },
+    options: [
+      {
+        id: "option-motion-order-observe",
+        key: "observe",
+        label: "Observe the motion",
+        sortOrder: 0,
+        isCorrect: true,
+      },
+      {
+        id: "option-motion-order-model",
+        key: "model",
+        label: "Choose a model",
+        sortOrder: 1,
+        isCorrect: true,
+      },
+      {
+        id: "option-motion-order-calculate",
+        key: "calculate",
+        label: "Calculate a prediction",
+        sortOrder: 2,
+        isCorrect: true,
+      },
+    ],
+    hints: [],
+    solutions: [],
+    conceptIds: ["concept-motion-graphs"],
+    learningObjectiveIds: ["objective-international-grade-8-subject-physics"],
+  },
+  {
+    id: "question-velocity-matching",
+    slug: "match-motion-quantities",
+    title: "Match motion quantities",
+    type: "matching",
+    subjectId: "subject-physics",
+    gradeMinId: "grade-8",
+    gradeMaxId: "grade-9",
+    difficulty: "gentle",
+    estimatedTimeSeconds: 120,
+    source: "Mathios Phase 5 seed",
+    authorProfileId: null,
+    tags: ["motion", "definitions"],
+    status: "published",
+    prompt: "Match each quantity to its meaning.",
+    answerSpec: { correctPairs: { distance: "path", displacement: "change-position" } },
+    explanation: "Distance follows the path; displacement compares endpoints.",
+    fullSolution: "Distance → length of path. Displacement → change in position.",
+    commonWrongAnswers: [],
+    errorFeedback: {},
+    partialCreditRules: { enabled: true },
+    options: [
+      {
+        id: "option-velocity-matching-path",
+        key: "path",
+        label: "Length of the path",
+        sortOrder: 0,
+        isCorrect: false,
+      },
+      {
+        id: "option-velocity-matching-change",
+        key: "change-position",
+        label: "Change in position",
+        sortOrder: 1,
+        isCorrect: false,
+      },
+    ],
+    hints: [],
+    solutions: [],
+    conceptIds: ["concept-velocity", "concept-position"],
+    learningObjectiveIds: ["objective-kosovo-grade-8-subject-physics"],
+  },
+  {
+    id: "question-motion-multi-step",
+    slug: "multi-step-motion-calculation",
+    title: "A two-step motion calculation",
+    type: "multi-step",
+    subjectId: "subject-physics",
+    gradeMinId: "grade-8",
+    gradeMaxId: "grade-10",
+    difficulty: "challenging",
+    estimatedTimeSeconds: 240,
+    source: "Mathios Phase 5 seed",
+    authorProfileId: null,
+    tags: ["motion", "multi-step"],
+    status: "published",
+    prompt: "First find the change in velocity, then find the acceleration.",
+    answerSpec: {
+      steps: [
+        {
+          id: "change",
+          label: "Change in velocity",
+          type: "numeric",
+          weight: 1,
+          spec: { expected: 6, tolerance: 0 },
+        },
+        {
+          id: "acceleration",
+          label: "Acceleration",
+          type: "numeric-tolerance",
+          weight: 1,
+          spec: { expected: 2, tolerance: 0.05 },
+        },
+      ],
+    },
+    explanation: "Keep the intermediate result visible before dividing by time.",
+    fullSolution: "The velocity changes by 10 - 4 = 6 m/s. Dividing by 3 s gives 2 m/s².",
+    commonWrongAnswers: [],
+    errorFeedback: {},
+    partialCreditRules: { enabled: true },
+    options: [],
+    hints: [],
+    solutions: [],
+    conceptIds: ["concept-acceleration"],
+    learningObjectiveIds: ["objective-international-grade-8-subject-physics"],
+  },
+] as const;
+
+export const questionTemplateSeed = [
+  {
+    id: "template-force-randomized",
+    questionId: "question-force-unit",
+    slug: "random-force-from-mass-and-acceleration",
+    name: "Random force from mass and acceleration",
+    questionType: "numeric-unit",
+    promptTemplate:
+      "What force accelerates a {{mass}} kg object at {{acceleration}} m/s²? Include the SI unit.",
+    variables: [
+      { name: "mass", label: "Mass", min: 2, max: 8, step: 1, decimals: 0 },
+      { name: "acceleration", label: "Acceleration", min: 2, max: 6, step: 1, decimals: 0 },
+    ],
+    answerExpression: "mass * acceleration",
+    validationSpec: { unit: "N", tolerance: 0 },
+    seed: 42,
+    isActive: true,
+  },
+] as const;
+
+export const exerciseSetSeed = [
+  {
+    id: "exercise-set-motion-practice",
+    slug: "motion-practice",
+    title: "Motion practice lab",
+    description: "A reusable practice set for position, velocity, and acceleration.",
+    kind: "concept",
+    subjectId: "subject-physics",
+    gradeId: "grade-8",
+    difficulty: "balanced",
+    status: "published",
+    estimatedTimeSeconds: 900,
+    createdByProfileId: null,
+  },
+] as const;
+
+export const exerciseSetQuestionSeed = [
+  ["exercise-set-motion-practice", "question-velocity-direction", 0, 1, true],
+  ["exercise-set-motion-practice", "question-acceleration-numeric", 1, 1, true],
+  ["exercise-set-motion-practice", "question-force-unit", 2, 1, true],
+  ["exercise-set-motion-practice", "question-position-true-false", 3, 1, true],
+  ["exercise-set-motion-practice", "question-motion-order", 4, 1, true],
+  ["exercise-set-motion-practice", "question-motion-multi-step", 5, 2, true],
+] as const;
+
 export async function runSeed(
   options: { provider?: "sqlite" | "postgres"; databaseUrl?: string } = {},
 ): Promise<void> {
@@ -1311,6 +1707,36 @@ export async function runSeed(
         ON CONFLICT(id) DO UPDATE SET concept_id = excluded.concept_id, misconception = excluded.misconception,
           correction = excluded.correction, sort_order = excluded.sort_order, updated_at = CURRENT_TIMESTAMP
       `);
+      const insertQuestion = database.prepare(
+        "INSERT INTO questions (id, slug, title, question_type, subject_id, grade_min_id, grade_max_id, difficulty, estimated_time_seconds, source, author_profile_id, tags, status, current_version_number) VALUES (@id, @slug, @title, @type, @subjectId, @gradeMinId, @gradeMaxId, @difficulty, @estimatedTimeSeconds, @source, @authorProfileId, @tags, @status, 1) ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, title = excluded.title, question_type = excluded.question_type, subject_id = excluded.subject_id, grade_min_id = excluded.grade_min_id, grade_max_id = excluded.grade_max_id, difficulty = excluded.difficulty, estimated_time_seconds = excluded.estimated_time_seconds, source = excluded.source, author_profile_id = excluded.author_profile_id, tags = excluded.tags, status = excluded.status, current_version_number = 1, updated_at = CURRENT_TIMESTAMP",
+      );
+      const insertQuestionVersion = database.prepare(
+        "INSERT INTO question_versions (id, question_id, version_number, status, prompt, answer_spec, explanation, full_solution, common_wrong_answers, error_feedback, partial_credit_rules, change_summary, created_by_profile_id, published_at) VALUES (@id, @questionId, 1, @status, @prompt, @answerSpec, @explanation, @fullSolution, @commonWrongAnswers, @errorFeedback, @partialCreditRules, @changeSummary, @authorProfileId, CASE WHEN @status = 'published' THEN CURRENT_TIMESTAMP ELSE NULL END) ON CONFLICT(id) DO UPDATE SET question_id = excluded.question_id, status = excluded.status, prompt = excluded.prompt, answer_spec = excluded.answer_spec, explanation = excluded.explanation, full_solution = excluded.full_solution, common_wrong_answers = excluded.common_wrong_answers, error_feedback = excluded.error_feedback, partial_credit_rules = excluded.partial_credit_rules, change_summary = excluded.change_summary, created_by_profile_id = excluded.created_by_profile_id, published_at = excluded.published_at",
+      );
+      const insertQuestionOption = database.prepare(
+        "INSERT INTO question_options (id, question_version_id, option_key, label, sort_order, is_correct) VALUES (@id, @versionId, @key, @label, @sortOrder, @isCorrect) ON CONFLICT(id) DO UPDATE SET question_version_id = excluded.question_version_id, option_key = excluded.option_key, label = excluded.label, sort_order = excluded.sort_order, is_correct = excluded.is_correct",
+      );
+      const insertQuestionHint = database.prepare(
+        "INSERT INTO question_hints (id, question_version_id, level, content, sort_order) VALUES (@id, @versionId, @level, @content, @sortOrder) ON CONFLICT(id) DO UPDATE SET question_version_id = excluded.question_version_id, level = excluded.level, content = excluded.content, sort_order = excluded.sort_order",
+      );
+      const insertQuestionSolution = database.prepare(
+        "INSERT INTO question_solutions (id, question_version_id, title, content, sort_order) VALUES (@id, @versionId, @title, @content, @sortOrder) ON CONFLICT(id) DO UPDATE SET question_version_id = excluded.question_version_id, title = excluded.title, content = excluded.content, sort_order = excluded.sort_order",
+      );
+      const insertQuestionConcept = database.prepare(
+        "INSERT INTO question_concepts (question_id, concept_id, sort_order) VALUES (@questionId, @conceptId, @sortOrder) ON CONFLICT(question_id, concept_id) DO UPDATE SET sort_order = excluded.sort_order",
+      );
+      const insertQuestionObjective = database.prepare(
+        "INSERT INTO question_learning_objectives (question_id, objective_id, sort_order) VALUES (@questionId, @objectiveId, @sortOrder) ON CONFLICT(question_id, objective_id) DO UPDATE SET sort_order = excluded.sort_order",
+      );
+      const insertQuestionTemplate = database.prepare(
+        "INSERT INTO question_templates (id, question_id, slug, name, question_type, prompt_template, variables, answer_expression, validation_spec, seed, is_active) VALUES (@id, @questionId, @slug, @name, @questionType, @promptTemplate, @variables, @answerExpression, @validationSpec, @seed, @isActive) ON CONFLICT(id) DO UPDATE SET question_id = excluded.question_id, slug = excluded.slug, name = excluded.name, question_type = excluded.question_type, prompt_template = excluded.prompt_template, variables = excluded.variables, answer_expression = excluded.answer_expression, validation_spec = excluded.validation_spec, seed = excluded.seed, is_active = excluded.is_active, updated_at = CURRENT_TIMESTAMP",
+      );
+      const insertExerciseSet = database.prepare(
+        "INSERT INTO exercise_sets (id, slug, title, description, kind, subject_id, grade_id, difficulty, status, estimated_time_seconds, created_by_profile_id) VALUES (@id, @slug, @title, @description, @kind, @subjectId, @gradeId, @difficulty, @status, @estimatedTimeSeconds, @createdByProfileId) ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, title = excluded.title, description = excluded.description, kind = excluded.kind, subject_id = excluded.subject_id, grade_id = excluded.grade_id, difficulty = excluded.difficulty, status = excluded.status, estimated_time_seconds = excluded.estimated_time_seconds, created_by_profile_id = excluded.created_by_profile_id, updated_at = CURRENT_TIMESTAMP",
+      );
+      const insertExerciseSetQuestion = database.prepare(
+        "INSERT INTO exercise_set_questions (exercise_set_id, question_id, sort_order, points, is_required) VALUES (@exerciseSetId, @questionId, @sortOrder, @points, @isRequired) ON CONFLICT(exercise_set_id, question_id) DO UPDATE SET sort_order = excluded.sort_order, points = excluded.points, is_required = excluded.is_required",
+      );
       const seedStructure = database.transaction(() => {
         for (const curriculum of curriculumSeed)
           insertCurriculum.run({ ...curriculum, isSystem: curriculum.isSystem ? 1 : 0 });
@@ -1418,6 +1844,70 @@ export async function runSeed(
           sortOrder,
         ] of conceptMisconceptionSeed)
           insertConceptMisconception.run({ id, conceptId, misconception, correction, sortOrder });
+        for (const question of questionSeed) {
+          insertQuestion.run({
+            ...question,
+            tags: JSON.stringify(question.tags),
+            answerSpec: JSON.stringify(question.answerSpec),
+            commonWrongAnswers: JSON.stringify(question.commonWrongAnswers),
+            errorFeedback: JSON.stringify(question.errorFeedback),
+            partialCreditRules: question.partialCreditRules
+              ? JSON.stringify(question.partialCreditRules)
+              : null,
+          });
+          const versionId = "question-version-" + question.id;
+          insertQuestionVersion.run({
+            id: versionId,
+            questionId: question.id,
+            status: question.status,
+            prompt: question.prompt,
+            answerSpec: JSON.stringify(question.answerSpec),
+            explanation: question.explanation,
+            fullSolution: question.fullSolution,
+            commonWrongAnswers: JSON.stringify(question.commonWrongAnswers),
+            errorFeedback: JSON.stringify(question.errorFeedback),
+            partialCreditRules: question.partialCreditRules
+              ? JSON.stringify(question.partialCreditRules)
+              : null,
+            changeSummary:
+              (question as { changeSummary?: string }).changeSummary ??
+              "Initial published question.",
+            authorProfileId: question.authorProfileId,
+          });
+          for (const option of question.options)
+            insertQuestionOption.run({ ...option, versionId, isCorrect: option.isCorrect ? 1 : 0 });
+          for (const hint of question.hints) insertQuestionHint.run({ ...hint, versionId });
+          for (const solution of question.solutions)
+            insertQuestionSolution.run({ ...solution, versionId });
+          for (const [sortOrder, conceptId] of question.conceptIds.entries())
+            insertQuestionConcept.run({ questionId: question.id, conceptId, sortOrder });
+          for (const [sortOrder, objectiveId] of question.learningObjectiveIds.entries())
+            insertQuestionObjective.run({ questionId: question.id, objectiveId, sortOrder });
+        }
+        for (const template of questionTemplateSeed) {
+          insertQuestionTemplate.run({
+            ...template,
+            questionId: template.questionId,
+            variables: JSON.stringify(template.variables),
+            validationSpec: JSON.stringify(template.validationSpec),
+            isActive: template.isActive ? 1 : 0,
+          });
+        }
+        for (const exerciseSet of exerciseSetSeed) insertExerciseSet.run(exerciseSet);
+        for (const [
+          exerciseSetId,
+          questionId,
+          sortOrder,
+          points,
+          isRequired,
+        ] of exerciseSetQuestionSeed)
+          insertExerciseSetQuestion.run({
+            exerciseSetId,
+            questionId,
+            sortOrder,
+            points,
+            isRequired: isRequired ? 1 : 0,
+          });
       });
       seedStructure();
     } finally {
@@ -1695,6 +2185,115 @@ export async function runSeed(
             correction = EXCLUDED.correction, sort_order = EXCLUDED.sort_order, updated_at = NOW()
         `;
       }
+      for (const question of questionSeed) {
+        await transaction.unsafe(
+          "INSERT INTO questions (id, slug, title, question_type, subject_id, grade_min_id, grade_max_id, difficulty, estimated_time_seconds, source, author_profile_id, tags, status, current_version_number) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 1) ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, question_type = EXCLUDED.question_type, subject_id = EXCLUDED.subject_id, grade_min_id = EXCLUDED.grade_min_id, grade_max_id = EXCLUDED.grade_max_id, difficulty = EXCLUDED.difficulty, estimated_time_seconds = EXCLUDED.estimated_time_seconds, source = EXCLUDED.source, author_profile_id = EXCLUDED.author_profile_id, tags = EXCLUDED.tags, status = EXCLUDED.status, current_version_number = 1, updated_at = NOW()",
+          [
+            question.id,
+            question.slug,
+            question.title,
+            question.type,
+            question.subjectId,
+            question.gradeMinId,
+            question.gradeMaxId,
+            question.difficulty,
+            question.estimatedTimeSeconds,
+            question.source,
+            question.authorProfileId,
+            JSON.stringify(question.tags),
+            question.status,
+          ],
+        );
+        const versionId = "question-version-" + question.id;
+        await transaction.unsafe(
+          "INSERT INTO question_versions (id, question_id, version_number, status, prompt, answer_spec, explanation, full_solution, common_wrong_answers, error_feedback, partial_credit_rules, change_summary, created_by_profile_id, published_at) VALUES ($1, $2, 1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) ON CONFLICT (id) DO UPDATE SET question_id = EXCLUDED.question_id, status = EXCLUDED.status, prompt = EXCLUDED.prompt, answer_spec = EXCLUDED.answer_spec, explanation = EXCLUDED.explanation, full_solution = EXCLUDED.full_solution, common_wrong_answers = EXCLUDED.common_wrong_answers, error_feedback = EXCLUDED.error_feedback, partial_credit_rules = EXCLUDED.partial_credit_rules, change_summary = EXCLUDED.change_summary, created_by_profile_id = EXCLUDED.created_by_profile_id, published_at = EXCLUDED.published_at",
+          [
+            versionId,
+            question.id,
+            question.status,
+            question.prompt,
+            JSON.stringify(question.answerSpec),
+            question.explanation,
+            question.fullSolution,
+            JSON.stringify(question.commonWrongAnswers),
+            JSON.stringify(question.errorFeedback),
+            question.partialCreditRules ? JSON.stringify(question.partialCreditRules) : null,
+            (question as { changeSummary?: string }).changeSummary ?? "Initial published question.",
+            question.authorProfileId,
+            question.status === "published" ? new Date().toISOString() : null,
+          ],
+        );
+        for (const option of question.options)
+          await transaction.unsafe(
+            "INSERT INTO question_options (id, question_version_id, option_key, label, sort_order, is_correct) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO UPDATE SET question_version_id = EXCLUDED.question_version_id, option_key = EXCLUDED.option_key, label = EXCLUDED.label, sort_order = EXCLUDED.sort_order, is_correct = EXCLUDED.is_correct",
+            [option.id, versionId, option.key, option.label, option.sortOrder, option.isCorrect],
+          );
+        for (const hint of question.hints)
+          await transaction.unsafe(
+            "INSERT INTO question_hints (id, question_version_id, level, content, sort_order) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET question_version_id = EXCLUDED.question_version_id, level = EXCLUDED.level, content = EXCLUDED.content, sort_order = EXCLUDED.sort_order",
+            [hint.id, versionId, hint.level, hint.content, hint.sortOrder],
+          );
+        for (const solution of question.solutions)
+          await transaction.unsafe(
+            "INSERT INTO question_solutions (id, question_version_id, title, content, sort_order) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET question_version_id = EXCLUDED.question_version_id, title = EXCLUDED.title, content = EXCLUDED.content, sort_order = EXCLUDED.sort_order",
+            [solution.id, versionId, solution.title, solution.content, solution.sortOrder],
+          );
+        for (const [sortOrder, conceptId] of question.conceptIds.entries())
+          await transaction.unsafe(
+            "INSERT INTO question_concepts (question_id, concept_id, sort_order) VALUES ($1, $2, $3) ON CONFLICT (question_id, concept_id) DO UPDATE SET sort_order = EXCLUDED.sort_order",
+            [question.id, conceptId, sortOrder],
+          );
+        for (const [sortOrder, objectiveId] of question.learningObjectiveIds.entries())
+          await transaction.unsafe(
+            "INSERT INTO question_learning_objectives (question_id, objective_id, sort_order) VALUES ($1, $2, $3) ON CONFLICT (question_id, objective_id) DO UPDATE SET sort_order = EXCLUDED.sort_order",
+            [question.id, objectiveId, sortOrder],
+          );
+      }
+      for (const template of questionTemplateSeed)
+        await transaction.unsafe(
+          "INSERT INTO question_templates (id, question_id, slug, name, question_type, prompt_template, variables, answer_expression, validation_spec, seed, is_active) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT (id) DO UPDATE SET question_id = EXCLUDED.question_id, slug = EXCLUDED.slug, name = EXCLUDED.name, question_type = EXCLUDED.question_type, prompt_template = EXCLUDED.prompt_template, variables = EXCLUDED.variables, answer_expression = EXCLUDED.answer_expression, validation_spec = EXCLUDED.validation_spec, seed = EXCLUDED.seed, is_active = EXCLUDED.is_active, updated_at = NOW()",
+          [
+            template.id,
+            template.questionId,
+            template.slug,
+            template.name,
+            template.questionType,
+            template.promptTemplate,
+            JSON.stringify(template.variables),
+            template.answerExpression,
+            JSON.stringify(template.validationSpec),
+            template.seed,
+            template.isActive,
+          ],
+        );
+      for (const exerciseSet of exerciseSetSeed)
+        await transaction.unsafe(
+          "INSERT INTO exercise_sets (id, slug, title, description, kind, subject_id, grade_id, difficulty, status, estimated_time_seconds, created_by_profile_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, description = EXCLUDED.description, kind = EXCLUDED.kind, subject_id = EXCLUDED.subject_id, grade_id = EXCLUDED.grade_id, difficulty = EXCLUDED.difficulty, status = EXCLUDED.status, estimated_time_seconds = EXCLUDED.estimated_time_seconds, created_by_profile_id = EXCLUDED.created_by_profile_id, updated_at = NOW()",
+          [
+            exerciseSet.id,
+            exerciseSet.slug,
+            exerciseSet.title,
+            exerciseSet.description,
+            exerciseSet.kind,
+            exerciseSet.subjectId,
+            exerciseSet.gradeId,
+            exerciseSet.difficulty,
+            exerciseSet.status,
+            exerciseSet.estimatedTimeSeconds,
+            exerciseSet.createdByProfileId,
+          ],
+        );
+      for (const [
+        exerciseSetId,
+        questionId,
+        sortOrder,
+        points,
+        isRequired,
+      ] of exerciseSetQuestionSeed)
+        await transaction.unsafe(
+          "INSERT INTO exercise_set_questions (exercise_set_id, question_id, sort_order, points, is_required) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (exercise_set_id, question_id) DO UPDATE SET sort_order = EXCLUDED.sort_order, points = EXCLUDED.points, is_required = EXCLUDED.is_required",
+          [exerciseSetId, questionId, sortOrder, points, isRequired],
+        );
     });
   } finally {
     await database.end({ timeout: 5 });

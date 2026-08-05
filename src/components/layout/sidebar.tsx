@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   Atom,
+  BrainCircuit,
   BookOpen,
   BookMarked,
   FlaskConical,
@@ -19,13 +20,14 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navigation = [
+const navigation: Array<{ href: string; label: string; icon: typeof Home }> = [
   { href: "/" as const, label: "Overview", icon: Home },
   { href: "/profiles" as const, label: "Profiles", icon: IdCard },
   { href: "/onboarding" as const, label: "Onboarding", icon: Route },
   { href: "/curricula" as const, label: "Curricula", icon: BookOpen },
   { href: "/courses" as const, label: "Courses", icon: BookMarked },
   { href: "/concepts" as const, label: "Concepts", icon: Network },
+  { href: "/exercises" as const, label: "Exercises", icon: BrainCircuit },
   { href: "/grades" as const, label: "Grades", icon: GraduationCap },
   { href: "/subjects" as const, label: "Subjects", icon: FlaskConical },
   { href: "/settings" as const, label: "Settings", icon: Settings2 },
@@ -88,7 +90,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={item.href as never}
                 onClick={onMobileClose}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
@@ -114,7 +116,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             Profiles, permissions, settings, and onboarding stay available on this device.
           </p>
           <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Phase 4 - Concepts and knowledge graph
+            Phase 5 - Exercises and answer validation
           </p>
         </div>
       </aside>

@@ -5,7 +5,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { runSeed } from "@/infrastructure/database/seed";
 
-describe("Phase 4 seed data", () => {
+describe("Phase 5 seed data", () => {
   it("installs the reusable curriculum, course, and concept structure and is safe to re-run", async () => {
     const directory = await mkdtemp(path.join(os.tmpdir(), "mathios-seed-"));
     const databaseUrl = `file:${path.join(directory, "seed.db")}`;
@@ -69,9 +69,29 @@ describe("Phase 4 seed data", () => {
       ).toEqual({
         count: 3,
       });
+      expect(database.prepare("SELECT COUNT(*) AS count FROM questions").get()).toEqual({
+        count: 8,
+      });
+      expect(database.prepare("SELECT COUNT(*) AS count FROM question_versions").get()).toEqual({
+        count: 8,
+      });
+      expect(database.prepare("SELECT COUNT(*) AS count FROM question_options").get()).toEqual({
+        count: 8,
+      });
+      expect(database.prepare("SELECT COUNT(*) AS count FROM exercise_sets").get()).toEqual({
+        count: 1,
+      });
+      expect(
+        database.prepare("SELECT COUNT(*) AS count FROM exercise_set_questions").get(),
+      ).toEqual({
+        count: 6,
+      });
+      expect(database.prepare("SELECT COUNT(*) AS count FROM question_templates").get()).toEqual({
+        count: 1,
+      });
       expect(
         database.prepare("SELECT value FROM app_metadata WHERE key = 'seed_version'").get(),
-      ).toEqual({ value: "phase-4" });
+      ).toEqual({ value: "phase-5" });
     } finally {
       database?.close();
       await rm(directory, { recursive: true, force: true });
