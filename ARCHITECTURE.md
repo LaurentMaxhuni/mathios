@@ -1,5 +1,7 @@
 # Mathios architecture
 
+Phase 3 uses `src/features/courses` and `src/domain/course` for the course/module/lesson hierarchy. Draft lesson rows are captured into `lesson_versions`; learner readers resolve only the published snapshot, so authoring changes cannot leak into published content. The course repository keeps this contract compatible with SQLite and PostgreSQL.
+
 Mathios is a modular monolith. A single Next.js application hosts the presentation, application, domain, and infrastructure layers while keeping feature boundaries explicit. This keeps local/offline use simple and leaves room for a hosted deployment later.
 
 ## Layers
@@ -28,7 +30,7 @@ The domain does not import Next.js, React, Drizzle, filesystem APIs, or provider
 
 Planned modules are `auth`, `profiles`, `curricula`, `grades`, `subjects`, `courses`, `lessons`, `concepts`, `roadmaps`, `assessments`, `mastery`, `simulations`, `notes`, `planner`, `analytics`, and `settings`. A module may expose public application contracts, but its internal schemas, queries, mutations, and repositories stay inside the module.
 
-Phase 1 adds the identity foundation through the `profiles`, `auth`, `settings`, and `onboarding` feature modules. Phase 2 adds the `curricula` module for reusable curricula, grades, subjects, domains, grade depth, and learning objectives. Courses, lessons, concepts, exercises, and progress remain outside this phase.
+Phase 1 adds the identity foundation through the `profiles`, `auth`, `settings`, and `onboarding` feature modules. Phase 2 adds the `curricula` module for reusable curricula, grades, subjects, domains, grade depth, and learning objectives. Phase 3 adds the `courses` feature for reusable course hierarchy, structured lessons, versioned authoring, publishing, and learner progress. Concepts, exercises, assessments, and mastery remain outside this phase.
 
 ## Abstractions
 
@@ -47,8 +49,12 @@ Phase 1 uses a signed, HttpOnly local session cookie rather than a session table
 
 ## Data and migrations
 
-Phase 0 creates `app_metadata`, used for migration/seed bookkeeping and future installation metadata. Phase 1 adds the identity tables in `0001_phase1_identity.sql`. Phase 2 adds the educational structure in `0002_phase2_curriculum_structure.sql`, including the supporting `grade_subject_domains` join needed to model domain depth by curriculum and grade. SQL migrations are checked in per dialect and applied transactionally by `src/infrastructure/database/migrations.ts`. Feature tables are added in their own phases rather than pre-created as placeholders.
+Phase 0 creates `app_metadata`, used for migration/seed bookkeeping and future installation metadata. Phase 1 adds the identity tables in `0001_phase1_identity.sql`. Phase 2 adds the educational structure in `0002_phase2_curriculum_structure.sql`, including the supporting `grade_subject_domains` join needed to model domain depth by curriculum and grade. Phase 3 adds the course hierarchy, lesson blocks, assets, version snapshots, and learner progress in `0003_phase3_courses_lessons.sql`. SQL migrations are checked in per dialect and applied transactionally by `src/infrastructure/database/migrations.ts`. Feature tables are added in their own phases rather than pre-created as placeholders.
 
 ## Phase 2 dependency direction
 
 The `curricula` feature owns input schemas, authorization-aware services, server actions, management forms, and explorer-facing read models. `src/domain/curriculum` contains framework-independent records and `src/domain/ports/curriculum-repository.ts` defines the persistence contract. `src/infrastructure/database/repositories/curriculum-repository.ts` implements that contract with explicit SQLite and PostgreSQL queries. Subjects and domains are independent records; curriculum and grade join tables determine availability, required/optional status, ordering, and depth. Learning objectives belong to a curriculum and subject, then `grade_learning_objectives` places them at specific grades.
+
+## Phase 3 dependency direction
+
+The `courses` feature owns authoring schemas, authorization-aware server actions, lesson editor/reader screens, formula accessibility, version and publication workflow, and progress mutations. `src/domain/course` contains framework-independent hierarchy, block, version, and progress records; `src/domain/ports/course-repository.ts` defines persistence behavior. `src/infrastructure/database/repositories/course-repository.ts` implements explicit SQLite and PostgreSQL queries. Draft lesson edits remain in authoring rows and are captured into immutable JSON snapshots; readers resolve only a published lesson snapshot inside a published course.

@@ -444,6 +444,335 @@ export const gradeLearningObjectives = pgTable(
   }),
 );
 
+export const courses = pgTable(
+  "courses",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    subjectId: text("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "restrict" }),
+    difficulty: text("difficulty").notNull().default("balanced"),
+    estimatedDurationMinutes: integer("estimated_duration_minutes").notNull().default(0),
+    gradeMinId: text("grade_min_id").references(() => grades.id, { onDelete: "set null" }),
+    gradeMaxId: text("grade_max_id").references(() => grades.id, { onDelete: "set null" }),
+    courseImage: text("course_image"),
+    isRequired: boolean("is_required").notNull().default(false),
+    status: text("status").notNull().default("draft"),
+    createdByProfileId: text("created_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("courses_slug_idx").on(table.slug),
+    subjectIdx: index("courses_subject_idx").on(table.subjectId),
+    statusIdx: index("courses_status_idx").on(table.status),
+  }),
+);
+
+export const courseCurricula = pgTable(
+  "course_curricula",
+  {
+    courseId: text("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "cascade" }),
+    curriculumId: text("curriculum_id")
+      .notNull()
+      .references(() => curricula.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.courseId, table.curriculumId] }),
+    curriculumIdx: index("course_curricula_curriculum_idx").on(table.curriculumId),
+  }),
+);
+
+export const courseGrades = pgTable(
+  "course_grades",
+  {
+    courseId: text("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "cascade" }),
+    gradeId: text("grade_id")
+      .notNull()
+      .references(() => grades.id, { onDelete: "cascade" }),
+    isRequired: boolean("is_required").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.courseId, table.gradeId] }),
+    gradeIdx: index("course_grades_grade_idx").on(table.gradeId),
+  }),
+);
+
+export const coursePrerequisites = pgTable(
+  "course_prerequisites",
+  {
+    courseId: text("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "cascade" }),
+    prerequisiteCourseId: text("prerequisite_course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.courseId, table.prerequisiteCourseId] }),
+    prerequisiteIdx: index("course_prerequisites_prerequisite_idx").on(table.prerequisiteCourseId),
+  }),
+);
+
+export const courseLearningObjectives = pgTable(
+  "course_learning_objectives",
+  {
+    courseId: text("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "cascade" }),
+    objectiveId: text("objective_id")
+      .notNull()
+      .references(() => learningObjectives.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.courseId, table.objectiveId] }),
+    objectiveIdx: index("course_learning_objectives_objective_idx").on(table.objectiveId),
+  }),
+);
+
+export const modules = pgTable(
+  "modules",
+  {
+    id: text("id").primaryKey(),
+    courseId: text("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    sortOrder: integer("sort_order").notNull().default(0),
+    estimatedStudyTimeMinutes: integer("estimated_study_time_minutes").notNull().default(0),
+    assessmentReference: text("assessment_reference"),
+    isArchived: boolean("is_archived").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    courseOrderIdx: index("modules_course_order_idx").on(table.courseId, table.sortOrder),
+  }),
+);
+
+export const modulePrerequisites = pgTable(
+  "module_prerequisites",
+  {
+    moduleId: text("module_id")
+      .notNull()
+      .references(() => modules.id, { onDelete: "cascade" }),
+    prerequisiteModuleId: text("prerequisite_module_id")
+      .notNull()
+      .references(() => modules.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.moduleId, table.prerequisiteModuleId] }),
+    prerequisiteIdx: index("module_prerequisites_prerequisite_idx").on(table.prerequisiteModuleId),
+  }),
+);
+
+export const moduleLearningObjectives = pgTable(
+  "module_learning_objectives",
+  {
+    moduleId: text("module_id")
+      .notNull()
+      .references(() => modules.id, { onDelete: "cascade" }),
+    objectiveId: text("objective_id")
+      .notNull()
+      .references(() => learningObjectives.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.moduleId, table.objectiveId] }),
+    objectiveIdx: index("module_learning_objectives_objective_idx").on(table.objectiveId),
+  }),
+);
+
+export const lessons = pgTable(
+  "lessons",
+  {
+    id: text("id").primaryKey(),
+    moduleId: text("module_id")
+      .notNull()
+      .references(() => modules.id, { onDelete: "cascade" }),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    summary: text("summary").notNull().default(""),
+    sortOrder: integer("sort_order").notNull().default(0),
+    estimatedDurationMinutes: integer("estimated_duration_minutes").notNull().default(0),
+    status: text("status").notNull().default("draft"),
+    currentVersionNumber: integer("current_version_number").notNull().default(1),
+    publishedVersionId: text("published_version_id"),
+    createdByProfileId: text("created_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    moduleSlugIdx: uniqueIndex("lessons_module_slug_idx").on(table.moduleId, table.slug),
+    moduleOrderIdx: index("lessons_module_order_idx").on(table.moduleId, table.sortOrder),
+    statusIdx: index("lessons_status_idx").on(table.status),
+  }),
+);
+
+export const lessonSections = pgTable(
+  "lesson_sections",
+  {
+    id: text("id").primaryKey(),
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lessons.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    lessonOrderIdx: index("lesson_sections_lesson_order_idx").on(table.lessonId, table.sortOrder),
+  }),
+);
+
+export const lessonBlocks = pgTable(
+  "lesson_blocks",
+  {
+    id: text("id").primaryKey(),
+    sectionId: text("section_id")
+      .notNull()
+      .references(() => lessonSections.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    title: text("title"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    payload: text("payload").notNull().default("{}"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    sectionOrderIdx: index("lesson_blocks_section_order_idx").on(table.sectionId, table.sortOrder),
+  }),
+);
+
+export const lessonAssets = pgTable(
+  "lesson_assets",
+  {
+    id: text("id").primaryKey(),
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lessons.id, { onDelete: "cascade" }),
+    blockId: text("block_id").references(() => lessonBlocks.id, { onDelete: "set null" }),
+    kind: text("kind").notNull(),
+    name: text("name").notNull(),
+    sourceUrl: text("source_url").notNull(),
+    mimeType: text("mime_type"),
+    altText: text("alt_text").notNull().default(""),
+    metadata: text("metadata").notNull().default("{}"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    lessonIdx: index("lesson_assets_lesson_idx").on(table.lessonId),
+  }),
+);
+
+export const lessonLearningObjectives = pgTable(
+  "lesson_learning_objectives",
+  {
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lessons.id, { onDelete: "cascade" }),
+    objectiveId: text("objective_id")
+      .notNull()
+      .references(() => learningObjectives.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.lessonId, table.objectiveId] }),
+    objectiveIdx: index("lesson_learning_objectives_objective_idx").on(table.objectiveId),
+  }),
+);
+
+export const lessonVersions = pgTable(
+  "lesson_versions",
+  {
+    id: text("id").primaryKey(),
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lessons.id, { onDelete: "cascade" }),
+    versionNumber: integer("version_number").notNull(),
+    status: text("status").notNull().default("draft"),
+    changeSummary: text("change_summary").notNull().default(""),
+    snapshot: text("snapshot").notNull().default("{}"),
+    createdByProfileId: text("created_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+  },
+  (table) => ({
+    lessonVersionIdx: uniqueIndex("lesson_versions_lesson_version_idx").on(
+      table.lessonId,
+      table.versionNumber,
+    ),
+    lessonStatusIdx: index("lesson_versions_lesson_status_idx").on(table.lessonId, table.status),
+  }),
+);
+
+export const userLessonProgress = pgTable(
+  "user_lesson_progress",
+  {
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lessons.id, { onDelete: "cascade" }),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    timeSpentSeconds: integer("time_spent_seconds").notNull().default(0),
+    lastViewedBlockId: text("last_viewed_block_id").references(() => lessonBlocks.id, {
+      onDelete: "set null",
+    }),
+    completionPercentage: integer("completion_percentage").notNull().default(0),
+    revisitCount: integer("revisit_count").notNull().default(0),
+    lastViewedAt: timestamp("last_viewed_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`NOW()`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.profileId, table.lessonId] }),
+    lessonIdx: index("user_lesson_progress_lesson_idx").on(table.lessonId),
+  }),
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Profile = typeof profiles.$inferSelect;
@@ -482,3 +811,33 @@ export type LearningObjective = typeof learningObjectives.$inferSelect;
 export type NewLearningObjective = typeof learningObjectives.$inferInsert;
 export type GradeLearningObjective = typeof gradeLearningObjectives.$inferSelect;
 export type NewGradeLearningObjective = typeof gradeLearningObjectives.$inferInsert;
+export type Course = typeof courses.$inferSelect;
+export type NewCourse = typeof courses.$inferInsert;
+export type CourseCurriculum = typeof courseCurricula.$inferSelect;
+export type NewCourseCurriculum = typeof courseCurricula.$inferInsert;
+export type CourseGrade = typeof courseGrades.$inferSelect;
+export type NewCourseGrade = typeof courseGrades.$inferInsert;
+export type CoursePrerequisite = typeof coursePrerequisites.$inferSelect;
+export type NewCoursePrerequisite = typeof coursePrerequisites.$inferInsert;
+export type CourseLearningObjective = typeof courseLearningObjectives.$inferSelect;
+export type NewCourseLearningObjective = typeof courseLearningObjectives.$inferInsert;
+export type Module = typeof modules.$inferSelect;
+export type NewModule = typeof modules.$inferInsert;
+export type ModulePrerequisite = typeof modulePrerequisites.$inferSelect;
+export type NewModulePrerequisite = typeof modulePrerequisites.$inferInsert;
+export type ModuleLearningObjective = typeof moduleLearningObjectives.$inferSelect;
+export type NewModuleLearningObjective = typeof moduleLearningObjectives.$inferInsert;
+export type Lesson = typeof lessons.$inferSelect;
+export type NewLesson = typeof lessons.$inferInsert;
+export type LessonSection = typeof lessonSections.$inferSelect;
+export type NewLessonSection = typeof lessonSections.$inferInsert;
+export type LessonBlock = typeof lessonBlocks.$inferSelect;
+export type NewLessonBlock = typeof lessonBlocks.$inferInsert;
+export type LessonAsset = typeof lessonAssets.$inferSelect;
+export type NewLessonAsset = typeof lessonAssets.$inferInsert;
+export type LessonLearningObjective = typeof lessonLearningObjectives.$inferSelect;
+export type NewLessonLearningObjective = typeof lessonLearningObjectives.$inferInsert;
+export type LessonVersion = typeof lessonVersions.$inferSelect;
+export type NewLessonVersion = typeof lessonVersions.$inferInsert;
+export type UserLessonProgress = typeof userLessonProgress.$inferSelect;
+export type NewUserLessonProgress = typeof userLessonProgress.$inferInsert;

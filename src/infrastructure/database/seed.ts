@@ -6,7 +6,7 @@ import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-2"],
+  ["seed_version", "phase-3"],
 ] as const;
 
 export const roleSeed = [
@@ -514,6 +514,366 @@ const learningObjectiveSeed = gradeSubjectSeed
     } as const;
   });
 
+export const courseSeed = [
+  {
+    id: "course-physics-motion",
+    slug: "physics-motion",
+    title: "Motion in One Dimension",
+    description:
+      "Build a reliable language for position, velocity, acceleration, and motion graphs.",
+    subjectId: "subject-physics",
+    difficulty: "balanced",
+    estimatedDurationMinutes: 90,
+    gradeMinId: "grade-7",
+    gradeMaxId: "grade-8",
+    courseImage: null,
+    isRequired: true,
+    status: "published",
+    createdByProfileId: null,
+  },
+  {
+    id: "course-astronomy-observation",
+    slug: "astronomy-observation",
+    title: "Reading the Night Sky",
+    description: "A draft course for practicing observation, evidence, and sky coordinates.",
+    subjectId: "subject-astronomy",
+    difficulty: "gentle",
+    estimatedDurationMinutes: 60,
+    gradeMinId: "grade-10",
+    gradeMaxId: "grade-10",
+    courseImage: null,
+    isRequired: false,
+    status: "draft",
+    createdByProfileId: null,
+  },
+] as const;
+
+export const courseCurriculumSeed = [
+  ["course-physics-motion", "curriculum-kosovo"],
+  ["course-physics-motion", "curriculum-international"],
+  ["course-astronomy-observation", "curriculum-international"],
+] as const;
+
+export const courseGradeSeed = [
+  ["course-physics-motion", "grade-7", true, 0],
+  ["course-physics-motion", "grade-8", true, 1],
+  ["course-astronomy-observation", "grade-10", false, 0],
+] as const;
+
+export const courseObjectiveSeed = [
+  ["course-physics-motion", "objective-kosovo-grade-8-subject-physics", 0],
+  ["course-physics-motion", "objective-international-grade-8-subject-physics", 1],
+] as const;
+
+export const moduleSeed = [
+  {
+    id: "module-motion-language",
+    courseId: "course-physics-motion",
+    title: "The language of motion",
+    description: "Move from observations to precise descriptions and graphs.",
+    sortOrder: 0,
+    estimatedStudyTimeMinutes: 45,
+    assessmentReference: "Module knowledge check: motion vocabulary",
+  },
+  {
+    id: "module-motion-models",
+    courseId: "course-physics-motion",
+    title: "Simple motion models",
+    description: "Use formulas and worked examples to predict motion.",
+    sortOrder: 1,
+    estimatedStudyTimeMinutes: 45,
+    assessmentReference: null,
+  },
+] as const;
+
+export const lessonSeed = [
+  {
+    id: "lesson-describing-motion",
+    moduleId: "module-motion-language",
+    slug: "describing-motion",
+    title: "Describing motion",
+    summary: "Learn how position changes become a measurable story.",
+    sortOrder: 0,
+    estimatedDurationMinutes: 25,
+    status: "published",
+    currentVersionNumber: 2,
+    publishedVersionId: "lesson-version-describing-motion-1",
+    createdByProfileId: null,
+  },
+  {
+    id: "lesson-speed-and-velocity",
+    moduleId: "module-motion-language",
+    slug: "speed-and-velocity",
+    title: "Speed and velocity",
+    summary: "A draft lesson contrasting scalar speed with directed velocity.",
+    sortOrder: 1,
+    estimatedDurationMinutes: 30,
+    status: "draft",
+    currentVersionNumber: 1,
+    publishedVersionId: null,
+    createdByProfileId: null,
+  },
+  {
+    id: "lesson-constant-acceleration",
+    moduleId: "module-motion-models",
+    slug: "constant-acceleration",
+    title: "Constant acceleration",
+    summary: "Use a compact model to connect velocity, time, and displacement.",
+    sortOrder: 0,
+    estimatedDurationMinutes: 35,
+    status: "published",
+    currentVersionNumber: 2,
+    publishedVersionId: "lesson-version-constant-acceleration-1",
+    createdByProfileId: null,
+  },
+] as const;
+
+export const sectionSeed = [
+  [
+    "section-motion-introduction",
+    "lesson-describing-motion",
+    "introduction",
+    "Start with an observation",
+    "A careful observation gives physics something to measure.",
+    0,
+  ],
+  [
+    "section-motion-formal",
+    "lesson-describing-motion",
+    "formal-explanation",
+    "From position to motion",
+    "Translate an everyday description into quantities and graphs.",
+    1,
+  ],
+  [
+    "section-motion-example",
+    "lesson-describing-motion",
+    "worked-example",
+    "Worked example",
+    "Read a position-time table without losing the units.",
+    2,
+  ],
+  [
+    "section-motion-summary",
+    "lesson-describing-motion",
+    "summary",
+    "Summary",
+    "Keep the core distinctions close at hand.",
+    3,
+  ],
+  [
+    "section-velocity-draft",
+    "lesson-speed-and-velocity",
+    "introduction",
+    "A draft introduction",
+    "This section is ready for creator review.",
+    0,
+  ],
+  [
+    "section-acceleration-formal",
+    "lesson-constant-acceleration",
+    "formal-explanation",
+    "A compact model",
+    "Connect the variables before choosing a formula.",
+    0,
+  ],
+  [
+    "section-acceleration-example",
+    "lesson-constant-acceleration",
+    "worked-example",
+    "Worked example",
+    "Substitute values and keep track of units.",
+    1,
+  ],
+] as const;
+
+export const blockSeed = [
+  [
+    "block-motion-observation",
+    "section-motion-introduction",
+    "paragraph",
+    "",
+    0,
+    {
+      text: "A cyclist moving along a straight path changes position as time passes. Physics begins by naming that change precisely.",
+    },
+  ],
+  [
+    "block-motion-heading",
+    "section-motion-formal",
+    "heading",
+    "Position, time, and displacement",
+    0,
+    { level: 3, text: "Position, time, and displacement" },
+  ],
+  [
+    "block-motion-markdown",
+    "section-motion-formal",
+    "markdown",
+    "",
+    1,
+    {
+      markdown:
+        "Position tells us where an object is. Displacement compares the final and initial positions, including direction.",
+    },
+  ],
+  [
+    "block-motion-definition",
+    "section-motion-formal",
+    "definition",
+    "Displacement",
+    2,
+    {
+      term: "Displacement",
+      definition: "The change in position, with a sign that records direction.",
+    },
+  ],
+  [
+    "block-motion-example",
+    "section-motion-example",
+    "example",
+    "Reading a table",
+    0,
+    {
+      prompt:
+        "If position changes from 2 m to 8 m, the displacement is 6 m in the positive direction.",
+      steps: [
+        "Identify final and initial position.",
+        "Subtract initial from final.",
+        "Attach the unit and direction.",
+      ],
+    },
+  ],
+  [
+    "block-motion-formula",
+    "section-motion-example",
+    "formula",
+    "Displacement",
+    1,
+    {
+      latex: "\\Delta x = x_f - x_i",
+      accessibleLabel: "Delta x equals final position minus initial position",
+      display: "block",
+    },
+  ],
+  [
+    "block-motion-summary",
+    "section-motion-summary",
+    "callout",
+    "Remember",
+    0,
+    { tone: "success", text: "A graph is a model of measurements, not the motion itself." },
+  ],
+  [
+    "block-velocity-draft",
+    "section-velocity-draft",
+    "paragraph",
+    "",
+    0,
+    { text: "Draft content: explain why direction matters before publishing." },
+  ],
+  [
+    "block-acceleration-formula",
+    "section-acceleration-formal",
+    "formula",
+    "Constant acceleration",
+    0,
+    {
+      latex: "v = v_0 + at",
+      accessibleLabel: "Final velocity equals initial velocity plus acceleration times time",
+      display: "block",
+    },
+  ],
+  [
+    "block-acceleration-example",
+    "section-acceleration-example",
+    "example",
+    "A 2-second prediction",
+    0,
+    {
+      prompt: "Starting from rest with a = 3 m/s^2 for 2 s gives v = 6 m/s.",
+      steps: [
+        "Write the known values.",
+        "Substitute into v = v_0 + at.",
+        "Check that the unit is m/s.",
+      ],
+    },
+  ],
+] as const;
+
+export const lessonObjectiveSeed = [
+  ["lesson-describing-motion", "objective-kosovo-grade-8-subject-physics", 0],
+  ["lesson-constant-acceleration", "objective-kosovo-grade-8-subject-physics", 0],
+] as const;
+
+function lessonSnapshot(lessonId: string) {
+  const lesson = lessonSeed.find((item) => item.id === lessonId)!;
+  return {
+    lesson: {
+      id: lesson.id,
+      slug: lesson.slug,
+      title: lesson.title,
+      summary: lesson.summary,
+      estimatedDurationMinutes: lesson.estimatedDurationMinutes,
+    },
+    sections: sectionSeed
+      .filter((section) => section[1] === lessonId)
+      .map((section) => ({
+        section: {
+          id: section[0],
+          lessonId,
+          kind: section[2],
+          title: section[3],
+          description: section[4],
+          sortOrder: section[5],
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+        blocks: blockSeed
+          .filter((block) => block[1] === section[0])
+          .map((block) => ({
+            id: block[0],
+            sectionId: section[0],
+            type: block[2],
+            title: block[3] || null,
+            sortOrder: block[4],
+            payload: block[5],
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+          })),
+      })),
+    assets: [],
+    objectiveIds: lessonObjectiveSeed.filter((item) => item[0] === lessonId).map((item) => item[1]),
+  };
+}
+
+export const lessonVersionSeed = lessonSeed.flatMap((lesson) => [
+  {
+    id: `lesson-version-${lesson.id.replace("lesson-", "")}-1`,
+    lessonId: lesson.id,
+    versionNumber: 1,
+    status: lesson.status === "published" ? "published" : "draft",
+    changeSummary: lesson.status === "published" ? "Initial published lesson" : "Initial draft",
+    snapshot: lessonSnapshot(lesson.id),
+    createdByProfileId: null,
+    publishedAt: lesson.status === "published" ? "2026-01-01T00:00:00.000Z" : null,
+  },
+  ...(lesson.status === "published"
+    ? [
+        {
+          id: `lesson-version-${lesson.id.replace("lesson-", "")}-2`,
+          lessonId: lesson.id,
+          versionNumber: 2,
+          status: "draft",
+          changeSummary: "Draft workspace after publishing",
+          snapshot: lessonSnapshot(lesson.id),
+          createdByProfileId: null,
+          publishedAt: null,
+        },
+      ]
+    : []),
+]);
+
 export async function runSeed(
   options: { provider?: "sqlite" | "postgres"; databaseUrl?: string } = {},
 ): Promise<void> {
@@ -636,6 +996,66 @@ export async function runSeed(
         ON CONFLICT(curriculum_id, grade_id, objective_id) DO UPDATE SET is_required = excluded.is_required,
           sort_order = excluded.sort_order, updated_at = CURRENT_TIMESTAMP
       `);
+      const insertCourse = database.prepare(`
+        INSERT INTO courses (id, slug, title, description, subject_id, difficulty, estimated_duration_minutes, grade_min_id, grade_max_id, course_image, is_required, status, created_by_profile_id)
+        VALUES (@id, @slug, @title, @description, @subjectId, @difficulty, @estimatedDurationMinutes, @gradeMinId, @gradeMaxId, @courseImage, @isRequired, @status, @createdByProfileId)
+        ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, title = excluded.title, description = excluded.description,
+          subject_id = excluded.subject_id, difficulty = excluded.difficulty, estimated_duration_minutes = excluded.estimated_duration_minutes,
+          grade_min_id = excluded.grade_min_id, grade_max_id = excluded.grade_max_id, course_image = excluded.course_image,
+          is_required = excluded.is_required, status = excluded.status, updated_at = CURRENT_TIMESTAMP
+      `);
+      const insertCourseCurriculum = database.prepare(`
+        INSERT OR IGNORE INTO course_curricula (course_id, curriculum_id) VALUES (@courseId, @curriculumId)
+      `);
+      const insertCourseGrade = database.prepare(`
+        INSERT INTO course_grades (course_id, grade_id, is_required, sort_order)
+        VALUES (@courseId, @gradeId, @isRequired, @sortOrder)
+        ON CONFLICT(course_id, grade_id) DO UPDATE SET is_required = excluded.is_required, sort_order = excluded.sort_order
+      `);
+      const insertCourseObjective = database.prepare(`
+        INSERT INTO course_learning_objectives (course_id, objective_id, sort_order)
+        VALUES (@courseId, @objectiveId, @sortOrder)
+        ON CONFLICT(course_id, objective_id) DO UPDATE SET sort_order = excluded.sort_order
+      `);
+      const insertModule = database.prepare(`
+        INSERT INTO modules (id, course_id, title, description, sort_order, estimated_study_time_minutes, assessment_reference, is_archived)
+        VALUES (@id, @courseId, @title, @description, @sortOrder, @estimatedStudyTimeMinutes, @assessmentReference, 0)
+        ON CONFLICT(id) DO UPDATE SET course_id = excluded.course_id, title = excluded.title, description = excluded.description,
+          sort_order = excluded.sort_order, estimated_study_time_minutes = excluded.estimated_study_time_minutes,
+          assessment_reference = excluded.assessment_reference, is_archived = 0, updated_at = CURRENT_TIMESTAMP
+      `);
+      const insertLesson = database.prepare(`
+        INSERT INTO lessons (id, module_id, slug, title, summary, sort_order, estimated_duration_minutes, status, current_version_number, published_version_id, created_by_profile_id)
+        VALUES (@id, @moduleId, @slug, @title, @summary, @sortOrder, @estimatedDurationMinutes, @status, @currentVersionNumber, @publishedVersionId, @createdByProfileId)
+        ON CONFLICT(id) DO UPDATE SET module_id = excluded.module_id, slug = excluded.slug, title = excluded.title,
+          summary = excluded.summary, sort_order = excluded.sort_order, estimated_duration_minutes = excluded.estimated_duration_minutes,
+          status = excluded.status, current_version_number = excluded.current_version_number, published_version_id = excluded.published_version_id,
+          updated_at = CURRENT_TIMESTAMP
+      `);
+      const insertSection = database.prepare(`
+        INSERT INTO lesson_sections (id, lesson_id, kind, title, description, sort_order)
+        VALUES (@id, @lessonId, @kind, @title, @description, @sortOrder)
+        ON CONFLICT(id) DO UPDATE SET lesson_id = excluded.lesson_id, kind = excluded.kind, title = excluded.title,
+          description = excluded.description, sort_order = excluded.sort_order, updated_at = CURRENT_TIMESTAMP
+      `);
+      const insertBlock = database.prepare(`
+        INSERT INTO lesson_blocks (id, section_id, type, title, sort_order, payload)
+        VALUES (@id, @sectionId, @type, @title, @sortOrder, @payload)
+        ON CONFLICT(id) DO UPDATE SET section_id = excluded.section_id, type = excluded.type, title = excluded.title,
+          sort_order = excluded.sort_order, payload = excluded.payload, updated_at = CURRENT_TIMESTAMP
+      `);
+      const insertLessonObjective = database.prepare(`
+        INSERT INTO lesson_learning_objectives (lesson_id, objective_id, sort_order)
+        VALUES (@lessonId, @objectiveId, @sortOrder)
+        ON CONFLICT(lesson_id, objective_id) DO UPDATE SET sort_order = excluded.sort_order
+      `);
+      const insertLessonVersion = database.prepare(`
+        INSERT INTO lesson_versions (id, lesson_id, version_number, status, change_summary, snapshot, created_by_profile_id, published_at)
+        VALUES (@id, @lessonId, @versionNumber, @status, @changeSummary, @snapshot, @createdByProfileId, @publishedAt)
+        ON CONFLICT(id) DO UPDATE SET lesson_id = excluded.lesson_id, version_number = excluded.version_number,
+          status = excluded.status, change_summary = excluded.change_summary, snapshot = excluded.snapshot,
+          created_by_profile_id = excluded.created_by_profile_id, published_at = excluded.published_at
+      `);
       const seedStructure = database.transaction(() => {
         for (const curriculum of curriculumSeed)
           insertCurriculum.run({ ...curriculum, isSystem: curriculum.isSystem ? 1 : 0 });
@@ -694,6 +1114,38 @@ export async function runSeed(
             sortOrder: objective.sortOrder,
           });
         }
+        for (const course of courseSeed) {
+          insertCourse.run({
+            ...course,
+            isRequired: course.isRequired ? 1 : 0,
+          });
+        }
+        for (const [courseId, curriculumId] of courseCurriculumSeed)
+          insertCourseCurriculum.run({ courseId, curriculumId });
+        for (const [courseId, gradeId, isRequired, sortOrder] of courseGradeSeed)
+          insertCourseGrade.run({ courseId, gradeId, isRequired: isRequired ? 1 : 0, sortOrder });
+        for (const [courseId, objectiveId, sortOrder] of courseObjectiveSeed)
+          insertCourseObjective.run({ courseId, objectiveId, sortOrder });
+        for (const courseModule of moduleSeed) insertModule.run(courseModule);
+        for (const lesson of lessonSeed) insertLesson.run(lesson);
+        for (const [id, lessonId, kind, title, description, sortOrder] of sectionSeed)
+          insertSection.run({ id, lessonId, kind, title, description, sortOrder });
+        for (const [id, sectionId, type, title, sortOrder, payload] of blockSeed)
+          insertBlock.run({
+            id,
+            sectionId,
+            type,
+            title: title || null,
+            sortOrder,
+            payload: JSON.stringify(payload),
+          });
+        for (const [lessonId, objectiveId, sortOrder] of lessonObjectiveSeed)
+          insertLessonObjective.run({ lessonId, objectiveId, sortOrder });
+        for (const version of lessonVersionSeed)
+          insertLessonVersion.run({
+            ...version,
+            snapshot: JSON.stringify(version.snapshot),
+          });
       });
       seedStructure();
     } finally {
@@ -833,6 +1285,87 @@ export async function runSeed(
           VALUES (${objective.curriculumId}, ${objective.gradeId}, ${objective.id}, ${objective.isRequired}, ${objective.sortOrder})
           ON CONFLICT (curriculum_id, grade_id, objective_id) DO UPDATE SET is_required = EXCLUDED.is_required,
             sort_order = EXCLUDED.sort_order, updated_at = NOW()
+        `;
+      }
+      for (const course of courseSeed) {
+        await transaction`
+          INSERT INTO courses (id, slug, title, description, subject_id, difficulty, estimated_duration_minutes, grade_min_id, grade_max_id, course_image, is_required, status, created_by_profile_id)
+          VALUES (${course.id}, ${course.slug}, ${course.title}, ${course.description}, ${course.subjectId}, ${course.difficulty}, ${course.estimatedDurationMinutes}, ${course.gradeMinId}, ${course.gradeMaxId}, ${course.courseImage}, ${course.isRequired}, ${course.status}, ${course.createdByProfileId})
+          ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, description = EXCLUDED.description,
+            subject_id = EXCLUDED.subject_id, difficulty = EXCLUDED.difficulty, estimated_duration_minutes = EXCLUDED.estimated_duration_minutes,
+            grade_min_id = EXCLUDED.grade_min_id, grade_max_id = EXCLUDED.grade_max_id, course_image = EXCLUDED.course_image,
+            is_required = EXCLUDED.is_required, status = EXCLUDED.status, updated_at = NOW()
+        `;
+      }
+      for (const [courseId, curriculumId] of courseCurriculumSeed) {
+        await transaction`
+          INSERT INTO course_curricula (course_id, curriculum_id)
+          VALUES (${courseId}, ${curriculumId}) ON CONFLICT DO NOTHING
+        `;
+      }
+      for (const [courseId, gradeId, isRequired, sortOrder] of courseGradeSeed) {
+        await transaction`
+          INSERT INTO course_grades (course_id, grade_id, is_required, sort_order)
+          VALUES (${courseId}, ${gradeId}, ${isRequired}, ${sortOrder})
+          ON CONFLICT (course_id, grade_id) DO UPDATE SET is_required = EXCLUDED.is_required, sort_order = EXCLUDED.sort_order
+        `;
+      }
+      for (const [courseId, objectiveId, sortOrder] of courseObjectiveSeed) {
+        await transaction`
+          INSERT INTO course_learning_objectives (course_id, objective_id, sort_order)
+          VALUES (${courseId}, ${objectiveId}, ${sortOrder})
+          ON CONFLICT (course_id, objective_id) DO UPDATE SET sort_order = EXCLUDED.sort_order
+        `;
+      }
+      for (const courseModule of moduleSeed) {
+        await transaction`
+          INSERT INTO modules (id, course_id, title, description, sort_order, estimated_study_time_minutes, assessment_reference, is_archived)
+          VALUES (${courseModule.id}, ${courseModule.courseId}, ${courseModule.title}, ${courseModule.description}, ${courseModule.sortOrder}, ${courseModule.estimatedStudyTimeMinutes}, ${courseModule.assessmentReference}, FALSE)
+          ON CONFLICT (id) DO UPDATE SET course_id = EXCLUDED.course_id, title = EXCLUDED.title, description = EXCLUDED.description,
+            sort_order = EXCLUDED.sort_order, estimated_study_time_minutes = EXCLUDED.estimated_study_time_minutes,
+            assessment_reference = EXCLUDED.assessment_reference, is_archived = FALSE, updated_at = NOW()
+        `;
+      }
+      for (const lesson of lessonSeed) {
+        await transaction`
+          INSERT INTO lessons (id, module_id, slug, title, summary, sort_order, estimated_duration_minutes, status, current_version_number, published_version_id, created_by_profile_id)
+          VALUES (${lesson.id}, ${lesson.moduleId}, ${lesson.slug}, ${lesson.title}, ${lesson.summary}, ${lesson.sortOrder}, ${lesson.estimatedDurationMinutes}, ${lesson.status}, ${lesson.currentVersionNumber}, ${lesson.publishedVersionId}, ${lesson.createdByProfileId})
+          ON CONFLICT (id) DO UPDATE SET module_id = EXCLUDED.module_id, slug = EXCLUDED.slug, title = EXCLUDED.title,
+            summary = EXCLUDED.summary, sort_order = EXCLUDED.sort_order, estimated_duration_minutes = EXCLUDED.estimated_duration_minutes,
+            status = EXCLUDED.status, current_version_number = EXCLUDED.current_version_number, published_version_id = EXCLUDED.published_version_id,
+            updated_at = NOW()
+        `;
+      }
+      for (const [id, lessonId, kind, title, description, sortOrder] of sectionSeed) {
+        await transaction`
+          INSERT INTO lesson_sections (id, lesson_id, kind, title, description, sort_order)
+          VALUES (${id}, ${lessonId}, ${kind}, ${title}, ${description}, ${sortOrder})
+          ON CONFLICT (id) DO UPDATE SET lesson_id = EXCLUDED.lesson_id, kind = EXCLUDED.kind, title = EXCLUDED.title,
+            description = EXCLUDED.description, sort_order = EXCLUDED.sort_order, updated_at = NOW()
+        `;
+      }
+      for (const [id, sectionId, type, title, sortOrder, payload] of blockSeed) {
+        await transaction`
+          INSERT INTO lesson_blocks (id, section_id, type, title, sort_order, payload)
+          VALUES (${id}, ${sectionId}, ${type}, ${title || null}, ${sortOrder}, ${JSON.stringify(payload)})
+          ON CONFLICT (id) DO UPDATE SET section_id = EXCLUDED.section_id, type = EXCLUDED.type, title = EXCLUDED.title,
+            sort_order = EXCLUDED.sort_order, payload = EXCLUDED.payload, updated_at = NOW()
+        `;
+      }
+      for (const [lessonId, objectiveId, sortOrder] of lessonObjectiveSeed) {
+        await transaction`
+          INSERT INTO lesson_learning_objectives (lesson_id, objective_id, sort_order)
+          VALUES (${lessonId}, ${objectiveId}, ${sortOrder})
+          ON CONFLICT (lesson_id, objective_id) DO UPDATE SET sort_order = EXCLUDED.sort_order
+        `;
+      }
+      for (const version of lessonVersionSeed) {
+        await transaction`
+          INSERT INTO lesson_versions (id, lesson_id, version_number, status, change_summary, snapshot, created_by_profile_id, published_at)
+          VALUES (${version.id}, ${version.lessonId}, ${version.versionNumber}, ${version.status}, ${version.changeSummary}, ${JSON.stringify(version.snapshot)}, ${version.createdByProfileId}, ${version.publishedAt})
+          ON CONFLICT (id) DO UPDATE SET lesson_id = EXCLUDED.lesson_id, version_number = EXCLUDED.version_number,
+            status = EXCLUDED.status, change_summary = EXCLUDED.change_summary, snapshot = EXCLUDED.snapshot,
+            created_by_profile_id = EXCLUDED.created_by_profile_id, published_at = EXCLUDED.published_at
         `;
       }
     });

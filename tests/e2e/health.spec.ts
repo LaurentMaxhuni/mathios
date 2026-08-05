@@ -97,3 +97,38 @@ test("Phase 2 curriculum, grade, subject, and management explorers are usable", 
   await page.goto("/domains/manage");
   await expect(page.getByRole("heading", { name: "Domain management" })).toBeVisible();
 });
+
+test("Phase 3 course catalog, lesson reader, progress, and authoring surfaces are usable", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/courses");
+  await expect(
+    page.getByRole("heading", { name: "A course is a path, not a pile." }),
+  ).toBeVisible();
+  await expect(page.getByText("Motion in One Dimension")).toBeVisible();
+  await page.getByRole("link", { name: /Motion in One Dimension/ }).click();
+  await expect(page).toHaveURL(/\/courses\/course-physics-motion$/);
+  await expect(page.getByRole("heading", { name: "Motion in One Dimension" })).toBeVisible();
+  await expect(page.getByText("The language of motion")).toBeVisible();
+
+  await page.getByRole("link", { name: /Describing motion/ }).click();
+  await expect(page).toHaveURL(/\/lessons\/lesson-describing-motion$/);
+  await expect(page.getByRole("heading", { name: "Describing motion" })).toBeVisible();
+  await expect(page.locator('[role="math"]')).toBeVisible();
+  await page.getByRole("button", { name: "Mark lesson complete" }).click();
+  await expect(page.getByRole("status")).toContainText("Progress saved.");
+
+  await page.goto("/courses/manage");
+  await expect(page.getByRole("heading", { name: "Course studio" })).toBeVisible();
+  await page.goto("/lessons/lesson-speed-and-velocity/edit");
+  await expect(page.getByRole("heading", { name: "Speed and velocity" })).toBeVisible();
+  await expect(page.getByLabel("Payload JSON").first()).toBeVisible();
+  await page.goto("/lessons/lesson-describing-motion/versions");
+  await expect(page.getByRole("heading", { name: "Describing motion" })).toBeVisible();
+});
