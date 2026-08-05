@@ -28,7 +28,7 @@ The domain does not import Next.js, React, Drizzle, filesystem APIs, or provider
 
 Planned modules are `auth`, `profiles`, `curricula`, `grades`, `subjects`, `courses`, `lessons`, `concepts`, `roadmaps`, `assessments`, `mastery`, `simulations`, `notes`, `planner`, `analytics`, and `settings`. A module may expose public application contracts, but its internal schemas, queries, mutations, and repositories stay inside the module.
 
-Only foundation infrastructure is present in Phase 0. Profiles, users, roles, learning content, and progress entities intentionally arrive in later phases.
+Phase 1 adds the identity foundation through the `profiles`, `auth`, `settings`, and `onboarding` feature modules. Users, profiles, roles, permissions, and their local preferences are persisted locally. Curriculum, grade, subject, learning-content, and progress entities remain intentionally absent until their planned phases.
 
 ## Abstractions
 
@@ -39,10 +39,12 @@ Only foundation infrastructure is present in Phase 0. Profiles, users, roles, le
 - `Repository` is the persistence seam for feature modules; Drizzle schemas remain in infrastructure.
 - `ApplicationError` subclasses provide stable error codes and safe serialization.
 
+Phase 1 uses a signed, HttpOnly local session cookie rather than a session table. The cookie contains only a profile identifier and an issued-at timestamp; the server reloads roles and permissions from the repository on every request. Profile PINs/passwords are stored as salted `scrypt` hashes and never returned to the frontend.
+
 ## Runtime environments
 
 `src/lib/env.ts` is the only application-level environment parser. Runtime code imports the validated `env` object instead of reading `process.env` directly. Development and test default to SQLite and local filesystem storage. Docker can run PostgreSQL through Compose, while the same schema contract remains available for a hosted deployment.
 
 ## Data and migrations
 
-Phase 0 creates only `app_metadata`, used for migration/seed bookkeeping and future installation metadata. SQL migrations are checked in per dialect and applied transactionally by `src/infrastructure/database/migrations.ts`. Feature tables are added in their own phases rather than pre-created as placeholders.
+Phase 0 creates `app_metadata`, used for migration/seed bookkeeping and future installation metadata. Phase 1 adds the identity tables in `0001_phase1_identity.sql`. SQL migrations are checked in per dialect and applied transactionally by `src/infrastructure/database/migrations.ts`. Feature tables are added in their own phases rather than pre-created as placeholders.

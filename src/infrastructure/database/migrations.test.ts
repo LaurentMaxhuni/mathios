@@ -16,10 +16,15 @@ describe("database migrations", () => {
       const second = await runMigrations({ provider: "sqlite", databaseUrl });
       database = new Database(path.join(directory, "test.db"));
 
-      expect(first.applied).toEqual(["0000_foundation.sql"]);
+      expect(first.applied).toEqual(["0000_foundation.sql", "0001_phase1_identity.sql"]);
       expect(second.applied).toEqual([]);
-      expect(second.skipped).toEqual(["0000_foundation.sql"]);
+      expect(second.skipped).toEqual(["0000_foundation.sql", "0001_phase1_identity.sql"]);
       expect(database.prepare("SELECT key FROM app_metadata").all()).toEqual([]);
+      expect(
+        database
+          .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'profiles'")
+          .get(),
+      ).toEqual({ name: "profiles" });
     } finally {
       database?.close();
       await rm(directory, { recursive: true, force: true });
