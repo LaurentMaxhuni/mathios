@@ -1268,13 +1268,243 @@ export const exerciseAttempts = sqliteTable(
   }),
 );
 
+export const assessments = sqliteTable(
+  "assessments",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    type: text("assessment_type").notNull(),
+    subjectId: text("subject_id").references(() => subjects.id, { onDelete: "set null" }),
+    gradeId: text("grade_id").references(() => grades.id, { onDelete: "set null" }),
+    status: text("status").notNull().default("draft"),
+    timeLimitSeconds: integer("time_limit_seconds"),
+    attemptLimit: integer("attempt_limit"),
+    passingThreshold: real("passing_threshold").notNull().default(0.6),
+    partialCredit: integer("partial_credit", { mode: "boolean" }).notNull().default(true),
+    feedbackVisibility: text("feedback_visibility").notNull().default("after-submit"),
+    reviewMode: text("review_mode").notNull().default("full"),
+    retakeRule: text("retake_rule").notNull().default("after-failure"),
+    questionOrdering: text("question_ordering").notNull().default("fixed"),
+    autoSubmit: integer("auto_submit", { mode: "boolean" }).notNull().default(false),
+    configuration: text("configuration").notNull().default("{}"),
+    createdByProfileId: text("created_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("assessments_slug_idx").on(table.slug),
+    statusIdx: index("assessments_status_idx").on(table.status),
+    typeIdx: index("assessments_type_idx").on(table.type),
+    subjectGradeIdx: index("assessments_subject_grade_idx").on(table.subjectId, table.gradeId),
+  }),
+);
+
+export const assessmentSections = sqliteTable(
+  "assessment_sections",
+  {
+    id: text("id").primaryKey(),
+    assessmentId: text("assessment_id")
+      .notNull()
+      .references(() => assessments.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    sortOrder: integer("sort_order").notNull().default(0),
+    points: real("points").notNull().default(1),
+    timeLimitSeconds: integer("time_limit_seconds"),
+    questionOrdering: text("question_ordering").notNull().default("fixed"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    assessmentIdx: index("assessment_sections_assessment_idx").on(
+      table.assessmentId,
+      table.sortOrder,
+    ),
+  }),
+);
+
+export const assessmentPools = sqliteTable(
+  "assessment_pools",
+  {
+    id: text("id").primaryKey(),
+    assessmentId: text("assessment_id")
+      .notNull()
+      .references(() => assessments.id, { onDelete: "cascade" }),
+    sectionId: text("section_id")
+      .notNull()
+      .references(() => assessmentSections.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    selectionCount: integer("selection_count").notNull(),
+    difficultyDistribution: text("difficulty_distribution").notNull().default("{}"),
+    conceptIds: text("concept_ids").notNull().default("[]"),
+    questionOrdering: text("question_ordering").notNull().default("randomized"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    sectionIdx: index("assessment_pools_section_idx").on(table.sectionId),
+  }),
+);
+
+export const assessmentQuestions = sqliteTable(
+  "assessment_questions",
+  {
+    id: text("id").primaryKey(),
+    assessmentId: text("assessment_id")
+      .notNull()
+      .references(() => assessments.id, { onDelete: "cascade" }),
+    sectionId: text("section_id")
+      .notNull()
+      .references(() => assessmentSections.id, { onDelete: "cascade" }),
+    poolId: text("pool_id").references(() => assessmentPools.id, { onDelete: "cascade" }),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => questions.id, { onDelete: "restrict" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    points: real("points").notNull().default(1),
+    isRequired: integer("is_required", { mode: "boolean" }).notNull().default(true),
+  },
+  (table) => ({
+    sectionIdx: index("assessment_questions_section_idx").on(table.sectionId, table.sortOrder),
+    questionIdx: index("assessment_questions_question_idx").on(table.questionId),
+  }),
+);
+
+export const assessmentAttempts = sqliteTable(
+  "assessment_attempts",
+  {
+    id: text("id").primaryKey(),
+    assessmentId: text("assessment_id")
+      .notNull()
+      .references(() => assessments.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("in-progress"),
+    seed: integer("seed").notNull(),
+    score: real("score").notNull().default(0),
+    maxScore: real("max_score").notNull().default(0),
+    percentage: real("percentage").notNull().default(0),
+    passed: integer("passed", { mode: "boolean" }),
+    questionOrder: text("question_order").notNull().default("[]"),
+    questionInstances: text("question_instances").notNull().default("[]"),
+    startedAt: text("started_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    expiresAt: text("expires_at"),
+    submittedAt: text("submitted_at"),
+  },
+  (table) => ({
+    profileIdx: index("assessment_attempts_profile_idx").on(table.profileId, table.startedAt),
+    assessmentIdx: index("assessment_attempts_assessment_idx").on(
+      table.assessmentId,
+      table.profileId,
+      table.status,
+    ),
+  }),
+);
+
+export const assessmentSectionResults = sqliteTable(
+  "assessment_section_results",
+  {
+    id: text("id").primaryKey(),
+    assessmentAttemptId: text("assessment_attempt_id")
+      .notNull()
+      .references(() => assessmentAttempts.id, { onDelete: "cascade" }),
+    sectionId: text("section_id")
+      .notNull()
+      .references(() => assessmentSections.id, { onDelete: "cascade" }),
+    score: real("score").notNull().default(0),
+    maxScore: real("max_score").notNull().default(0),
+    percentage: real("percentage").notNull().default(0),
+    correctCount: integer("correct_count").notNull().default(0),
+    answeredCount: integer("answered_count").notNull().default(0),
+    questionCount: integer("question_count").notNull().default(0),
+    conceptScores: text("concept_scores").notNull().default("{}"),
+  },
+  (table) => ({
+    uniqueSection: uniqueIndex("assessment_section_results_attempt_section_idx").on(
+      table.assessmentAttemptId,
+      table.sectionId,
+    ),
+  }),
+);
+
+export const diagnosticResults = sqliteTable(
+  "diagnostic_results",
+  {
+    id: text("id").primaryKey(),
+    assessmentAttemptId: text("assessment_attempt_id")
+      .notNull()
+      .references(() => assessmentAttempts.id, { onDelete: "cascade" }),
+    readinessGradeId: text("readiness_grade_id").references(() => grades.id, {
+      onDelete: "set null",
+    }),
+    readinessLabel: text("readiness_label").notNull(),
+    subjectStrengths: text("subject_strengths").notNull().default("[]"),
+    weakConceptIds: text("weak_concept_ids").notNull().default("[]"),
+    missingPrerequisiteConceptIds: text("missing_prerequisite_concept_ids").notNull().default("[]"),
+    recommendations: text("recommendations").notNull().default("[]"),
+    explanation: text("explanation").notNull().default(""),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    attemptIdx: uniqueIndex("diagnostic_results_attempt_idx").on(table.assessmentAttemptId),
+  }),
+);
+
+export const placementResults = sqliteTable(
+  "placement_results",
+  {
+    id: text("id").primaryKey(),
+    assessmentAttemptId: text("assessment_attempt_id")
+      .notNull()
+      .references(() => assessmentAttempts.id, { onDelete: "cascade" }),
+    recommendedGradeId: text("recommended_grade_id").references(() => grades.id, {
+      onDelete: "set null",
+    }),
+    startingLevel: text("starting_level").notNull(),
+    confidence: real("confidence").notNull().default(0),
+    reviewQuestionIds: text("review_question_ids").notNull().default("[]"),
+    recommendations: text("recommendations").notNull().default("[]"),
+    explanation: text("explanation").notNull().default(""),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    attemptIdx: uniqueIndex("placement_results_attempt_idx").on(table.assessmentAttemptId),
+  }),
+);
+
 export const questionAttempts = sqliteTable(
   "question_attempts",
   {
     id: text("id").primaryKey(),
-    exerciseAttemptId: text("exercise_attempt_id")
-      .notNull()
-      .references(() => exerciseAttempts.id, { onDelete: "cascade" }),
+    exerciseAttemptId: text("exercise_attempt_id").references(() => exerciseAttempts.id, {
+      onDelete: "cascade",
+    }),
+    assessmentAttemptId: text("assessment_attempt_id").references(() => assessmentAttempts.id, {
+      onDelete: "cascade",
+    }),
     questionId: text("question_id")
       .notNull()
       .references(() => questions.id, { onDelete: "restrict" }),
@@ -1296,6 +1526,10 @@ export const questionAttempts = sqliteTable(
   (table) => ({
     uniqueQuestionAttempt: uniqueIndex("question_attempts_attempt_question_idx").on(
       table.exerciseAttemptId,
+      table.questionId,
+    ),
+    assessmentQuestionAttempt: uniqueIndex("question_attempts_assessment_question_idx").on(
+      table.assessmentAttemptId,
       table.questionId,
     ),
     questionIdx: index("question_attempts_question_idx").on(table.questionId, table.answeredAt),
@@ -1382,3 +1616,19 @@ export type ConceptApplication = typeof conceptApplications.$inferSelect;
 export type NewConceptApplication = typeof conceptApplications.$inferInsert;
 export type ConceptMisconception = typeof conceptMisconceptions.$inferSelect;
 export type NewConceptMisconception = typeof conceptMisconceptions.$inferInsert;
+export type Assessment = typeof assessments.$inferSelect;
+export type NewAssessment = typeof assessments.$inferInsert;
+export type AssessmentSection = typeof assessmentSections.$inferSelect;
+export type NewAssessmentSection = typeof assessmentSections.$inferInsert;
+export type AssessmentPool = typeof assessmentPools.$inferSelect;
+export type NewAssessmentPool = typeof assessmentPools.$inferInsert;
+export type AssessmentQuestion = typeof assessmentQuestions.$inferSelect;
+export type NewAssessmentQuestion = typeof assessmentQuestions.$inferInsert;
+export type AssessmentAttempt = typeof assessmentAttempts.$inferSelect;
+export type NewAssessmentAttempt = typeof assessmentAttempts.$inferInsert;
+export type AssessmentSectionResult = typeof assessmentSectionResults.$inferSelect;
+export type NewAssessmentSectionResult = typeof assessmentSectionResults.$inferInsert;
+export type DiagnosticResult = typeof diagnosticResults.$inferSelect;
+export type NewDiagnosticResult = typeof diagnosticResults.$inferInsert;
+export type PlacementResult = typeof placementResults.$inferSelect;
+export type NewPlacementResult = typeof placementResults.$inferInsert;

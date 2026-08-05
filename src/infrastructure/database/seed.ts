@@ -6,7 +6,7 @@ import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-5"],
+  ["seed_version", "phase-6"],
 ] as const;
 
 export const roleSeed = [
@@ -1488,6 +1488,253 @@ export const exerciseSetQuestionSeed = [
   ["exercise-set-motion-practice", "question-motion-multi-step", 5, 2, true],
 ] as const;
 
+export const assessmentSeed = [
+  {
+    id: "assessment-motion-quiz",
+    slug: "motion-module-quiz",
+    title: "Motion module quiz",
+    description: "A short untimed knowledge check for the core language of motion.",
+    type: "module-quiz",
+    subjectId: "subject-physics",
+    gradeId: "grade-8",
+    status: "published",
+    timeLimitSeconds: null,
+    attemptLimit: 3,
+    passingThreshold: 0.6,
+    partialCredit: true,
+    feedbackVisibility: "after-submit",
+    reviewMode: "full",
+    retakeRule: "after-failure",
+    questionOrdering: "fixed",
+    autoSubmit: false,
+    configuration: {},
+    createdByProfileId: null,
+  },
+  {
+    id: "assessment-motion-diagnostic",
+    slug: "motion-readiness-diagnostic",
+    title: "Motion readiness diagnostic",
+    description: "An explainable diagnostic that identifies strengths and concepts to review.",
+    type: "diagnostic-test",
+    subjectId: "subject-physics",
+    gradeId: null,
+    status: "published",
+    timeLimitSeconds: 600,
+    attemptLimit: 1,
+    passingThreshold: 0.6,
+    partialCredit: true,
+    feedbackVisibility: "after-submit",
+    reviewMode: "full",
+    retakeRule: "never",
+    questionOrdering: "fixed",
+    autoSubmit: true,
+    configuration: {
+      gradeBands: [
+        { gradeId: "grade-6", label: "Grade 6 foundations", minPercentage: 0.35 },
+        { gradeId: "grade-8", label: "Grade 8 readiness", minPercentage: 0.6 },
+        { gradeId: "grade-10", label: "Grade 10 extension", minPercentage: 0.82 },
+      ],
+    },
+    createdByProfileId: null,
+  },
+  {
+    id: "assessment-motion-placement",
+    slug: "motion-placement-check",
+    title: "Motion placement check",
+    description: "A reproducible placement assessment that recommends a safe starting level.",
+    type: "placement-test",
+    subjectId: "subject-physics",
+    gradeId: null,
+    status: "published",
+    timeLimitSeconds: 900,
+    attemptLimit: 1,
+    passingThreshold: 0.6,
+    partialCredit: true,
+    feedbackVisibility: "after-submit",
+    reviewMode: "incorrect-only",
+    retakeRule: "never",
+    questionOrdering: "randomized",
+    autoSubmit: true,
+    configuration: {
+      gradeBands: [
+        { gradeId: "grade-6", label: "Grade 6 foundations", minPercentage: 0.35 },
+        { gradeId: "grade-8", label: "Grade 8 readiness", minPercentage: 0.6 },
+        { gradeId: "grade-10", label: "Grade 10 extension", minPercentage: 0.82 },
+      ],
+    },
+    createdByProfileId: null,
+  },
+] as const;
+
+export const assessmentSectionSeed = [
+  {
+    id: "assessment-section-motion-quiz",
+    assessmentId: "assessment-motion-quiz",
+    title: "Core motion language",
+    description: "Fixed questions connect directly to the module concepts.",
+    sortOrder: 0,
+    points: 4,
+    timeLimitSeconds: null,
+    questionOrdering: "fixed",
+  },
+  {
+    id: "assessment-section-motion-diagnostic",
+    assessmentId: "assessment-motion-diagnostic",
+    title: "Readiness signals",
+    description: "Questions are grouped by the concepts they diagnose.",
+    sortOrder: 0,
+    points: 5,
+    timeLimitSeconds: 600,
+    questionOrdering: "fixed",
+  },
+  {
+    id: "assessment-section-motion-placement",
+    assessmentId: "assessment-motion-placement",
+    title: "Placement sample",
+    description: "The pool keeps the sampled question set reproducible for review.",
+    sortOrder: 0,
+    points: 3,
+    timeLimitSeconds: 900,
+    questionOrdering: "randomized",
+  },
+] as const;
+
+export const assessmentPoolSeed = [
+  {
+    id: "assessment-pool-motion-placement",
+    assessmentId: "assessment-motion-placement",
+    sectionId: "assessment-section-motion-placement",
+    title: "Motion placement pool",
+    selectionCount: 3,
+    difficultyDistribution: { gentle: 1, balanced: 1, challenging: 1 },
+    conceptIds: [],
+    questionOrdering: "randomized",
+  },
+] as const;
+
+export const assessmentQuestionSeed = [
+  {
+    id: "assessment-question-quiz-velocity",
+    assessmentId: "assessment-motion-quiz",
+    sectionId: "assessment-section-motion-quiz",
+    poolId: null,
+    questionId: "question-velocity-direction",
+    sortOrder: 0,
+    points: 1,
+    isRequired: true,
+  },
+  {
+    id: "assessment-question-quiz-acceleration",
+    assessmentId: "assessment-motion-quiz",
+    sectionId: "assessment-section-motion-quiz",
+    poolId: null,
+    questionId: "question-acceleration-numeric",
+    sortOrder: 1,
+    points: 1,
+    isRequired: true,
+  },
+  {
+    id: "assessment-question-quiz-force",
+    assessmentId: "assessment-motion-quiz",
+    sectionId: "assessment-section-motion-quiz",
+    poolId: null,
+    questionId: "question-force-unit",
+    sortOrder: 2,
+    points: 1,
+    isRequired: true,
+  },
+  {
+    id: "assessment-question-quiz-equation",
+    assessmentId: "assessment-motion-quiz",
+    sectionId: "assessment-section-motion-quiz",
+    poolId: null,
+    questionId: "question-linear-equation-expression",
+    sortOrder: 3,
+    points: 1,
+    isRequired: true,
+  },
+  {
+    id: "assessment-question-diagnostic-velocity",
+    assessmentId: "assessment-motion-diagnostic",
+    sectionId: "assessment-section-motion-diagnostic",
+    poolId: null,
+    questionId: "question-velocity-direction",
+    sortOrder: 0,
+    points: 1,
+    isRequired: true,
+  },
+  {
+    id: "assessment-question-diagnostic-force",
+    assessmentId: "assessment-motion-diagnostic",
+    sectionId: "assessment-section-motion-diagnostic",
+    poolId: null,
+    questionId: "question-force-unit",
+    sortOrder: 1,
+    points: 1,
+    isRequired: true,
+  },
+  {
+    id: "assessment-question-diagnostic-order",
+    assessmentId: "assessment-motion-diagnostic",
+    sectionId: "assessment-section-motion-diagnostic",
+    poolId: null,
+    questionId: "question-motion-order",
+    sortOrder: 2,
+    points: 1,
+    isRequired: true,
+  },
+  {
+    id: "assessment-question-diagnostic-multi",
+    assessmentId: "assessment-motion-diagnostic",
+    sectionId: "assessment-section-motion-diagnostic",
+    poolId: null,
+    questionId: "question-motion-multi-step",
+    sortOrder: 3,
+    points: 2,
+    isRequired: true,
+  },
+  {
+    id: "assessment-question-placement-velocity",
+    assessmentId: "assessment-motion-placement",
+    sectionId: "assessment-section-motion-placement",
+    poolId: "assessment-pool-motion-placement",
+    questionId: "question-velocity-direction",
+    sortOrder: 0,
+    points: 1,
+    isRequired: true,
+  },
+  {
+    id: "assessment-question-placement-force",
+    assessmentId: "assessment-motion-placement",
+    sectionId: "assessment-section-motion-placement",
+    poolId: "assessment-pool-motion-placement",
+    questionId: "question-force-unit",
+    sortOrder: 1,
+    points: 1,
+    isRequired: true,
+  },
+  {
+    id: "assessment-question-placement-equation",
+    assessmentId: "assessment-motion-placement",
+    sectionId: "assessment-section-motion-placement",
+    poolId: "assessment-pool-motion-placement",
+    questionId: "question-linear-equation-expression",
+    sortOrder: 2,
+    points: 1,
+    isRequired: true,
+  },
+  {
+    id: "assessment-question-placement-multi",
+    assessmentId: "assessment-motion-placement",
+    sectionId: "assessment-section-motion-placement",
+    poolId: "assessment-pool-motion-placement",
+    questionId: "question-motion-multi-step",
+    sortOrder: 3,
+    points: 2,
+    isRequired: true,
+  },
+] as const;
+
 export async function runSeed(
   options: { provider?: "sqlite" | "postgres"; databaseUrl?: string } = {},
 ): Promise<void> {
@@ -1737,6 +1984,18 @@ export async function runSeed(
       const insertExerciseSetQuestion = database.prepare(
         "INSERT INTO exercise_set_questions (exercise_set_id, question_id, sort_order, points, is_required) VALUES (@exerciseSetId, @questionId, @sortOrder, @points, @isRequired) ON CONFLICT(exercise_set_id, question_id) DO UPDATE SET sort_order = excluded.sort_order, points = excluded.points, is_required = excluded.is_required",
       );
+      const insertAssessment = database.prepare(
+        "INSERT INTO assessments (id, slug, title, description, assessment_type, subject_id, grade_id, status, time_limit_seconds, attempt_limit, passing_threshold, partial_credit, feedback_visibility, review_mode, retake_rule, question_ordering, auto_submit, configuration, created_by_profile_id) VALUES (@id, @slug, @title, @description, @type, @subjectId, @gradeId, @status, @timeLimitSeconds, @attemptLimit, @passingThreshold, @partialCredit, @feedbackVisibility, @reviewMode, @retakeRule, @questionOrdering, @autoSubmit, @configuration, @createdByProfileId) ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, title = excluded.title, description = excluded.description, assessment_type = excluded.assessment_type, subject_id = excluded.subject_id, grade_id = excluded.grade_id, status = excluded.status, time_limit_seconds = excluded.time_limit_seconds, attempt_limit = excluded.attempt_limit, passing_threshold = excluded.passing_threshold, partial_credit = excluded.partial_credit, feedback_visibility = excluded.feedback_visibility, review_mode = excluded.review_mode, retake_rule = excluded.retake_rule, question_ordering = excluded.question_ordering, auto_submit = excluded.auto_submit, configuration = excluded.configuration, created_by_profile_id = excluded.created_by_profile_id, updated_at = CURRENT_TIMESTAMP",
+      );
+      const insertAssessmentSection = database.prepare(
+        "INSERT INTO assessment_sections (id, assessment_id, title, description, sort_order, points, time_limit_seconds, question_ordering) VALUES (@id, @assessmentId, @title, @description, @sortOrder, @points, @timeLimitSeconds, @questionOrdering) ON CONFLICT(id) DO UPDATE SET assessment_id = excluded.assessment_id, title = excluded.title, description = excluded.description, sort_order = excluded.sort_order, points = excluded.points, time_limit_seconds = excluded.time_limit_seconds, question_ordering = excluded.question_ordering, updated_at = CURRENT_TIMESTAMP",
+      );
+      const insertAssessmentPool = database.prepare(
+        "INSERT INTO assessment_pools (id, assessment_id, section_id, title, selection_count, difficulty_distribution, concept_ids, question_ordering) VALUES (@id, @assessmentId, @sectionId, @title, @selectionCount, @difficultyDistribution, @conceptIds, @questionOrdering) ON CONFLICT(id) DO UPDATE SET assessment_id = excluded.assessment_id, section_id = excluded.section_id, title = excluded.title, selection_count = excluded.selection_count, difficulty_distribution = excluded.difficulty_distribution, concept_ids = excluded.concept_ids, question_ordering = excluded.question_ordering, updated_at = CURRENT_TIMESTAMP",
+      );
+      const insertAssessmentQuestion = database.prepare(
+        "INSERT INTO assessment_questions (id, assessment_id, section_id, pool_id, question_id, sort_order, points, is_required) VALUES (@id, @assessmentId, @sectionId, @poolId, @questionId, @sortOrder, @points, @isRequired) ON CONFLICT(id) DO UPDATE SET assessment_id = excluded.assessment_id, section_id = excluded.section_id, pool_id = excluded.pool_id, question_id = excluded.question_id, sort_order = excluded.sort_order, points = excluded.points, is_required = excluded.is_required",
+      );
       const seedStructure = database.transaction(() => {
         for (const curriculum of curriculumSeed)
           insertCurriculum.run({ ...curriculum, isSystem: curriculum.isSystem ? 1 : 0 });
@@ -1907,6 +2166,25 @@ export async function runSeed(
             sortOrder,
             points,
             isRequired: isRequired ? 1 : 0,
+          });
+        for (const assessment of assessmentSeed)
+          insertAssessment.run({
+            ...assessment,
+            partialCredit: assessment.partialCredit ? 1 : 0,
+            autoSubmit: assessment.autoSubmit ? 1 : 0,
+            configuration: JSON.stringify(assessment.configuration),
+          });
+        for (const section of assessmentSectionSeed) insertAssessmentSection.run(section);
+        for (const pool of assessmentPoolSeed)
+          insertAssessmentPool.run({
+            ...pool,
+            difficultyDistribution: JSON.stringify(pool.difficultyDistribution),
+            conceptIds: JSON.stringify(pool.conceptIds),
+          });
+        for (const question of assessmentQuestionSeed)
+          insertAssessmentQuestion.run({
+            ...question,
+            isRequired: question.isRequired ? 1 : 0,
           });
       });
       seedStructure();
@@ -2293,6 +2571,73 @@ export async function runSeed(
         await transaction.unsafe(
           "INSERT INTO exercise_set_questions (exercise_set_id, question_id, sort_order, points, is_required) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (exercise_set_id, question_id) DO UPDATE SET sort_order = EXCLUDED.sort_order, points = EXCLUDED.points, is_required = EXCLUDED.is_required",
           [exerciseSetId, questionId, sortOrder, points, isRequired],
+        );
+      for (const assessment of assessmentSeed)
+        await transaction.unsafe(
+          "INSERT INTO assessments (id, slug, title, description, type, subject_id, grade_id, status, time_limit_seconds, attempt_limit, passing_threshold, partial_credit, feedback_visibility, review_mode, retake_rule, question_ordering, auto_submit, configuration, created_by_profile_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, description = EXCLUDED.description, type = EXCLUDED.type, subject_id = EXCLUDED.subject_id, grade_id = EXCLUDED.grade_id, status = EXCLUDED.status, time_limit_seconds = EXCLUDED.time_limit_seconds, attempt_limit = EXCLUDED.attempt_limit, passing_threshold = EXCLUDED.passing_threshold, partial_credit = EXCLUDED.partial_credit, feedback_visibility = EXCLUDED.feedback_visibility, review_mode = EXCLUDED.review_mode, retake_rule = EXCLUDED.retake_rule, question_ordering = EXCLUDED.question_ordering, auto_submit = EXCLUDED.auto_submit, configuration = EXCLUDED.configuration, created_by_profile_id = EXCLUDED.created_by_profile_id, updated_at = NOW()",
+          [
+            assessment.id,
+            assessment.slug,
+            assessment.title,
+            assessment.description,
+            assessment.type,
+            assessment.subjectId,
+            assessment.gradeId,
+            assessment.status,
+            assessment.timeLimitSeconds,
+            assessment.attemptLimit,
+            assessment.passingThreshold,
+            assessment.partialCredit,
+            assessment.feedbackVisibility,
+            assessment.reviewMode,
+            assessment.retakeRule,
+            assessment.questionOrdering,
+            assessment.autoSubmit,
+            JSON.stringify(assessment.configuration),
+            assessment.createdByProfileId,
+          ],
+        );
+      for (const section of assessmentSectionSeed)
+        await transaction.unsafe(
+          "INSERT INTO assessment_sections (id, assessment_id, title, description, sort_order, points, time_limit_seconds, question_ordering) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO UPDATE SET assessment_id = EXCLUDED.assessment_id, title = EXCLUDED.title, description = EXCLUDED.description, sort_order = EXCLUDED.sort_order, points = EXCLUDED.points, time_limit_seconds = EXCLUDED.time_limit_seconds, question_ordering = EXCLUDED.question_ordering, updated_at = NOW()",
+          [
+            section.id,
+            section.assessmentId,
+            section.title,
+            section.description,
+            section.sortOrder,
+            section.points,
+            section.timeLimitSeconds,
+            section.questionOrdering,
+          ],
+        );
+      for (const pool of assessmentPoolSeed)
+        await transaction.unsafe(
+          "INSERT INTO assessment_pools (id, assessment_id, section_id, title, selection_count, difficulty_distribution, concept_ids, question_ordering) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO UPDATE SET assessment_id = EXCLUDED.assessment_id, section_id = EXCLUDED.section_id, title = EXCLUDED.title, selection_count = EXCLUDED.selection_count, difficulty_distribution = EXCLUDED.difficulty_distribution, concept_ids = EXCLUDED.concept_ids, question_ordering = EXCLUDED.question_ordering, updated_at = NOW()",
+          [
+            pool.id,
+            pool.assessmentId,
+            pool.sectionId,
+            pool.title,
+            pool.selectionCount,
+            JSON.stringify(pool.difficultyDistribution),
+            JSON.stringify(pool.conceptIds),
+            pool.questionOrdering,
+          ],
+        );
+      for (const question of assessmentQuestionSeed)
+        await transaction.unsafe(
+          "INSERT INTO assessment_questions (id, assessment_id, section_id, pool_id, question_id, sort_order, points, is_required) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO UPDATE SET assessment_id = EXCLUDED.assessment_id, section_id = EXCLUDED.section_id, pool_id = EXCLUDED.pool_id, question_id = EXCLUDED.question_id, sort_order = EXCLUDED.sort_order, points = EXCLUDED.points, is_required = EXCLUDED.is_required, updated_at = NOW()",
+          [
+            question.id,
+            question.assessmentId,
+            question.sectionId,
+            question.poolId,
+            question.questionId,
+            question.sortOrder,
+            question.points,
+            question.isRequired,
+          ],
         );
     });
   } finally {

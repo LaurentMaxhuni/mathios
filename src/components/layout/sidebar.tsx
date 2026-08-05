@@ -8,6 +8,7 @@ import {
   BrainCircuit,
   BookOpen,
   BookMarked,
+  ClipboardCheck,
   FlaskConical,
   GraduationCap,
   Home,
@@ -28,6 +29,7 @@ const navigation: Array<{ href: string; label: string; icon: typeof Home }> = [
   { href: "/courses" as const, label: "Courses", icon: BookMarked },
   { href: "/concepts" as const, label: "Concepts", icon: Network },
   { href: "/exercises" as const, label: "Exercises", icon: BrainCircuit },
+  { href: "/assessments" as const, label: "Assessments", icon: ClipboardCheck },
   { href: "/grades" as const, label: "Grades", icon: GraduationCap },
   { href: "/subjects" as const, label: "Subjects", icon: FlaskConical },
   { href: "/settings" as const, label: "Settings", icon: Settings2 },
@@ -116,7 +118,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             Profiles, permissions, settings, and onboarding stay available on this device.
           </p>
           <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Phase 5 - Exercises and answer validation
+            Phase 6 - Assessments, diagnostics, and placement
           </p>
         </div>
       </aside>
