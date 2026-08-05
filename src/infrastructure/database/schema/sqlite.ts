@@ -1753,6 +1753,318 @@ export const recommendationDismissals = sqliteTable(
   }),
 );
 
+export const roadmaps = sqliteTable(
+  "roadmaps",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    goal: text("goal").notNull().default(""),
+    targetGradeId: text("target_grade_id").references(() => grades.id, { onDelete: "set null" }),
+    targetDifficulty: text("target_difficulty").notNull().default("balanced"),
+    estimatedDurationMinutes: integer("estimated_duration_minutes").notNull().default(0),
+    coverImage: text("cover_image"),
+    status: text("status").notNull().default("draft"),
+    createdByProfileId: text("created_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    currentVersionNumber: integer("current_version_number").notNull().default(0),
+    publishedVersionId: text("published_version_id"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("roadmaps_slug_idx").on(table.slug),
+    statusIdx: index("roadmaps_status_idx").on(table.status, table.updatedAt),
+    targetGradeIdx: index("roadmaps_target_grade_idx").on(table.targetGradeId, table.status),
+  }),
+);
+
+export const roadmapVersions = sqliteTable(
+  "roadmap_versions",
+  {
+    id: text("id").primaryKey(),
+    roadmapId: text("roadmap_id")
+      .notNull()
+      .references(() => roadmaps.id, { onDelete: "cascade" }),
+    versionNumber: integer("version_number").notNull(),
+    status: text("status").notNull().default("draft"),
+    changeSummary: text("change_summary").notNull().default(""),
+    snapshot: text("snapshot").notNull().default("{}"),
+    createdByProfileId: text("created_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    publishedAt: text("published_at"),
+  },
+  (table) => ({
+    roadmapVersionIdx: uniqueIndex("roadmap_versions_roadmap_version_idx").on(
+      table.roadmapId,
+      table.versionNumber,
+    ),
+    statusIdx: index("roadmap_versions_status_idx").on(
+      table.roadmapId,
+      table.status,
+      table.versionNumber,
+    ),
+  }),
+);
+
+export const roadmapSubjects = sqliteTable(
+  "roadmap_subjects",
+  {
+    roadmapId: text("roadmap_id")
+      .notNull()
+      .references(() => roadmaps.id, { onDelete: "cascade" }),
+    subjectId: text("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "restrict" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.roadmapId, table.subjectId] }),
+    subjectIdx: index("roadmap_subjects_subject_idx").on(table.subjectId, table.roadmapId),
+  }),
+);
+
+export const roadmapPrerequisites = sqliteTable(
+  "roadmap_prerequisites",
+  {
+    roadmapId: text("roadmap_id")
+      .notNull()
+      .references(() => roadmaps.id, { onDelete: "cascade" }),
+    prerequisiteRoadmapId: text("prerequisite_roadmap_id")
+      .notNull()
+      .references(() => roadmaps.id, { onDelete: "restrict" }),
+    isRequired: integer("is_required", { mode: "boolean" }).notNull().default(true),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.roadmapId, table.prerequisiteRoadmapId] }),
+    reverseIdx: index("roadmap_prerequisites_reverse_idx").on(
+      table.prerequisiteRoadmapId,
+      table.roadmapId,
+    ),
+  }),
+);
+
+export const roadmapNodes = sqliteTable(
+  "roadmap_nodes",
+  {
+    id: text("id").primaryKey(),
+    roadmapVersionId: text("roadmap_version_id")
+      .notNull()
+      .references(() => roadmapVersions.id, { onDelete: "cascade" }),
+    nodeKey: text("node_key").notNull(),
+    nodeType: text("node_type").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    referenceId: text("reference_id"),
+    referenceTitle: text("reference_title"),
+    subjectId: text("subject_id").references(() => subjects.id, { onDelete: "set null" }),
+    isRequired: integer("is_required", { mode: "boolean" }).notNull().default(true),
+    isCheckpoint: integer("is_checkpoint", { mode: "boolean" }).notNull().default(false),
+    isOptionalBranch: integer("is_optional_branch", { mode: "boolean" }).notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    estimatedDurationMinutes: integer("estimated_duration_minutes").notNull().default(0),
+    metadata: text("metadata").notNull().default("{}"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    nodeKeyIdx: uniqueIndex("roadmap_nodes_version_key_idx").on(
+      table.roadmapVersionId,
+      table.nodeKey,
+    ),
+    orderIdx: index("roadmap_nodes_version_order_idx").on(
+      table.roadmapVersionId,
+      table.sortOrder,
+      table.nodeKey,
+    ),
+    referenceIdx: index("roadmap_nodes_reference_idx").on(table.referenceId, table.nodeType),
+  }),
+);
+
+export const roadmapEdges = sqliteTable(
+  "roadmap_edges",
+  {
+    id: text("id").primaryKey(),
+    roadmapVersionId: text("roadmap_version_id")
+      .notNull()
+      .references(() => roadmapVersions.id, { onDelete: "cascade" }),
+    sourceNodeId: text("source_node_id")
+      .notNull()
+      .references(() => roadmapNodes.id, { onDelete: "cascade" }),
+    targetNodeId: text("target_node_id")
+      .notNull()
+      .references(() => roadmapNodes.id, { onDelete: "cascade" }),
+    edgeType: text("edge_type").notNull().default("requires"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    edgeIdx: uniqueIndex("roadmap_edges_version_nodes_idx").on(
+      table.roadmapVersionId,
+      table.sourceNodeId,
+      table.targetNodeId,
+    ),
+    orderIdx: index("roadmap_edges_version_order_idx").on(
+      table.roadmapVersionId,
+      table.sortOrder,
+      table.id,
+    ),
+    targetIdx: index("roadmap_edges_target_idx").on(table.targetNodeId, table.edgeType),
+  }),
+);
+
+export const userRoadmaps = sqliteTable(
+  "user_roadmaps",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    roadmapId: text("roadmap_id")
+      .notNull()
+      .references(() => roadmaps.id, { onDelete: "cascade" }),
+    roadmapVersionId: text("roadmap_version_id")
+      .notNull()
+      .references(() => roadmapVersions.id, { onDelete: "restrict" }),
+    status: text("status").notNull().default("active"),
+    selectedGoal: text("selected_goal"),
+    startedAt: text("started_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    completedAt: text("completed_at"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    profileRoadmapIdx: uniqueIndex("user_roadmaps_profile_roadmap_idx").on(
+      table.profileId,
+      table.roadmapId,
+    ),
+    profileStatusIdx: index("user_roadmaps_profile_status_idx").on(
+      table.profileId,
+      table.status,
+      table.updatedAt,
+    ),
+    roadmapIdx: index("user_roadmaps_roadmap_idx").on(table.roadmapId, table.status),
+  }),
+);
+
+export const userRoadmapProgress = sqliteTable(
+  "user_roadmap_progress",
+  {
+    userRoadmapId: text("user_roadmap_id")
+      .notNull()
+      .references(() => userRoadmaps.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    roadmapNodeId: text("roadmap_node_id")
+      .notNull()
+      .references(() => roadmapNodes.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("locked"),
+    completionPercentage: integer("completion_percentage").notNull().default(0),
+    unlockedAt: text("unlocked_at"),
+    startedAt: text("started_at"),
+    completedAt: text("completed_at"),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.userRoadmapId, table.roadmapNodeId] }),
+    profileStatusIdx: index("user_roadmap_progress_profile_status_idx").on(
+      table.profileId,
+      table.status,
+      table.updatedAt,
+    ),
+    nodeIdx: index("user_roadmap_progress_node_idx").on(table.roadmapNodeId, table.status),
+  }),
+);
+
+export const personalizedPaths = sqliteTable(
+  "personalized_paths",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    roadmapId: text("roadmap_id")
+      .notNull()
+      .references(() => roadmaps.id, { onDelete: "cascade" }),
+    userRoadmapId: text("user_roadmap_id").references(() => userRoadmaps.id, {
+      onDelete: "cascade",
+    }),
+    currentGradeId: text("current_grade_id").references(() => grades.id, { onDelete: "set null" }),
+    targetGradeId: text("target_grade_id").references(() => grades.id, { onDelete: "set null" }),
+    selectedGoal: text("selected_goal"),
+    weeklyStudyTimeMinutes: integer("weekly_study_time_minutes"),
+    estimatedDurationMinutes: integer("estimated_duration_minutes").notNull().default(0),
+    estimatedWeeks: integer("estimated_weeks"),
+    includedTopics: text("included_topics").notNull().default("[]"),
+    skippedMasteredTopics: text("skipped_mastered_topics").notNull().default("[]"),
+    missingPrerequisites: text("missing_prerequisites").notNull().default("[]"),
+    pathNodes: text("path_nodes").notNull().default("[]"),
+    generatedAt: text("generated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    profileRoadmapIdx: index("personalized_paths_profile_roadmap_idx").on(
+      table.profileId,
+      table.roadmapId,
+      table.generatedAt,
+    ),
+  }),
+);
+
+export type Roadmap = typeof roadmaps.$inferSelect;
+export type NewRoadmap = typeof roadmaps.$inferInsert;
+export type RoadmapVersion = typeof roadmapVersions.$inferSelect;
+export type NewRoadmapVersion = typeof roadmapVersions.$inferInsert;
+export type RoadmapSubject = typeof roadmapSubjects.$inferSelect;
+export type NewRoadmapSubject = typeof roadmapSubjects.$inferInsert;
+export type RoadmapPrerequisite = typeof roadmapPrerequisites.$inferSelect;
+export type NewRoadmapPrerequisite = typeof roadmapPrerequisites.$inferInsert;
+export type RoadmapNode = typeof roadmapNodes.$inferSelect;
+export type NewRoadmapNode = typeof roadmapNodes.$inferInsert;
+export type RoadmapEdge = typeof roadmapEdges.$inferSelect;
+export type NewRoadmapEdge = typeof roadmapEdges.$inferInsert;
+export type UserRoadmap = typeof userRoadmaps.$inferSelect;
+export type NewUserRoadmap = typeof userRoadmaps.$inferInsert;
+export type UserRoadmapProgress = typeof userRoadmapProgress.$inferSelect;
+export type NewUserRoadmapProgress = typeof userRoadmapProgress.$inferInsert;
+export type PersonalizedPath = typeof personalizedPaths.$inferSelect;
+export type NewPersonalizedPath = typeof personalizedPaths.$inferInsert;
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Profile = typeof profiles.$inferSelect;

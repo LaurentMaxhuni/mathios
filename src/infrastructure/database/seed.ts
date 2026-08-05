@@ -7,7 +7,7 @@ import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-7"],
+  ["seed_version", "phase-8"],
 ] as const;
 
 export const masteryRuleSeed = [
@@ -1759,6 +1759,637 @@ export const assessmentQuestionSeed = [
   },
 ] as const;
 
+export const roadmapSeed = [
+  {
+    id: "roadmap-math-physics-foundations",
+    slug: "math-physics-foundations",
+    title: "Mathematics and Physics Foundations",
+    description: "A gentle bridge from ratios and measurement to the language of motion.",
+    goal: "Build the shared quantitative foundations needed for physical reasoning.",
+    targetGradeId: "grade-8",
+    targetDifficulty: "gentle",
+    estimatedDurationMinutes: 110,
+    coverImage: null,
+    status: "published",
+    createdByProfileId: null,
+  },
+  {
+    id: "roadmap-algebra-classical-mechanics",
+    slug: "algebra-to-classical-mechanics",
+    title: "Algebra to Classical Mechanics",
+    description: "Turn equations into models for velocity, acceleration, and force.",
+    goal: "Use algebra fluently enough to reason about classical mechanics.",
+    targetGradeId: "grade-10",
+    targetDifficulty: "balanced",
+    estimatedDurationMinutes: 190,
+    coverImage: null,
+    status: "published",
+    createdByProfileId: null,
+  },
+  {
+    id: "roadmap-mathematics-for-astronomy",
+    slug: "mathematics-for-astronomy",
+    title: "Mathematics for Astronomy",
+    description: "Connect proportional reasoning and equations to locating objects in the sky.",
+    goal: "Develop the mathematical language used to describe celestial observations.",
+    targetGradeId: "grade-10",
+    targetDifficulty: "balanced",
+    estimatedDurationMinutes: 115,
+    coverImage: null,
+    status: "published",
+    createdByProfileId: null,
+  },
+  {
+    id: "roadmap-introductory-astrophysics",
+    slug: "introductory-astrophysics",
+    title: "Introductory Astrophysics",
+    description: "Carry motion and coordinate ideas into an evidence-based view of the cosmos.",
+    goal: "Reach a first coherent model of astronomical motion and observation.",
+    targetGradeId: "grade-12",
+    targetDifficulty: "challenging",
+    estimatedDurationMinutes: 135,
+    coverImage: null,
+    status: "published",
+    createdByProfileId: null,
+  },
+  {
+    id: "roadmap-chemistry-for-biology",
+    slug: "chemistry-for-biology",
+    title: "Chemistry for Biology",
+    description: "Follow matter from atomic structure into the organization of living cells.",
+    goal: "Make the chemical foundations of cell biology visible and usable.",
+    targetGradeId: "grade-10",
+    targetDifficulty: "balanced",
+    estimatedDurationMinutes: 100,
+    coverImage: null,
+    status: "published",
+    createdByProfileId: null,
+  },
+  {
+    id: "roadmap-biochemistry-foundations",
+    slug: "biochemistry-foundations",
+    title: "Biochemistry Foundations",
+    description:
+      "A cross-subject foundation for thinking about molecules, cells, and life processes.",
+    goal: "Prepare for biochemistry by linking atomic models to cell structure.",
+    targetGradeId: "grade-university-foundations",
+    targetDifficulty: "challenging",
+    estimatedDurationMinutes: 125,
+    coverImage: null,
+    status: "published",
+    createdByProfileId: null,
+  },
+  {
+    id: "roadmap-natural-sciences-foundations",
+    slug: "complete-natural-sciences-foundations",
+    title: "Complete Natural Sciences Foundations",
+    description: "A wide, explainable route through the shared ideas of the five science subjects.",
+    goal: "Build a connected foundation across mathematics, physics, chemistry, biology, and astronomy.",
+    targetGradeId: "grade-10",
+    targetDifficulty: "balanced",
+    estimatedDurationMinutes: 245,
+    coverImage: null,
+    status: "published",
+    createdByProfileId: null,
+  },
+] as const;
+
+export const roadmapSubjectSeed = [
+  ["roadmap-math-physics-foundations", "subject-mathematics", 0],
+  ["roadmap-math-physics-foundations", "subject-physics", 1],
+  ["roadmap-algebra-classical-mechanics", "subject-mathematics", 0],
+  ["roadmap-algebra-classical-mechanics", "subject-physics", 1],
+  ["roadmap-mathematics-for-astronomy", "subject-mathematics", 0],
+  ["roadmap-mathematics-for-astronomy", "subject-astronomy", 1],
+  ["roadmap-introductory-astrophysics", "subject-physics", 0],
+  ["roadmap-introductory-astrophysics", "subject-astronomy", 1],
+  ["roadmap-chemistry-for-biology", "subject-chemistry", 0],
+  ["roadmap-chemistry-for-biology", "subject-biology", 1],
+  ["roadmap-biochemistry-foundations", "subject-chemistry", 0],
+  ["roadmap-biochemistry-foundations", "subject-biology", 1],
+  ["roadmap-natural-sciences-foundations", "subject-mathematics", 0],
+  ["roadmap-natural-sciences-foundations", "subject-physics", 1],
+  ["roadmap-natural-sciences-foundations", "subject-chemistry", 2],
+  ["roadmap-natural-sciences-foundations", "subject-biology", 3],
+  ["roadmap-natural-sciences-foundations", "subject-astronomy", 4],
+] as const;
+
+type SeedRoadmapNode = {
+  id: string;
+  roadmapId: string;
+  nodeKey: string;
+  type: string;
+  title: string;
+  description: string;
+  referenceId: string | null;
+  referenceTitle: string | null;
+  subjectId: string | null;
+  isRequired: boolean;
+  isCheckpoint: boolean;
+  isOptionalBranch: boolean;
+  sortOrder: number;
+  estimatedDurationMinutes: number;
+  metadata: Record<string, unknown>;
+};
+
+function seedRoadmapNode(
+  roadmapId: string,
+  id: string,
+  nodeKey: string,
+  type: string,
+  title: string,
+  referenceId: string | null,
+  referenceTitle: string | null,
+  subjectId: string | null,
+  sortOrder: number,
+  estimatedDurationMinutes: number,
+  options: Partial<
+    Pick<
+      SeedRoadmapNode,
+      "description" | "isRequired" | "isCheckpoint" | "isOptionalBranch" | "metadata"
+    >
+  > = {},
+): SeedRoadmapNode {
+  return {
+    id,
+    roadmapId,
+    nodeKey,
+    type,
+    title,
+    description: options.description ?? "A reusable step in this interdisciplinary path.",
+    referenceId,
+    referenceTitle,
+    subjectId,
+    isRequired: options.isRequired ?? true,
+    isCheckpoint: options.isCheckpoint ?? false,
+    isOptionalBranch: options.isOptionalBranch ?? false,
+    sortOrder,
+    estimatedDurationMinutes,
+    metadata: options.metadata ?? {},
+  };
+}
+
+export const roadmapNodeSeed: readonly SeedRoadmapNode[] = [
+  seedRoadmapNode(
+    "roadmap-math-physics-foundations",
+    "roadmap-node-mpf-ratio",
+    "ratio",
+    "concept",
+    "Ratio",
+    "concept-ratio",
+    "Ratio",
+    "subject-mathematics",
+    0,
+    20,
+  ),
+  seedRoadmapNode(
+    "roadmap-math-physics-foundations",
+    "roadmap-node-mpf-position",
+    "position",
+    "concept",
+    "Position",
+    "concept-position",
+    "Position",
+    "subject-physics",
+    1,
+    20,
+  ),
+  seedRoadmapNode(
+    "roadmap-math-physics-foundations",
+    "roadmap-node-mpf-velocity",
+    "velocity",
+    "concept",
+    "Velocity",
+    "concept-velocity",
+    "Velocity",
+    "subject-physics",
+    2,
+    25,
+  ),
+  seedRoadmapNode(
+    "roadmap-math-physics-foundations",
+    "roadmap-node-mpf-motion",
+    "motion-lesson",
+    "lesson",
+    "Describing motion",
+    "lesson-describing-motion",
+    "Describing motion",
+    "subject-physics",
+    3,
+    25,
+    { isCheckpoint: true },
+  ),
+
+  seedRoadmapNode(
+    "roadmap-algebra-classical-mechanics",
+    "roadmap-node-acm-ratio",
+    "ratio",
+    "concept",
+    "Ratio",
+    "concept-ratio",
+    "Ratio",
+    "subject-mathematics",
+    0,
+    20,
+  ),
+  seedRoadmapNode(
+    "roadmap-algebra-classical-mechanics",
+    "roadmap-node-acm-linear",
+    "linear-equations",
+    "concept",
+    "Linear equations",
+    "concept-linear-equations",
+    "Linear equations",
+    "subject-mathematics",
+    1,
+    30,
+  ),
+  seedRoadmapNode(
+    "roadmap-algebra-classical-mechanics",
+    "roadmap-node-acm-position",
+    "position",
+    "concept",
+    "Position",
+    "concept-position",
+    "Position",
+    "subject-physics",
+    2,
+    20,
+  ),
+  seedRoadmapNode(
+    "roadmap-algebra-classical-mechanics",
+    "roadmap-node-acm-velocity",
+    "velocity",
+    "concept",
+    "Velocity",
+    "concept-velocity",
+    "Velocity",
+    "subject-physics",
+    3,
+    25,
+  ),
+  seedRoadmapNode(
+    "roadmap-algebra-classical-mechanics",
+    "roadmap-node-acm-acceleration",
+    "acceleration",
+    "concept",
+    "Acceleration",
+    "concept-acceleration",
+    "Acceleration",
+    "subject-physics",
+    4,
+    30,
+  ),
+  seedRoadmapNode(
+    "roadmap-algebra-classical-mechanics",
+    "roadmap-node-acm-lesson",
+    "acceleration-lesson",
+    "lesson",
+    "Constant acceleration",
+    "lesson-constant-acceleration",
+    "Constant acceleration",
+    "subject-physics",
+    5,
+    35,
+    { isCheckpoint: true },
+  ),
+  seedRoadmapNode(
+    "roadmap-algebra-classical-mechanics",
+    "roadmap-node-acm-assessment",
+    "motion-checkpoint",
+    "assessment",
+    "Motion module quiz",
+    "assessment-motion-quiz",
+    "Motion module quiz",
+    "subject-physics",
+    6,
+    30,
+    { isCheckpoint: true },
+  ),
+
+  seedRoadmapNode(
+    "roadmap-mathematics-for-astronomy",
+    "roadmap-node-mfa-ratio",
+    "ratio",
+    "concept",
+    "Ratio",
+    "concept-ratio",
+    "Ratio",
+    "subject-mathematics",
+    0,
+    20,
+  ),
+  seedRoadmapNode(
+    "roadmap-mathematics-for-astronomy",
+    "roadmap-node-mfa-linear",
+    "linear-equations",
+    "concept",
+    "Linear equations",
+    "concept-linear-equations",
+    "Linear equations",
+    "subject-mathematics",
+    1,
+    30,
+  ),
+  seedRoadmapNode(
+    "roadmap-mathematics-for-astronomy",
+    "roadmap-node-mfa-coordinates",
+    "sky-coordinates",
+    "concept",
+    "Sky coordinates",
+    "concept-sky-coordinates",
+    "Sky coordinates",
+    "subject-astronomy",
+    2,
+    35,
+    { isCheckpoint: true },
+  ),
+  seedRoadmapNode(
+    "roadmap-mathematics-for-astronomy",
+    "roadmap-node-mfa-milestone",
+    "observation-milestone",
+    "milestone",
+    "Read an observation map",
+    null,
+    null,
+    "subject-astronomy",
+    3,
+    30,
+    { isCheckpoint: true },
+  ),
+
+  seedRoadmapNode(
+    "roadmap-introductory-astrophysics",
+    "roadmap-node-ia-position",
+    "position",
+    "concept",
+    "Position",
+    "concept-position",
+    "Position",
+    "subject-physics",
+    0,
+    20,
+  ),
+  seedRoadmapNode(
+    "roadmap-introductory-astrophysics",
+    "roadmap-node-ia-velocity",
+    "velocity",
+    "concept",
+    "Velocity",
+    "concept-velocity",
+    "Velocity",
+    "subject-physics",
+    1,
+    25,
+  ),
+  seedRoadmapNode(
+    "roadmap-introductory-astrophysics",
+    "roadmap-node-ia-acceleration",
+    "acceleration",
+    "concept",
+    "Acceleration",
+    "concept-acceleration",
+    "Acceleration",
+    "subject-physics",
+    2,
+    30,
+  ),
+  seedRoadmapNode(
+    "roadmap-introductory-astrophysics",
+    "roadmap-node-ia-coordinates",
+    "sky-coordinates",
+    "concept",
+    "Sky coordinates",
+    "concept-sky-coordinates",
+    "Sky coordinates",
+    "subject-astronomy",
+    3,
+    35,
+  ),
+  seedRoadmapNode(
+    "roadmap-introductory-astrophysics",
+    "roadmap-node-ia-course",
+    "night-sky-course",
+    "course",
+    "Reading the Night Sky",
+    "course-astronomy-observation",
+    "Reading the Night Sky",
+    "subject-astronomy",
+    4,
+    25,
+    { isRequired: false, isOptionalBranch: true, isCheckpoint: true },
+  ),
+
+  seedRoadmapNode(
+    "roadmap-chemistry-for-biology",
+    "roadmap-node-cfb-atomic",
+    "atomic-model",
+    "concept",
+    "Atomic model",
+    "concept-atomic-model",
+    "Atomic model",
+    "subject-chemistry",
+    0,
+    35,
+  ),
+  seedRoadmapNode(
+    "roadmap-chemistry-for-biology",
+    "roadmap-node-cfb-cell",
+    "cell-structure",
+    "concept",
+    "Cell structure",
+    "concept-cell-structure",
+    "Cell structure",
+    "subject-biology",
+    1,
+    35,
+  ),
+  seedRoadmapNode(
+    "roadmap-chemistry-for-biology",
+    "roadmap-node-cfb-milestone",
+    "matter-to-life",
+    "milestone",
+    "Connect matter to life",
+    null,
+    null,
+    "subject-biology",
+    2,
+    30,
+    { isCheckpoint: true },
+  ),
+
+  seedRoadmapNode(
+    "roadmap-biochemistry-foundations",
+    "roadmap-node-bcf-atomic",
+    "atomic-model",
+    "concept",
+    "Atomic model",
+    "concept-atomic-model",
+    "Atomic model",
+    "subject-chemistry",
+    0,
+    35,
+  ),
+  seedRoadmapNode(
+    "roadmap-biochemistry-foundations",
+    "roadmap-node-bcf-cell",
+    "cell-structure",
+    "concept",
+    "Cell structure",
+    "concept-cell-structure",
+    "Cell structure",
+    "subject-biology",
+    1,
+    35,
+  ),
+  seedRoadmapNode(
+    "roadmap-biochemistry-foundations",
+    "roadmap-node-bcf-milestone",
+    "molecular-foundations",
+    "milestone",
+    "Molecular foundations",
+    null,
+    null,
+    "subject-chemistry",
+    2,
+    25,
+    { isCheckpoint: true },
+  ),
+  seedRoadmapNode(
+    "roadmap-biochemistry-foundations",
+    "roadmap-node-bcf-extension",
+    "cellular-chemistry-extension",
+    "milestone",
+    "Cellular chemistry extension",
+    null,
+    null,
+    "subject-biology",
+    3,
+    30,
+    { isRequired: false, isOptionalBranch: true },
+  ),
+
+  seedRoadmapNode(
+    "roadmap-natural-sciences-foundations",
+    "roadmap-node-nsf-ratio",
+    "ratio",
+    "concept",
+    "Ratio",
+    "concept-ratio",
+    "Ratio",
+    "subject-mathematics",
+    0,
+    20,
+  ),
+  seedRoadmapNode(
+    "roadmap-natural-sciences-foundations",
+    "roadmap-node-nsf-position",
+    "position",
+    "concept",
+    "Position",
+    "concept-position",
+    "Position",
+    "subject-physics",
+    1,
+    20,
+  ),
+  seedRoadmapNode(
+    "roadmap-natural-sciences-foundations",
+    "roadmap-node-nsf-atomic",
+    "atomic-model",
+    "concept",
+    "Atomic model",
+    "concept-atomic-model",
+    "Atomic model",
+    "subject-chemistry",
+    2,
+    35,
+  ),
+  seedRoadmapNode(
+    "roadmap-natural-sciences-foundations",
+    "roadmap-node-nsf-cell",
+    "cell-structure",
+    "concept",
+    "Cell structure",
+    "concept-cell-structure",
+    "Cell structure",
+    "subject-biology",
+    3,
+    35,
+  ),
+  seedRoadmapNode(
+    "roadmap-natural-sciences-foundations",
+    "roadmap-node-nsf-coordinates",
+    "sky-coordinates",
+    "concept",
+    "Sky coordinates",
+    "concept-sky-coordinates",
+    "Sky coordinates",
+    "subject-astronomy",
+    4,
+    35,
+  ),
+  seedRoadmapNode(
+    "roadmap-natural-sciences-foundations",
+    "roadmap-node-nsf-motion",
+    "motion-course",
+    "course",
+    "Motion in One Dimension",
+    "course-physics-motion",
+    "Motion in One Dimension",
+    "subject-physics",
+    5,
+    60,
+    { isCheckpoint: true },
+  ),
+  seedRoadmapNode(
+    "roadmap-natural-sciences-foundations",
+    "roadmap-node-nsf-outcome",
+    "science-outcome",
+    "milestone",
+    "Natural sciences foundation outcome",
+    null,
+    null,
+    null,
+    6,
+    40,
+    { isCheckpoint: true },
+  ),
+];
+
+export const roadmapVersionSeed = roadmapSeed.map((roadmap) => ({
+  id: `${roadmap.id}-version-1`,
+  roadmapId: roadmap.id,
+  versionNumber: 1,
+  status: "published",
+  changeSummary: "Initial published roadmap.",
+  createdByProfileId: null,
+  publishedAt: "2026-01-01T00:00:00.000Z",
+}));
+
+export const roadmapEdgeSeed = roadmapNodeSeed.flatMap((node, index, nodes) => {
+  const roadmapNodes = nodes.filter((candidate) => candidate.roadmapId === node.roadmapId);
+  const localIndex = roadmapNodes.findIndex((candidate) => candidate.id === node.id);
+  const next = roadmapNodes[localIndex + 1];
+  if (!next) return [];
+  return [
+    {
+      id: `roadmap-edge-${node.roadmapId}-${node.nodeKey}-${next.nodeKey}`,
+      roadmapId: node.roadmapId,
+      sourceNodeId: node.id,
+      targetNodeId: next.id,
+      type: next.isOptionalBranch ? "optional" : "requires",
+      sortOrder: localIndex,
+    },
+  ];
+});
+
+export const roadmapPrerequisiteSeed = [
+  ["roadmap-introductory-astrophysics", "roadmap-math-physics-foundations", true],
+  ["roadmap-biochemistry-foundations", "roadmap-chemistry-for-biology", true],
+  ["roadmap-natural-sciences-foundations", "roadmap-math-physics-foundations", false],
+] as const;
+
 export async function runSeed(
   options: { provider?: "sqlite" | "postgres"; databaseUrl?: string } = {},
 ): Promise<void> {
@@ -2026,6 +2657,24 @@ export async function runSeed(
       const insertRecommendationRule = database.prepare(
         "INSERT INTO recommendation_rules (id, slug, name, description, configuration, is_active) VALUES (@id, @slug, @name, @description, @configuration, @isActive) ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, name = excluded.name, description = excluded.description, configuration = excluded.configuration, is_active = excluded.is_active, updated_at = CURRENT_TIMESTAMP",
       );
+      const insertRoadmap = database.prepare(
+        "INSERT INTO roadmaps (id, slug, title, description, goal, target_grade_id, target_difficulty, estimated_duration_minutes, cover_image, status, created_by_profile_id, current_version_number, published_version_id) VALUES (@id, @slug, @title, @description, @goal, @targetGradeId, @targetDifficulty, @estimatedDurationMinutes, @coverImage, @status, @createdByProfileId, 1, @publishedVersionId) ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, title = excluded.title, description = excluded.description, goal = excluded.goal, target_grade_id = excluded.target_grade_id, target_difficulty = excluded.target_difficulty, estimated_duration_minutes = excluded.estimated_duration_minutes, cover_image = excluded.cover_image, status = excluded.status, current_version_number = 1, published_version_id = excluded.published_version_id, updated_at = CURRENT_TIMESTAMP",
+      );
+      const insertRoadmapVersion = database.prepare(
+        "INSERT INTO roadmap_versions (id, roadmap_id, version_number, status, change_summary, snapshot, created_by_profile_id, published_at) VALUES (@id, @roadmapId, @versionNumber, @status, @changeSummary, @snapshot, @createdByProfileId, @publishedAt) ON CONFLICT(id) DO UPDATE SET roadmap_id = excluded.roadmap_id, version_number = excluded.version_number, status = excluded.status, change_summary = excluded.change_summary, snapshot = excluded.snapshot, created_by_profile_id = excluded.created_by_profile_id, published_at = excluded.published_at",
+      );
+      const insertRoadmapSubject = database.prepare(
+        "INSERT INTO roadmap_subjects (roadmap_id, subject_id, sort_order) VALUES (@roadmapId, @subjectId, @sortOrder) ON CONFLICT(roadmap_id, subject_id) DO UPDATE SET sort_order = excluded.sort_order",
+      );
+      const insertRoadmapPrerequisite = database.prepare(
+        "INSERT INTO roadmap_prerequisites (roadmap_id, prerequisite_roadmap_id, is_required) VALUES (@roadmapId, @prerequisiteRoadmapId, @isRequired) ON CONFLICT(roadmap_id, prerequisite_roadmap_id) DO UPDATE SET is_required = excluded.is_required",
+      );
+      const insertRoadmapNode = database.prepare(
+        "INSERT INTO roadmap_nodes (id, roadmap_version_id, node_key, node_type, title, description, reference_id, reference_title, subject_id, is_required, is_checkpoint, is_optional_branch, sort_order, estimated_duration_minutes, metadata) VALUES (@id, @roadmapVersionId, @nodeKey, @type, @title, @description, @referenceId, @referenceTitle, @subjectId, @isRequired, @isCheckpoint, @isOptionalBranch, @sortOrder, @estimatedDurationMinutes, @metadata) ON CONFLICT(id) DO UPDATE SET roadmap_version_id = excluded.roadmap_version_id, node_key = excluded.node_key, node_type = excluded.node_type, title = excluded.title, description = excluded.description, reference_id = excluded.reference_id, reference_title = excluded.reference_title, subject_id = excluded.subject_id, is_required = excluded.is_required, is_checkpoint = excluded.is_checkpoint, is_optional_branch = excluded.is_optional_branch, sort_order = excluded.sort_order, estimated_duration_minutes = excluded.estimated_duration_minutes, metadata = excluded.metadata, updated_at = CURRENT_TIMESTAMP",
+      );
+      const insertRoadmapEdge = database.prepare(
+        "INSERT INTO roadmap_edges (id, roadmap_version_id, source_node_id, target_node_id, edge_type, sort_order) VALUES (@id, @roadmapVersionId, @sourceNodeId, @targetNodeId, @type, @sortOrder) ON CONFLICT(id) DO UPDATE SET roadmap_version_id = excluded.roadmap_version_id, source_node_id = excluded.source_node_id, target_node_id = excluded.target_node_id, edge_type = excluded.edge_type, sort_order = excluded.sort_order",
+      );
       const seedStructure = database.transaction(() => {
         for (const curriculum of curriculumSeed)
           insertCurriculum.run({ ...curriculum, isSystem: curriculum.isSystem ? 1 : 0 });
@@ -2228,6 +2877,36 @@ export async function runSeed(
             configuration: JSON.stringify(rule.configuration),
             isActive: rule.isActive ? 1 : 0,
           });
+        for (const roadmap of roadmapSeed)
+          insertRoadmap.run({
+            ...roadmap,
+            targetGradeId: roadmap.targetGradeId,
+            publishedVersionId: `${roadmap.id}-version-1`,
+          });
+        for (const version of roadmapVersionSeed)
+          insertRoadmapVersion.run({
+            ...version,
+            snapshot: JSON.stringify({}),
+          });
+        for (const [roadmapId, subjectId, sortOrder] of roadmapSubjectSeed)
+          insertRoadmapSubject.run({ roadmapId, subjectId, sortOrder });
+        for (const [roadmapId, prerequisiteRoadmapId, isRequired] of roadmapPrerequisiteSeed)
+          insertRoadmapPrerequisite.run({
+            roadmapId,
+            prerequisiteRoadmapId,
+            isRequired: isRequired ? 1 : 0,
+          });
+        for (const node of roadmapNodeSeed)
+          insertRoadmapNode.run({
+            ...node,
+            roadmapVersionId: `${node.roadmapId}-version-1`,
+            isRequired: node.isRequired ? 1 : 0,
+            isCheckpoint: node.isCheckpoint ? 1 : 0,
+            isOptionalBranch: node.isOptionalBranch ? 1 : 0,
+            metadata: JSON.stringify(node.metadata),
+          });
+        for (const edge of roadmapEdgeSeed)
+          insertRoadmapEdge.run({ ...edge, roadmapVersionId: `${edge.roadmapId}-version-1` });
       });
       seedStructure();
     } finally {
@@ -2703,6 +3382,81 @@ export async function runSeed(
             rule.description,
             JSON.stringify(rule.configuration),
             rule.isActive,
+          ],
+        );
+      for (const roadmap of roadmapSeed)
+        await transaction.unsafe(
+          "INSERT INTO roadmaps (id, slug, title, description, goal, target_grade_id, target_difficulty, estimated_duration_minutes, cover_image, status, created_by_profile_id, current_version_number, published_version_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 1, $12) ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, description = EXCLUDED.description, goal = EXCLUDED.goal, target_grade_id = EXCLUDED.target_grade_id, target_difficulty = EXCLUDED.target_difficulty, estimated_duration_minutes = EXCLUDED.estimated_duration_minutes, cover_image = EXCLUDED.cover_image, status = EXCLUDED.status, current_version_number = 1, published_version_id = EXCLUDED.published_version_id, updated_at = NOW()",
+          [
+            roadmap.id,
+            roadmap.slug,
+            roadmap.title,
+            roadmap.description,
+            roadmap.goal,
+            roadmap.targetGradeId,
+            roadmap.targetDifficulty,
+            roadmap.estimatedDurationMinutes,
+            roadmap.coverImage,
+            roadmap.status,
+            roadmap.createdByProfileId,
+            `${roadmap.id}-version-1`,
+          ],
+        );
+      for (const version of roadmapVersionSeed)
+        await transaction.unsafe(
+          "INSERT INTO roadmap_versions (id, roadmap_id, version_number, status, change_summary, snapshot, created_by_profile_id, published_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO UPDATE SET roadmap_id = EXCLUDED.roadmap_id, version_number = EXCLUDED.version_number, status = EXCLUDED.status, change_summary = EXCLUDED.change_summary, snapshot = EXCLUDED.snapshot, created_by_profile_id = EXCLUDED.created_by_profile_id, published_at = EXCLUDED.published_at",
+          [
+            version.id,
+            version.roadmapId,
+            version.versionNumber,
+            version.status,
+            version.changeSummary,
+            JSON.stringify({}),
+            version.createdByProfileId,
+            version.publishedAt,
+          ],
+        );
+      for (const [roadmapId, subjectId, sortOrder] of roadmapSubjectSeed)
+        await transaction.unsafe(
+          "INSERT INTO roadmap_subjects (roadmap_id, subject_id, sort_order) VALUES ($1, $2, $3) ON CONFLICT (roadmap_id, subject_id) DO UPDATE SET sort_order = EXCLUDED.sort_order",
+          [roadmapId, subjectId, sortOrder],
+        );
+      for (const [roadmapId, prerequisiteRoadmapId, isRequired] of roadmapPrerequisiteSeed)
+        await transaction.unsafe(
+          "INSERT INTO roadmap_prerequisites (roadmap_id, prerequisite_roadmap_id, is_required) VALUES ($1, $2, $3) ON CONFLICT (roadmap_id, prerequisite_roadmap_id) DO UPDATE SET is_required = EXCLUDED.is_required",
+          [roadmapId, prerequisiteRoadmapId, isRequired],
+        );
+      for (const node of roadmapNodeSeed)
+        await transaction.unsafe(
+          "INSERT INTO roadmap_nodes (id, roadmap_version_id, node_key, node_type, title, description, reference_id, reference_title, subject_id, is_required, is_checkpoint, is_optional_branch, sort_order, estimated_duration_minutes, metadata) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) ON CONFLICT (id) DO UPDATE SET roadmap_version_id = EXCLUDED.roadmap_version_id, node_key = EXCLUDED.node_key, node_type = EXCLUDED.node_type, title = EXCLUDED.title, description = EXCLUDED.description, reference_id = EXCLUDED.reference_id, reference_title = EXCLUDED.reference_title, subject_id = EXCLUDED.subject_id, is_required = EXCLUDED.is_required, is_checkpoint = EXCLUDED.is_checkpoint, is_optional_branch = EXCLUDED.is_optional_branch, sort_order = EXCLUDED.sort_order, estimated_duration_minutes = EXCLUDED.estimated_duration_minutes, metadata = EXCLUDED.metadata, updated_at = NOW()",
+          [
+            node.id,
+            `${node.roadmapId}-version-1`,
+            node.nodeKey,
+            node.type,
+            node.title,
+            node.description,
+            node.referenceId,
+            node.referenceTitle,
+            node.subjectId,
+            node.isRequired,
+            node.isCheckpoint,
+            node.isOptionalBranch,
+            node.sortOrder,
+            node.estimatedDurationMinutes,
+            JSON.stringify(node.metadata),
+          ],
+        );
+      for (const edge of roadmapEdgeSeed)
+        await transaction.unsafe(
+          "INSERT INTO roadmap_edges (id, roadmap_version_id, source_node_id, target_node_id, edge_type, sort_order) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO UPDATE SET roadmap_version_id = EXCLUDED.roadmap_version_id, source_node_id = EXCLUDED.source_node_id, target_node_id = EXCLUDED.target_node_id, edge_type = EXCLUDED.edge_type, sort_order = EXCLUDED.sort_order",
+          [
+            edge.id,
+            `${edge.roadmapId}-version-1`,
+            edge.sourceNodeId,
+            edge.targetNodeId,
+            edge.type,
+            edge.sortOrder,
           ],
         );
     });

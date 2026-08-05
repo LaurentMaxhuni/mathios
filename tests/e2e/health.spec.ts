@@ -304,3 +304,66 @@ test("Phase 7 mastery dashboard, explainable detail, recommendations, and review
     recommendations: expect.any(Array),
   });
 });
+
+test("Phase 8 roadmaps, prerequisite progress, personalized paths, and APIs are usable", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/roadmaps");
+  await expect(page.getByRole("heading", { name: "Interdisciplinary roadmaps" })).toBeVisible();
+  await expect(page.getByText("Mathematics and Physics Foundations")).toBeVisible();
+
+  const catalogResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/roadmaps");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(catalogResponse.ok).toBeTruthy();
+  expect(catalogResponse.body.roadmaps).toHaveLength(7);
+
+  const roadmapLink = page.getByRole("link", {
+    name: /published Mathematics and Physics Foundations/,
+  });
+  await expect(roadmapLink).toHaveAttribute("href", "/roadmaps/roadmap-math-physics-foundations");
+  await page.goto("/roadmaps/roadmap-math-physics-foundations");
+  await expect(page).toHaveURL(/\/roadmaps\/roadmap-math-physics-foundations$/);
+  await expect(
+    page.getByRole("heading", { name: "Mathematics and Physics Foundations" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Start this roadmap" }).click();
+  await expect(page.getByRole("heading", { name: "Your progress" })).toBeVisible();
+
+  const detailResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/roadmaps/roadmap-math-physics-foundations");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(detailResponse.ok).toBeTruthy();
+  expect(detailResponse.body.detail).toMatchObject({
+    roadmap: { id: "roadmap-math-physics-foundations" },
+    integrity: { valid: true },
+  });
+
+  await page.getByRole("button", { name: "Mark complete" }).first().click();
+  await expect(page.getByText("1/4")).toBeVisible();
+  await page.getByRole("button", { name: "Generate personalized path" }).click();
+  await expect(page.getByRole("link", { name: "Open full path" })).toBeVisible();
+
+  const pathResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/roadmaps/roadmap-math-physics-foundations/path");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(pathResponse.ok).toBeTruthy();
+  expect(pathResponse.body.path).toMatchObject({
+    roadmapId: "roadmap-math-physics-foundations",
+    pathNodes: expect.any(Array),
+  });
+
+  await page.goto("/personalized-paths");
+  await expect(page.getByRole("heading", { name: "Personalized learning paths" })).toBeVisible();
+  await expect(page.getByText("Why this order?")).toBeVisible();
+  await expect(page.getByText("Describing motion")).toBeVisible();
+});
