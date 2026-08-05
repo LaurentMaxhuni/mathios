@@ -4,6 +4,7 @@ import { LessonReader } from "@/features/courses/components/lesson-reader";
 import { canAuthorCourses } from "@/features/courses/service";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getCourseRepository } from "@/infrastructure/database/repositories/course-repository";
+import { getSimulationRepository } from "@/infrastructure/database/repositories/simulation-repository";
 
 export default async function LessonReaderPage({
   params,
@@ -23,7 +24,18 @@ export default async function LessonReaderPage({
     <div className="mx-auto w-full max-w-[1280px] px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
       <Breadcrumbs current={reader.lesson.title} />
       <div className="mt-7">
-        <LessonReader data={reader} />
+        <LessonReader
+          data={{
+            ...reader,
+            simulationLinks: (await getSimulationRepository().listLessonSimulations(lessonId)).map(
+              (link) => ({
+                simulationId: link.simulationId ?? "",
+                simulationTitle: link.simulationTitle ?? link.lessonTitle,
+                instructions: link.instructions,
+              }),
+            ),
+          }}
+        />
       </div>
     </div>
   );

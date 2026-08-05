@@ -26,6 +26,7 @@ describe("database migrations", () => {
         "0006_phase6_assessments.sql",
         "0007_phase7_mastery_recommendations.sql",
         "0008_phase8_roadmaps_paths.sql",
+        "0009_phase9_simulations.sql",
       ]);
       expect(second.applied).toEqual([]);
       expect(second.skipped).toEqual([
@@ -38,6 +39,7 @@ describe("database migrations", () => {
         "0006_phase6_assessments.sql",
         "0007_phase7_mastery_recommendations.sql",
         "0008_phase8_roadmaps_paths.sql",
+        "0009_phase9_simulations.sql",
       ]);
       expect(database.prepare("SELECT key FROM app_metadata").all()).toEqual([]);
       expect(
@@ -96,6 +98,13 @@ describe("database migrations", () => {
         "user_roadmaps",
         "user_roadmap_progress",
         "personalized_paths",
+        "simulations",
+        "simulation_versions",
+        "simulation_inputs",
+        "simulation_presets",
+        "lesson_simulations",
+        "user_simulation_sessions",
+        "simulation_results",
       ]) {
         expect(
           database
