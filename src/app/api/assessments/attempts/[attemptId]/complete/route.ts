@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { asApplicationError } from "@/domain/errors/application-error";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getAssessmentRepository } from "@/infrastructure/database/repositories/assessment-repository";
+import { getMasteryRepository } from "@/infrastructure/database/repositories/mastery-repository";
 import { completeAssessmentSchema } from "@/features/assessments/schemas";
 import {
   completeAssessmentAttempt,
@@ -35,6 +36,7 @@ export async function POST(
     const result = await completeAssessmentAttempt(
       { attemptId, profileId: principal.profileId },
       getAssessmentRepository(),
+      getMasteryRepository(),
     );
     return NextResponse.json({ result });
   } catch (error) {

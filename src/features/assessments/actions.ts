@@ -10,6 +10,7 @@ import {
   newAssessmentId,
 } from "@/infrastructure/database/repositories/assessment-repository";
 import { getExerciseRepository } from "@/infrastructure/database/repositories/exercise-repository";
+import { getMasteryRepository } from "@/infrastructure/database/repositories/mastery-repository";
 import {
   completeAssessmentAttempt,
   createAssessment,
@@ -275,6 +276,7 @@ export async function completeAssessmentAttemptAction(
     const result = await completeAssessmentAttempt(
       { attemptId: parsed.data.attemptId, profileId: principal.profileId },
       getAssessmentRepository(),
+      getMasteryRepository(),
     );
     return {
       ok: true,

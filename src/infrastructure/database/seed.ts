@@ -1,12 +1,36 @@
 import Database from "better-sqlite3";
 import postgres from "postgres";
+import { DEFAULT_MASTERY_RULES, DEFAULT_RECOMMENDATION_RULES } from "@/domain/mastery/types";
 import { env } from "@/lib/env";
 import { resolveSqliteFilename } from "@/infrastructure/database/client";
 import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-6"],
+  ["seed_version", "phase-7"],
+] as const;
+
+export const masteryRuleSeed = [
+  {
+    id: "mastery-rule-default",
+    slug: "default",
+    name: "Explainable mastery",
+    description: "Weighted, recency-aware mastery with evidence and prerequisite safeguards.",
+    configuration: DEFAULT_MASTERY_RULES,
+    isActive: true,
+  },
+] as const;
+
+export const recommendationRuleSeed = [
+  {
+    id: "recommendation-rule-default",
+    slug: "default",
+    name: "Explainable learning recommendations",
+    description:
+      "Deterministic recommendations for prerequisites, review, requirements, and weak concepts.",
+    configuration: DEFAULT_RECOMMENDATION_RULES,
+    isActive: true,
+  },
 ] as const;
 
 export const roleSeed = [
@@ -1996,6 +2020,12 @@ export async function runSeed(
       const insertAssessmentQuestion = database.prepare(
         "INSERT INTO assessment_questions (id, assessment_id, section_id, pool_id, question_id, sort_order, points, is_required) VALUES (@id, @assessmentId, @sectionId, @poolId, @questionId, @sortOrder, @points, @isRequired) ON CONFLICT(id) DO UPDATE SET assessment_id = excluded.assessment_id, section_id = excluded.section_id, pool_id = excluded.pool_id, question_id = excluded.question_id, sort_order = excluded.sort_order, points = excluded.points, is_required = excluded.is_required",
       );
+      const insertMasteryRule = database.prepare(
+        "INSERT INTO mastery_rules (id, slug, name, description, configuration, is_active) VALUES (@id, @slug, @name, @description, @configuration, @isActive) ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, name = excluded.name, description = excluded.description, configuration = excluded.configuration, is_active = excluded.is_active, updated_at = CURRENT_TIMESTAMP",
+      );
+      const insertRecommendationRule = database.prepare(
+        "INSERT INTO recommendation_rules (id, slug, name, description, configuration, is_active) VALUES (@id, @slug, @name, @description, @configuration, @isActive) ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, name = excluded.name, description = excluded.description, configuration = excluded.configuration, is_active = excluded.is_active, updated_at = CURRENT_TIMESTAMP",
+      );
       const seedStructure = database.transaction(() => {
         for (const curriculum of curriculumSeed)
           insertCurriculum.run({ ...curriculum, isSystem: curriculum.isSystem ? 1 : 0 });
@@ -2185,6 +2215,18 @@ export async function runSeed(
           insertAssessmentQuestion.run({
             ...question,
             isRequired: question.isRequired ? 1 : 0,
+          });
+        for (const rule of masteryRuleSeed)
+          insertMasteryRule.run({
+            ...rule,
+            configuration: JSON.stringify(rule.configuration),
+            isActive: rule.isActive ? 1 : 0,
+          });
+        for (const rule of recommendationRuleSeed)
+          insertRecommendationRule.run({
+            ...rule,
+            configuration: JSON.stringify(rule.configuration),
+            isActive: rule.isActive ? 1 : 0,
           });
       });
       seedStructure();
@@ -2637,6 +2679,30 @@ export async function runSeed(
             question.sortOrder,
             question.points,
             question.isRequired,
+          ],
+        );
+      for (const rule of masteryRuleSeed)
+        await transaction.unsafe(
+          "INSERT INTO mastery_rules (id, slug, name, description, configuration, is_active) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, name = EXCLUDED.name, description = EXCLUDED.description, configuration = EXCLUDED.configuration, is_active = EXCLUDED.is_active, updated_at = NOW()",
+          [
+            rule.id,
+            rule.slug,
+            rule.name,
+            rule.description,
+            JSON.stringify(rule.configuration),
+            rule.isActive,
+          ],
+        );
+      for (const rule of recommendationRuleSeed)
+        await transaction.unsafe(
+          "INSERT INTO recommendation_rules (id, slug, name, description, configuration, is_active) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, name = EXCLUDED.name, description = EXCLUDED.description, configuration = EXCLUDED.configuration, is_active = EXCLUDED.is_active, updated_at = NOW()",
+          [
+            rule.id,
+            rule.slug,
+            rule.name,
+            rule.description,
+            JSON.stringify(rule.configuration),
+            rule.isActive,
           ],
         );
     });

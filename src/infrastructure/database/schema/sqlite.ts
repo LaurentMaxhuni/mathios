@@ -1536,6 +1536,223 @@ export const questionAttempts = sqliteTable(
   }),
 );
 
+export const userConceptMastery = sqliteTable(
+  "user_concept_mastery",
+  {
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    conceptId: text("concept_id")
+      .notNull()
+      .references(() => concepts.id, { onDelete: "cascade" }),
+    state: text("state").notNull().default("not-started"),
+    score: real("score").notNull().default(0),
+    confidence: real("confidence").notNull().default(0),
+    evidenceCount: integer("evidence_count").notNull().default(0),
+    evidenceTypeCount: integer("evidence_type_count").notNull().default(0),
+    difficultyBandCount: integer("difficulty_band_count").notNull().default(0),
+    lastPracticedAt: text("last_practiced_at"),
+    nextReviewAt: text("next_review_at"),
+    breakdown: text("breakdown").notNull().default("{}"),
+    evidenceSummary: text("evidence_summary").notNull().default("[]"),
+    currentSnapshotId: text("current_snapshot_id"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.profileId, table.conceptId] }),
+    profileStateIdx: index("user_concept_mastery_profile_state_idx").on(
+      table.profileId,
+      table.state,
+      table.score,
+    ),
+    reviewIdx: index("user_concept_mastery_review_idx").on(table.profileId, table.nextReviewAt),
+    conceptIdx: index("user_concept_mastery_concept_idx").on(table.conceptId),
+  }),
+);
+
+export const masteryEvents = sqliteTable(
+  "mastery_events",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    conceptId: text("concept_id")
+      .notNull()
+      .references(() => concepts.id, { onDelete: "cascade" }),
+    eventType: text("event_type").notNull(),
+    sourceId: text("source_id").notNull(),
+    score: real("score").notNull().default(0),
+    difficulty: text("difficulty").notNull().default("balanced"),
+    attempts: integer("attempts").notNull().default(1),
+    hintsUsed: integer("hints_used").notNull().default(0),
+    partialCredit: integer("partial_credit", { mode: "boolean" }).notNull().default(false),
+    metadata: text("metadata").notNull().default("{}"),
+    occurredAt: text("occurred_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    sourceIdx: uniqueIndex("mastery_events_profile_concept_source_idx").on(
+      table.profileId,
+      table.conceptId,
+      table.eventType,
+      table.sourceId,
+    ),
+    profileConceptIdx: index("mastery_events_profile_concept_idx").on(
+      table.profileId,
+      table.conceptId,
+      table.occurredAt,
+    ),
+    eventSourceIdx: index("mastery_events_source_idx").on(table.eventType, table.sourceId),
+  }),
+);
+
+export const masterySnapshots = sqliteTable(
+  "mastery_snapshots",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    conceptId: text("concept_id")
+      .notNull()
+      .references(() => concepts.id, { onDelete: "cascade" }),
+    state: text("state").notNull(),
+    score: real("score").notNull(),
+    confidence: real("confidence").notNull(),
+    evidenceCount: integer("evidence_count").notNull(),
+    evidenceTypeCount: integer("evidence_type_count").notNull(),
+    difficultyBandCount: integer("difficulty_band_count").notNull(),
+    lastPracticedAt: text("last_practiced_at"),
+    nextReviewAt: text("next_review_at"),
+    breakdown: text("breakdown").notNull().default("{}"),
+    evidenceSummary: text("evidence_summary").notNull().default("[]"),
+    reason: text("reason").notNull().default("Evidence updated."),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    profileConceptIdx: index("mastery_snapshots_profile_concept_idx").on(
+      table.profileId,
+      table.conceptId,
+      table.createdAt,
+    ),
+  }),
+);
+
+export const masteryRules = sqliteTable(
+  "mastery_rules",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    description: text("description").notNull().default(""),
+    configuration: text("configuration").notNull().default("{}"),
+    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({ slugIdx: uniqueIndex("mastery_rules_slug_idx").on(table.slug) }),
+);
+
+export const recommendationRules = sqliteTable(
+  "recommendation_rules",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    description: text("description").notNull().default(""),
+    configuration: text("configuration").notNull().default("{}"),
+    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({ slugIdx: uniqueIndex("recommendation_rules_slug_idx").on(table.slug) }),
+);
+
+export const recommendations = sqliteTable(
+  "recommendations",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    conceptId: text("concept_id").references(() => concepts.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    sourceKey: text("source_key").notNull(),
+    title: text("title").notNull(),
+    reason: text("reason").notNull(),
+    priority: integer("priority").notNull().default(0),
+    status: text("status").notNull().default("active"),
+    metadata: text("metadata").notNull().default("{}"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    expiresAt: text("expires_at"),
+  },
+  (table) => ({
+    sourceIdx: uniqueIndex("recommendations_profile_kind_source_idx").on(
+      table.profileId,
+      table.kind,
+      table.sourceKey,
+    ),
+    statusIdx: index("recommendations_profile_status_idx").on(
+      table.profileId,
+      table.status,
+      table.priority,
+    ),
+    conceptIdx: index("recommendations_concept_idx").on(table.conceptId, table.status),
+  }),
+);
+
+export const recommendationDismissals = sqliteTable(
+  "recommendation_dismissals",
+  {
+    id: text("id").primaryKey(),
+    recommendationId: text("recommendation_id")
+      .notNull()
+      .references(() => recommendations.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    dismissedAt: text("dismissed_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    reason: text("reason"),
+  },
+  (table) => ({
+    uniqueDismissal: uniqueIndex("recommendation_dismissals_profile_recommendation_idx").on(
+      table.profileId,
+      table.recommendationId,
+    ),
+    profileIdx: index("recommendation_dismissals_profile_idx").on(
+      table.profileId,
+      table.dismissedAt,
+    ),
+  }),
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Profile = typeof profiles.$inferSelect;
@@ -1632,3 +1849,17 @@ export type DiagnosticResult = typeof diagnosticResults.$inferSelect;
 export type NewDiagnosticResult = typeof diagnosticResults.$inferInsert;
 export type PlacementResult = typeof placementResults.$inferSelect;
 export type NewPlacementResult = typeof placementResults.$inferInsert;
+export type UserConceptMastery = typeof userConceptMastery.$inferSelect;
+export type NewUserConceptMastery = typeof userConceptMastery.$inferInsert;
+export type MasteryEvent = typeof masteryEvents.$inferSelect;
+export type NewMasteryEvent = typeof masteryEvents.$inferInsert;
+export type MasterySnapshot = typeof masterySnapshots.$inferSelect;
+export type NewMasterySnapshot = typeof masterySnapshots.$inferInsert;
+export type MasteryRule = typeof masteryRules.$inferSelect;
+export type NewMasteryRule = typeof masteryRules.$inferInsert;
+export type RecommendationRule = typeof recommendationRules.$inferSelect;
+export type NewRecommendationRule = typeof recommendationRules.$inferInsert;
+export type Recommendation = typeof recommendations.$inferSelect;
+export type NewRecommendation = typeof recommendations.$inferInsert;
+export type RecommendationDismissal = typeof recommendationDismissals.$inferSelect;
+export type NewRecommendationDismissal = typeof recommendationDismissals.$inferInsert;

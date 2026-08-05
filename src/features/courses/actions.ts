@@ -5,6 +5,8 @@ import { actionStateFromError, actionStateFromZod, type ActionState } from "@/li
 import { formBoolean, formNumber, formString } from "@/lib/form-data";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getCourseRepository } from "@/infrastructure/database/repositories/course-repository";
+import { getMasteryRepository } from "@/infrastructure/database/repositories/mastery-repository";
+import { recordLessonCompletion } from "@/features/mastery/service";
 import {
   archiveLesson,
   autosaveLesson,
@@ -581,6 +583,18 @@ export async function saveLessonProgressAction(
       { ...parsed.data, profileId: session.principal.profileId },
       repository,
     );
+    if (parsed.data.completed) {
+      await recordLessonCompletion(
+        {
+          profileId: session.principal.profileId,
+          lessonId: parsed.data.lessonId,
+        },
+        getMasteryRepository(),
+      );
+      revalidatePath("/mastery");
+      revalidatePath("/recommendations");
+      revalidatePath("/review-queue");
+    }
     return { ok: true, message: "Progress saved." };
   } catch (error) {
     return actionStateFromError(error);

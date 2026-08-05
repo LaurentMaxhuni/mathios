@@ -24,6 +24,7 @@ describe("database migrations", () => {
         "0004_phase4_concepts_knowledge_graph.sql",
         "0005_phase5_exercises_questions.sql",
         "0006_phase6_assessments.sql",
+        "0007_phase7_mastery_recommendations.sql",
       ]);
       expect(second.applied).toEqual([]);
       expect(second.skipped).toEqual([
@@ -34,6 +35,7 @@ describe("database migrations", () => {
         "0004_phase4_concepts_knowledge_graph.sql",
         "0005_phase5_exercises_questions.sql",
         "0006_phase6_assessments.sql",
+        "0007_phase7_mastery_recommendations.sql",
       ]);
       expect(database.prepare("SELECT key FROM app_metadata").all()).toEqual([]);
       expect(
@@ -76,6 +78,13 @@ describe("database migrations", () => {
         "assessment_section_results",
         "diagnostic_results",
         "placement_results",
+        "user_concept_mastery",
+        "mastery_events",
+        "mastery_snapshots",
+        "mastery_rules",
+        "recommendation_rules",
+        "recommendations",
+        "recommendation_dismissals",
       ]) {
         expect(
           database

@@ -261,3 +261,46 @@ test("Phase 6 assessment catalog, timed workflow, and authoring surface are usab
   await expect(page.getByRole("heading", { name: "Assessment studio." })).toBeVisible();
   await expect(page.getByText("Motion placement check")).toBeVisible();
 });
+
+test("Phase 7 mastery dashboard, explainable detail, recommendations, and review queue are usable", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/mastery");
+  await expect(page.getByRole("heading", { name: "See what is sticking." })).toBeVisible();
+  await expect(page.getByText("Concepts assessed")).toBeVisible();
+  await expect(page.getByText("Mastery by subject")).toBeVisible();
+  await expect(page.getByText("Mastery by grade range")).toBeVisible();
+
+  await page.goto("/mastery/subjects");
+  await expect(page.getByRole("heading", { name: "Subject mastery map" })).toBeVisible();
+  await page.goto("/mastery/grades");
+  await expect(page.getByRole("heading", { name: "Grade mastery view" })).toBeVisible();
+
+  await page.goto("/mastery/concepts/concept-velocity");
+  await expect(page.getByRole("heading", { name: "Velocity" })).toBeVisible();
+  await expect(page.getByText("Explainable score")).toBeVisible();
+  await expect(page.getByText("Evidence history")).toBeVisible();
+  await expect(page.getByText("Prerequisite health")).toBeVisible();
+
+  await page.goto("/recommendations");
+  await expect(page.getByRole("heading", { name: "Recommendation feed" })).toBeVisible();
+  await expect(page.getByText(/Every suggestion names the signal/)).toBeVisible();
+  await page.goto("/review-queue");
+  await expect(page.getByRole("heading", { name: "Review queue" })).toBeVisible();
+
+  const masteryResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/mastery");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(masteryResponse.ok).toBeTruthy();
+  expect(masteryResponse.body).toMatchObject({
+    dashboard: { concepts: expect.any(Array) },
+    recommendations: expect.any(Array),
+  });
+});

@@ -30,6 +30,7 @@ import type {
 } from "@/domain/assessment/types";
 import type { ExerciseRepository } from "@/domain/ports/exercise-repository";
 import type { AssessmentRepository } from "@/domain/ports/assessment-repository";
+import type { MasteryRepository } from "@/domain/ports/mastery-repository";
 import type { AuthSession, AuthenticatedPrincipal } from "@/infrastructure/auth/auth-provider";
 import { requirePermission, requireSession } from "@/features/auth/authorization";
 import { generateQuestionInstance } from "@/domain/exercise/generator";
@@ -39,6 +40,7 @@ import type {
   JsonValue,
   QuestionOptionRecord,
 } from "@/domain/exercise/types";
+import { recordAssessmentCompletion } from "@/features/mastery/service";
 
 const editorRoles = new Set(["administrator", "content-creator", "teacher"]);
 
@@ -427,6 +429,7 @@ export async function submitAssessmentAnswer(
 export async function completeAssessmentAttempt(
   input: { attemptId: string; profileId: string },
   repository: AssessmentRepository,
+  masteryRepository?: MasteryRepository,
 ): Promise<AssessmentResultDetail> {
   const attempt = ensure(
     await repository.getAttempt(input.attemptId, input.profileId),
@@ -502,11 +505,15 @@ export async function completeAssessmentAttempt(
     passed: expired ? false : summary.passed,
     submittedAt: new Date().toISOString(),
   });
-  return ensure(
+  const result = ensure(
     await repository.getResult(attempt.id, input.profileId),
     "Assessment result",
     attempt.id,
   );
+  if (masteryRepository) {
+    await recordAssessmentCompletion(input, masteryRepository);
+  }
+  return result;
 }
 
 export async function getLearnerAssessment(
