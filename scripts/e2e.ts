@@ -1,7 +1,7 @@
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
+import { access, cp, mkdtemp, rm } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { runSeed } from "@/infrastructure/database/seed";
 
@@ -11,6 +11,7 @@ async function main(): Promise<void> {
   const databaseDirectory = await mkdtemp(path.join(os.tmpdir(), "mathios-e2e-"));
   const databaseUrl = `file:${path.join(databaseDirectory, "e2e.db")}`;
   await runSeed({ provider: "sqlite", databaseUrl });
+  await copyStandaloneAssets();
   const serverPath = path.resolve(".next/standalone/server.js");
   const server = spawn(process.execPath, [serverPath], {
     env: {
@@ -36,6 +37,25 @@ async function main(): Promise<void> {
       await new Promise<void>((resolve) => server.once("close", () => resolve()));
     }
     await rm(databaseDirectory, { recursive: true, force: true });
+  }
+}
+
+async function copyStandaloneAssets(): Promise<void> {
+  const standaloneRoot = path.resolve(".next/standalone");
+  await cp(path.resolve(".next/static"), path.join(standaloneRoot, ".next/static"), {
+    force: true,
+    recursive: true,
+  });
+
+  const publicDirectory = path.resolve("public");
+  try {
+    await access(publicDirectory);
+    await cp(publicDirectory, path.join(standaloneRoot, "public"), {
+      force: true,
+      recursive: true,
+    });
+  } catch {
+    // The current app has no public directory; keep this optional for future assets.
   }
 }
 

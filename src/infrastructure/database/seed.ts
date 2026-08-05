@@ -6,7 +6,7 @@ import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-3"],
+  ["seed_version", "phase-4"],
 ] as const;
 
 export const roleSeed = [
@@ -874,6 +874,224 @@ export const lessonVersionSeed = lessonSeed.flatMap((lesson) => [
     : []),
 ]);
 
+export const conceptSeed = [
+  {
+    id: "concept-position",
+    slug: "position",
+    name: "Position",
+    description: "A location described relative to a chosen reference point and coordinate system.",
+    subjectId: "subject-physics",
+    domainId: "domain-mechanics",
+    gradeMinId: "grade-7",
+    gradeMaxId: "grade-8",
+    difficulty: "gentle",
+    masteryThreshold: 70,
+  },
+  {
+    id: "concept-velocity",
+    slug: "velocity",
+    name: "Velocity",
+    description:
+      "A rate of change of position that keeps direction as part of the physical quantity.",
+    subjectId: "subject-physics",
+    domainId: "domain-mechanics",
+    gradeMinId: "grade-7",
+    gradeMaxId: "grade-9",
+    difficulty: "balanced",
+    masteryThreshold: 75,
+  },
+  {
+    id: "concept-acceleration",
+    slug: "acceleration",
+    name: "Acceleration",
+    description: "The rate at which velocity changes, including changes in speed or direction.",
+    subjectId: "subject-physics",
+    domainId: "domain-mechanics",
+    gradeMinId: "grade-8",
+    gradeMaxId: "grade-10",
+    difficulty: "balanced",
+    masteryThreshold: 75,
+  },
+  {
+    id: "concept-motion-graphs",
+    slug: "motion-graphs",
+    name: "Motion graphs",
+    description: "Graphs that model how position, velocity, and acceleration evolve over time.",
+    subjectId: "subject-physics",
+    domainId: "domain-mechanics",
+    gradeMinId: "grade-8",
+    gradeMaxId: "grade-10",
+    difficulty: "challenging",
+    masteryThreshold: 80,
+  },
+  {
+    id: "concept-ratio",
+    slug: "ratio",
+    name: "Ratio",
+    description:
+      "A multiplicative comparison used to describe scale, rates, and proportional structure.",
+    subjectId: "subject-mathematics",
+    domainId: "domain-arithmetic",
+    gradeMinId: "grade-6",
+    gradeMaxId: "grade-8",
+    difficulty: "gentle",
+    masteryThreshold: 70,
+  },
+  {
+    id: "concept-linear-equations",
+    slug: "linear-equations",
+    name: "Linear equations",
+    description:
+      "Equations whose variables change at a constant rate and can be solved with inverse operations.",
+    subjectId: "subject-mathematics",
+    domainId: "domain-algebra",
+    gradeMinId: "grade-7",
+    gradeMaxId: "grade-9",
+    difficulty: "balanced",
+    masteryThreshold: 75,
+  },
+  {
+    id: "concept-sky-coordinates",
+    slug: "sky-coordinates",
+    name: "Sky coordinates",
+    description:
+      "A reference system for locating objects on the celestial sphere from observations.",
+    subjectId: "subject-astronomy",
+    domainId: "domain-observational-astronomy",
+    gradeMinId: "grade-10",
+    gradeMaxId: "grade-12",
+    difficulty: "balanced",
+    masteryThreshold: 70,
+  },
+  {
+    id: "concept-cell-structure",
+    slug: "cell-structure",
+    name: "Cell structure",
+    description:
+      "The organized components of a cell and how their structure supports life processes.",
+    subjectId: "subject-biology",
+    domainId: "domain-cell-biology",
+    gradeMinId: "grade-6",
+    gradeMaxId: "grade-8",
+    difficulty: "gentle",
+    masteryThreshold: 70,
+  },
+  {
+    id: "concept-atomic-model",
+    slug: "atomic-model",
+    name: "Atomic model",
+    description:
+      "A model of matter built from nuclei, electrons, energy levels, and observable evidence.",
+    subjectId: "subject-chemistry",
+    domainId: "domain-atomic-structure",
+    gradeMinId: "grade-8",
+    gradeMaxId: "grade-10",
+    difficulty: "balanced",
+    masteryThreshold: 75,
+  },
+] as const;
+
+export const conceptRelationshipSeed = [
+  ["concept-edge-velocity-position", "concept-velocity", "concept-position", "requires"],
+  ["concept-edge-acceleration-velocity", "concept-acceleration", "concept-velocity", "requires"],
+  [
+    "concept-edge-acceleration-motion-graphs",
+    "concept-acceleration",
+    "concept-motion-graphs",
+    "unlocks",
+  ],
+  [
+    "concept-edge-motion-graphs-velocity",
+    "concept-motion-graphs",
+    "concept-velocity",
+    "builds-upon",
+  ],
+  ["concept-edge-ratio-linear-equations", "concept-linear-equations", "concept-ratio", "requires"],
+  ["concept-edge-ratio-velocity", "concept-ratio", "concept-velocity", "applies-in"],
+  [
+    "concept-edge-position-sky-coordinates",
+    "concept-sky-coordinates",
+    "concept-position",
+    "cross-subject-connection",
+  ],
+  ["concept-edge-atomic-position", "concept-atomic-model", "concept-position", "related-to"],
+] as const;
+
+export const conceptObjectiveSeed = [
+  ["concept-position", "objective-kosovo-grade-8-subject-physics", 0],
+  ["concept-velocity", "objective-kosovo-grade-8-subject-physics", 1],
+  ["concept-acceleration", "objective-international-grade-8-subject-physics", 0],
+  ["concept-motion-graphs", "objective-international-grade-8-subject-physics", 1],
+  ["concept-ratio", "objective-kosovo-grade-6-subject-mathematics", 0],
+  ["concept-linear-equations", "objective-kosovo-grade-8-subject-mathematics", 0],
+  ["concept-sky-coordinates", "objective-international-grade-10-subject-astronomy", 0],
+  ["concept-cell-structure", "objective-kosovo-grade-6-subject-biology", 0],
+  ["concept-atomic-model", "objective-kosovo-grade-8-subject-chemistry", 0],
+] as const;
+
+export const conceptLessonSeed = [
+  ["concept-position", "lesson-describing-motion", 0],
+  ["concept-velocity", "lesson-describing-motion", 1],
+  ["concept-velocity", "lesson-speed-and-velocity", 0],
+  ["concept-acceleration", "lesson-constant-acceleration", 0],
+  ["concept-motion-graphs", "lesson-describing-motion", 2],
+] as const;
+
+export const conceptApplicationSeed = [
+  [
+    "application-position-navigation",
+    "concept-position",
+    "Navigation and mapping",
+    "Reference points and coordinate systems make it possible to describe routes, maps, and locations.",
+    0,
+  ],
+  [
+    "application-velocity-traffic",
+    "concept-velocity",
+    "Traffic safety",
+    "Direction-aware velocity helps explain closing distances, braking, and collision risk.",
+    0,
+  ],
+  [
+    "application-acceleration-sports",
+    "concept-acceleration",
+    "Sports performance",
+    "Acceleration describes how athletes and vehicles change their motion over time.",
+    0,
+  ],
+  [
+    "application-sky-coordinates",
+    "concept-sky-coordinates",
+    "Telescope pointing",
+    "Astronomers use coordinates to locate and revisit objects in the night sky.",
+    0,
+  ],
+] as const;
+
+export const conceptMisconceptionSeed = [
+  [
+    "misconception-velocity-speed",
+    "concept-velocity",
+    "Velocity and speed are always the same.",
+    "Speed is scalar; velocity also records direction.",
+    0,
+  ],
+  [
+    "misconception-acceleration-speeding",
+    "concept-acceleration",
+    "An object accelerates only when it speeds up.",
+    "A change in direction is also acceleration, even at constant speed.",
+    0,
+  ],
+  [
+    "misconception-position-motion",
+    "concept-position",
+    "An object at a position is automatically moving.",
+    "Position is a state; motion describes how position changes with time.",
+    0,
+  ],
+] as const;
+
 export async function runSeed(
   options: { provider?: "sqlite" | "postgres"; databaseUrl?: string } = {},
 ): Promise<void> {
@@ -1056,6 +1274,43 @@ export async function runSeed(
           status = excluded.status, change_summary = excluded.change_summary, snapshot = excluded.snapshot,
           created_by_profile_id = excluded.created_by_profile_id, published_at = excluded.published_at
       `);
+      const insertConcept = database.prepare(`
+        INSERT INTO concepts (id, slug, name, description, subject_id, domain_id, grade_min_id, grade_max_id, difficulty, mastery_threshold, is_archived)
+        VALUES (@id, @slug, @name, @description, @subjectId, @domainId, @gradeMinId, @gradeMaxId, @difficulty, @masteryThreshold, 0)
+        ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, name = excluded.name, description = excluded.description,
+          subject_id = excluded.subject_id, domain_id = excluded.domain_id, grade_min_id = excluded.grade_min_id,
+          grade_max_id = excluded.grade_max_id, difficulty = excluded.difficulty, mastery_threshold = excluded.mastery_threshold,
+          is_archived = 0, updated_at = CURRENT_TIMESTAMP
+      `);
+      const insertConceptRelationship = database.prepare(`
+        INSERT INTO concept_relationships (id, source_concept_id, target_concept_id, relationship_type)
+        VALUES (@id, @sourceConceptId, @targetConceptId, @type)
+        ON CONFLICT(id) DO UPDATE SET source_concept_id = excluded.source_concept_id,
+          target_concept_id = excluded.target_concept_id, relationship_type = excluded.relationship_type,
+          updated_at = CURRENT_TIMESTAMP
+      `);
+      const insertConceptObjective = database.prepare(`
+        INSERT INTO concept_learning_objectives (concept_id, objective_id, sort_order)
+        VALUES (@conceptId, @objectiveId, @sortOrder)
+        ON CONFLICT(concept_id, objective_id) DO UPDATE SET sort_order = excluded.sort_order
+      `);
+      const insertConceptLesson = database.prepare(`
+        INSERT INTO lesson_concepts (lesson_id, concept_id, sort_order)
+        VALUES (@lessonId, @conceptId, @sortOrder)
+        ON CONFLICT(lesson_id, concept_id) DO UPDATE SET sort_order = excluded.sort_order
+      `);
+      const insertConceptApplication = database.prepare(`
+        INSERT INTO concept_applications (id, concept_id, title, description, sort_order)
+        VALUES (@id, @conceptId, @title, @description, @sortOrder)
+        ON CONFLICT(id) DO UPDATE SET concept_id = excluded.concept_id, title = excluded.title,
+          description = excluded.description, sort_order = excluded.sort_order, updated_at = CURRENT_TIMESTAMP
+      `);
+      const insertConceptMisconception = database.prepare(`
+        INSERT INTO concept_misconceptions (id, concept_id, misconception, correction, sort_order)
+        VALUES (@id, @conceptId, @misconception, @correction, @sortOrder)
+        ON CONFLICT(id) DO UPDATE SET concept_id = excluded.concept_id, misconception = excluded.misconception,
+          correction = excluded.correction, sort_order = excluded.sort_order, updated_at = CURRENT_TIMESTAMP
+      `);
       const seedStructure = database.transaction(() => {
         for (const curriculum of curriculumSeed)
           insertCurriculum.run({ ...curriculum, isSystem: curriculum.isSystem ? 1 : 0 });
@@ -1146,6 +1401,23 @@ export async function runSeed(
             ...version,
             snapshot: JSON.stringify(version.snapshot),
           });
+        for (const concept of conceptSeed) insertConcept.run(concept);
+        for (const [id, sourceConceptId, targetConceptId, type] of conceptRelationshipSeed)
+          insertConceptRelationship.run({ id, sourceConceptId, targetConceptId, type });
+        for (const [conceptId, objectiveId, sortOrder] of conceptObjectiveSeed)
+          insertConceptObjective.run({ conceptId, objectiveId, sortOrder });
+        for (const [conceptId, lessonId, sortOrder] of conceptLessonSeed)
+          insertConceptLesson.run({ conceptId, lessonId, sortOrder });
+        for (const [id, conceptId, title, description, sortOrder] of conceptApplicationSeed)
+          insertConceptApplication.run({ id, conceptId, title, description, sortOrder });
+        for (const [
+          id,
+          conceptId,
+          misconception,
+          correction,
+          sortOrder,
+        ] of conceptMisconceptionSeed)
+          insertConceptMisconception.run({ id, conceptId, misconception, correction, sortOrder });
       });
       seedStructure();
     } finally {
@@ -1366,6 +1638,61 @@ export async function runSeed(
           ON CONFLICT (id) DO UPDATE SET lesson_id = EXCLUDED.lesson_id, version_number = EXCLUDED.version_number,
             status = EXCLUDED.status, change_summary = EXCLUDED.change_summary, snapshot = EXCLUDED.snapshot,
             created_by_profile_id = EXCLUDED.created_by_profile_id, published_at = EXCLUDED.published_at
+        `;
+      }
+      for (const concept of conceptSeed) {
+        await transaction`
+          INSERT INTO concepts (id, slug, name, description, subject_id, domain_id, grade_min_id, grade_max_id, difficulty, mastery_threshold, is_archived)
+          VALUES (${concept.id}, ${concept.slug}, ${concept.name}, ${concept.description}, ${concept.subjectId}, ${concept.domainId}, ${concept.gradeMinId}, ${concept.gradeMaxId}, ${concept.difficulty}, ${concept.masteryThreshold}, FALSE)
+          ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, name = EXCLUDED.name, description = EXCLUDED.description,
+            subject_id = EXCLUDED.subject_id, domain_id = EXCLUDED.domain_id, grade_min_id = EXCLUDED.grade_min_id,
+            grade_max_id = EXCLUDED.grade_max_id, difficulty = EXCLUDED.difficulty, mastery_threshold = EXCLUDED.mastery_threshold,
+            is_archived = FALSE, updated_at = NOW()
+        `;
+      }
+      for (const [id, sourceConceptId, targetConceptId, type] of conceptRelationshipSeed) {
+        await transaction`
+          INSERT INTO concept_relationships (id, source_concept_id, target_concept_id, relationship_type)
+          VALUES (${id}, ${sourceConceptId}, ${targetConceptId}, ${type})
+          ON CONFLICT (id) DO UPDATE SET source_concept_id = EXCLUDED.source_concept_id,
+            target_concept_id = EXCLUDED.target_concept_id, relationship_type = EXCLUDED.relationship_type,
+            updated_at = NOW()
+        `;
+      }
+      for (const [conceptId, objectiveId, sortOrder] of conceptObjectiveSeed) {
+        await transaction`
+          INSERT INTO concept_learning_objectives (concept_id, objective_id, sort_order)
+          VALUES (${conceptId}, ${objectiveId}, ${sortOrder})
+          ON CONFLICT (concept_id, objective_id) DO UPDATE SET sort_order = EXCLUDED.sort_order
+        `;
+      }
+      for (const [conceptId, lessonId, sortOrder] of conceptLessonSeed) {
+        await transaction`
+          INSERT INTO lesson_concepts (lesson_id, concept_id, sort_order)
+          VALUES (${lessonId}, ${conceptId}, ${sortOrder})
+          ON CONFLICT (lesson_id, concept_id) DO UPDATE SET sort_order = EXCLUDED.sort_order
+        `;
+      }
+      for (const [id, conceptId, title, description, sortOrder] of conceptApplicationSeed) {
+        await transaction`
+          INSERT INTO concept_applications (id, concept_id, title, description, sort_order)
+          VALUES (${id}, ${conceptId}, ${title}, ${description}, ${sortOrder})
+          ON CONFLICT (id) DO UPDATE SET concept_id = EXCLUDED.concept_id, title = EXCLUDED.title,
+            description = EXCLUDED.description, sort_order = EXCLUDED.sort_order, updated_at = NOW()
+        `;
+      }
+      for (const [
+        id,
+        conceptId,
+        misconception,
+        correction,
+        sortOrder,
+      ] of conceptMisconceptionSeed) {
+        await transaction`
+          INSERT INTO concept_misconceptions (id, concept_id, misconception, correction, sort_order)
+          VALUES (${id}, ${conceptId}, ${misconception}, ${correction}, ${sortOrder})
+          ON CONFLICT (id) DO UPDATE SET concept_id = EXCLUDED.concept_id, misconception = EXCLUDED.misconception,
+            correction = EXCLUDED.correction, sort_order = EXCLUDED.sort_order, updated_at = NOW()
         `;
       }
     });
