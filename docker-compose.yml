@@ -1,0 +1,56 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: docker
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      DATABASE_PROVIDER: postgres
+      DATABASE_URL: postgres://mathios:mathios@db:5432/mathios
+      STORAGE_PROVIDER: local
+      STORAGE_ROOT: /app/data/storage
+      AUTH_MODE: local-profile
+      SEARCH_PROVIDER: local
+      AI_PROVIDER: disabled
+      SESSION_SECRET: change-me-in-docker-only-change-me
+      LOG_LEVEL: info
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - mathios_storage:/app/data/storage
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: mathios
+      POSTGRES_USER: mathios
+      POSTGRES_PASSWORD: mathios
+    ports:
+      - "5432:5432"
+    volumes:
+      - mathios_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mathios -d mathios"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mathios_postgres:
+  mathios_storage:
