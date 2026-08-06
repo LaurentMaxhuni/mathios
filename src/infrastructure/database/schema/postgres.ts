@@ -2548,6 +2548,66 @@ export const studyCompletionEvents = pgTable(
   }),
 );
 
+export const searchIndexState = pgTable("search_index_state", {
+  id: integer("id").primaryKey(),
+  sourceRevision: integer("source_revision").notNull().default(0),
+  indexedRevision: integer("indexed_revision").notNull().default(-1),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const searchDocuments = pgTable(
+  "search_documents",
+  {
+    id: text("id").primaryKey(),
+    resourceType: text("resource_type").notNull(),
+    resourceId: text("resource_id").notNull(),
+    profileId: text("profile_id").references(() => profiles.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    content: text("content").notNull().default(""),
+    href: text("href"),
+    metadataJson: text("metadata_json").notNull().default("{}"),
+    searchVector: text("search_vector")
+      .notNull()
+      .default(sql`''::tsvector`),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    resourceIdx: index("search_documents_resource_idx").on(table.resourceType, table.resourceId),
+    profileIdx: index("search_documents_profile_idx").on(table.profileId, table.updatedAt),
+    resourceProfileIdx: uniqueIndex("search_documents_resource_profile_idx").on(
+      table.resourceType,
+      table.resourceId,
+      table.profileId,
+    ),
+  }),
+);
+
+export const searchRecentQueries = pgTable(
+  "search_recent_queries",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    query: text("query").notNull(),
+    filtersJson: text("filters_json").notNull().default("{}"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    profileQueryIdx: uniqueIndex("search_recent_queries_profile_query_idx").on(
+      table.profileId,
+      table.query,
+    ),
+    profileCreatedIdx: index("search_recent_queries_profile_created_idx").on(
+      table.profileId,
+      table.createdAt,
+    ),
+  }),
+);
+
+export type SearchIndexState = typeof searchIndexState.$inferSelect;
+export type SearchDocument = typeof searchDocuments.$inferSelect;
+export type SearchRecentQuery = typeof searchRecentQueries.$inferSelect;
 export type LaboratoryActivity = typeof laboratoryActivities.$inferSelect;
 export type NewLaboratoryActivity = typeof laboratoryActivities.$inferInsert;
 export type LaboratoryStep = typeof laboratorySteps.$inferSelect;

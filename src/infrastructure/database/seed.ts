@@ -9,7 +9,7 @@ import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-12"],
+  ["seed_version", "phase-13"],
 ] as const;
 
 export const simulationSeed = simulationRegistry.map((simulation) => ({
