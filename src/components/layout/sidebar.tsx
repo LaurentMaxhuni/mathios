@@ -8,7 +8,6 @@ import {
   Activity,
   BarChart3,
   CalendarDays,
-  Atom,
   BrainCircuit,
   BookOpen,
   BookMarked,
@@ -28,6 +27,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getFocusableElements } from "@/lib/focus";
+import { BrandMark } from "@/components/shared/brand-mark";
 import type { AuthMode, AuthenticatedPrincipal } from "@/infrastructure/auth/auth-provider";
 
 type NavigationSection = "workspace" | "learn" | "plan" | "explore" | "insights" | "settings";
@@ -212,9 +212,7 @@ export function Sidebar({
       >
         <div className="flex items-center justify-between px-3">
           <Link href="/" className="group flex items-center gap-3" onClick={onMobileClose}>
-            <span className="app-brand-mark grid h-10 w-10 place-items-center rounded-xl shadow-sm transition-transform group-hover:-rotate-6">
-              <Atom className="h-5 w-5" aria-hidden="true" />
-            </span>
+            <BrandMark className="app-brand-mark h-10 w-10 rounded-xl shadow-sm transition-transform group-hover:-rotate-6" />
             <span>
               <span className="app-brand-name block text-sm font-bold tracking-[0.2em]">
                 MATHIOS

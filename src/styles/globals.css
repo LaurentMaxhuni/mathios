@@ -315,6 +315,18 @@
   border-color: rgb(237 242 233 / 0.12);
   color: var(--mathios-ink-text);
 }
+.brand-mark {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.brand-mark-image {
+  object-fit: contain;
+  object-position: center;
+}
+
 
 .app-brand-mark {
   background: var(--mathios-accent);
@@ -1439,6 +1451,15 @@
   }
 }
 
+/* Keep the supplied mark unboxed so only the transparent logo artwork is visible. */
+.brand-mark,
+.app-brand-mark,
+.landing-brand-mark,
+.auth-page-brand-mark {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
 @theme inline {
   --font-heading: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;

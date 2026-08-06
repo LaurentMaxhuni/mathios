@@ -24,6 +24,16 @@ export const metadata: Metadata = {
     template: "%s · Mathios",
   },
   description: "A connected science learning workspace for concepts, practice, and experiments.",
+  icons: {
+    icon: [
+      {
+        url: "/brand/mathios-logo.png",
+        type: "image/png",
+        sizes: "768x768",
+      },
+    ],
+    apple: "/brand/mathios-logo.png",
+  },
 };
 
 export const dynamic = "force-dynamic";

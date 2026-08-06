@@ -3,7 +3,6 @@ import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
-  Atom,
   BookOpen,
   Check,
   FlaskConical,
@@ -11,6 +10,7 @@ import {
   Orbit,
   Sparkles,
 } from "lucide-react";
+import { BrandMark } from "@/components/shared/brand-mark";
 
 const subjects = ["Mathematics", "Physics", "Chemistry", "Biology", "Astronomy"];
 
@@ -30,9 +30,7 @@ export function LandingPage({
       <header className="landing-nav">
         <div className="landing-container landing-nav-inner">
           <Link href="/" className="landing-brand" aria-label="Mathios home">
-            <span className="landing-brand-mark" aria-hidden="true">
-              <Atom className="h-5 w-5" strokeWidth={1.8} />
-            </span>
+            <BrandMark className="landing-brand-mark" priority />
             <span className="landing-brand-name">Mathios</span>
           </Link>
 
@@ -281,9 +279,7 @@ export function LandingPage({
       <footer className="landing-footer">
         <div className="landing-container landing-footer-inner">
           <Link href="/" className="landing-brand" aria-label="Mathios home">
-            <span className="landing-brand-mark" aria-hidden="true">
-              <Atom className="h-5 w-5" strokeWidth={1.8} />
-            </span>
+            <BrandMark className="landing-brand-mark" />
             <span className="landing-brand-name">Mathios</span>
           </Link>
           <p>Provided science learning, with room for your own notes.</p>

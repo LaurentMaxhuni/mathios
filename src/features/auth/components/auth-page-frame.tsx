@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowLeft, Atom } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { AuthView } from "@neondatabase/auth-ui";
+import { BrandMark } from "@/components/shared/brand-mark";
 
 export function AuthPageFrame({
   path,
@@ -18,9 +19,7 @@ export function AuthPageFrame({
       <div className="auth-page-grid">
         <section className="auth-page-intro" aria-labelledby="auth-page-title">
           <Link href="/" className="auth-page-brand" aria-label="Mathios home">
-            <span className="auth-page-brand-mark" aria-hidden="true">
-              <Atom className="h-5 w-5" strokeWidth={1.8} />
-            </span>
+            <BrandMark className="auth-page-brand-mark" priority />
             <span className="auth-page-brand-name">Mathios</span>
           </Link>
           <p className="auth-page-eyebrow">{eyebrow}</p>
