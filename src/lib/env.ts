@@ -13,6 +13,12 @@ const envSchema = z.object({
   AUTH_MODE: z.enum(["local-profile", "local-credential", "hosted"]).default("local-profile"),
   SEARCH_PROVIDER: z.enum(["local", "remote"]).default("local"),
   AI_PROVIDER: z.enum(["disabled", "local", "remote", "hybrid"]).default("disabled"),
+  AI_LOCAL_BASE_URL: z.string().url().default("http://127.0.0.1:11434"),
+  AI_LOCAL_MODEL: z.string().min(1).default("llama3.2"),
+  AI_REMOTE_BASE_URL: z.string().url().default("https://api.openai.com/v1"),
+  AI_REMOTE_MODEL: z.string().min(1).default("gpt-4o-mini"),
+  AI_REMOTE_API_KEY: z.string().min(1).optional(),
+  AI_REQUEST_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(15000),
   SESSION_SECRET: z.string().min(32).default("change-me-in-development-only-change-me"),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });

@@ -61,6 +61,7 @@ const navigation: Array<{
   { href: "/laboratories" as const, label: "Laboratory", icon: FlaskConical },
   { href: "/planner" as const, label: "Study planner", icon: CalendarDays },
   { href: "/notes" as const, label: "Knowledge base", icon: StickyNote },
+  { href: "/ai" as const, label: "AI studio", icon: Sparkles },
   { href: "/portability" as const, label: "Import & backup", icon: Archive },
   { href: "/grades" as const, label: "Grades", icon: GraduationCap },
   { href: "/subjects" as const, label: "Subjects", icon: FlaskConical },
@@ -154,7 +155,7 @@ export function Sidebar({ mobileOpen, onMobileClose, principal }: SidebarProps) 
             Profiles, permissions, settings, and onboarding stay available on this device.
           </p>
           <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Phase 15 - Import, export, backup, and restore
+            Phase 16 - Optional local and remote AI
           </p>
         </div>
       </aside>
