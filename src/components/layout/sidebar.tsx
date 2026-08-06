@@ -18,6 +18,7 @@ import {
   IdCard,
   Network,
   Route,
+  Search,
   Settings2,
   ShieldCheck,
   Sparkles,
@@ -29,6 +30,7 @@ import { cn } from "@/lib/utils";
 
 const navigation: Array<{ href: string; label: string; icon: typeof Home }> = [
   { href: "/" as const, label: "Overview", icon: Home },
+  { href: "/search" as const, label: "Global search", icon: Search },
   { href: "/profiles" as const, label: "Profiles", icon: IdCard },
   { href: "/onboarding" as const, label: "Onboarding", icon: Route },
   { href: "/curricula" as const, label: "Curricula", icon: BookOpen },
@@ -132,7 +134,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             Profiles, permissions, settings, and onboarding stay available on this device.
           </p>
           <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Phase 12 - Personal knowledge base
+            Phase 13 - Global search and discovery
           </p>
         </div>
       </aside>

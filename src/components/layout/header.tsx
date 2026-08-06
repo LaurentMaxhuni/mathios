@@ -1,6 +1,7 @@
 "use client";
 
-import { Menu, WifiOff } from "lucide-react";
+import Link from "next/link";
+import { Menu, Search, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -28,7 +29,16 @@ export function Header({ onMobileMenuOpen, principal }: HeaderProps) {
           <Menu className="h-5 w-5" aria-hidden="true" />
         </Button>
         <div className="hidden h-8 w-px bg-border lg:block" aria-hidden="true" />
-        <p className="text-sm font-medium text-muted-foreground">Foundation workspace</p>
+        <Link
+          href={"/search" as never}
+          className="inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <Search className="h-4 w-4" aria-hidden="true" />
+          <span>Search workspace</span>
+          <kbd className="hidden rounded border bg-muted px-1.5 py-0.5 text-[0.65rem] font-normal sm:inline">
+            Ctrl K
+          </kbd>
+        </Link>
       </div>
       <div className="flex items-center gap-2">
         <Badge variant="success" className="hidden gap-1.5 sm:inline-flex">

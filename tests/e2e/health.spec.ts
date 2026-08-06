@@ -575,3 +575,41 @@ test("Phase 12 notes, captures, search, and personal map are usable", async ({ p
     ]),
   );
 });
+
+test("Phase 13 global search ranks local content and exposes discovery filters", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/search");
+  await expect(page.getByRole("heading", { name: "Find the next idea." })).toBeVisible();
+  await expect(page.getByLabel("Global search")).toBeVisible();
+
+  await page.getByLabel("Global search").fill("motion");
+  await page.getByRole("button", { name: "Search", exact: true }).click();
+  await expect(page.getByRole("heading", { name: /matches for/ })).toContainText("motion");
+  await expect(page.getByRole("link", { name: "Describing motion", exact: true })).toBeVisible();
+
+  const searchResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/search?q=motion&type=lesson");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(searchResponse.ok).toBeTruthy();
+  expect(searchResponse.body.results).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        document: expect.objectContaining({ type: "lesson", title: "Describing motion" }),
+      }),
+    ]),
+  );
+
+  await page.getByRole("button", { name: "lesson", exact: true }).click();
+  await page.getByRole("button", { name: "Search", exact: true }).click();
+  await expect(page.getByText("lesson", { exact: true }).first()).toBeVisible();
+  await page.keyboard.press("Control+K");
+  await expect(page.getByLabel("Global search")).toBeFocused();
+});
