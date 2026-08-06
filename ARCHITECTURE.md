@@ -104,3 +104,24 @@ The roadmaps feature owns roadmap authoring, versioning, graph validation, learn
 ## Phase 9 dependency direction
 
 The `simulations` feature owns catalog/detail reads, session/result mutations, presets, lesson links, and the player UI. `src/domain/simulation` contains trusted framework-free definitions, input validation, deterministic stepping, frame generation, guided-task completion, and the registry. `src/domain/ports/simulation-repository.ts` defines persistence behavior, while `src/infrastructure/database/repositories/simulation-repository.ts` implements explicit SQLite/PostgreSQL queries. The browser receives public metadata only; frame calculations use the trusted registry endpoint, and persisted inputs/state are validated before writes. Phase 9 behavior is documented in `docs/phase9-interactive-simulations.md`.
+
+## Phase 10 dependency direction
+
+The `laboratory` feature owns activity authoring, learner sessions, observation and measurement
+entry, simulation-data import, analysis summaries, report editing, feedback, and exports.
+`src/domain/laboratory` contains framework-independent activity/session/report types, unit
+normalization, significant-figure handling, uncertainty, regression, graph pairing, theory
+comparison, completion rules, and report submission invariants. `src/domain/ports/laboratory-
+repository.ts` defines persistence behavior, while
+`src/infrastructure/database/repositories/laboratory-repository.ts` implements explicit
+SQLite/PostgreSQL queries.
+
+Stored activity configuration is bounded metadata. Simulation data is generated only by the
+trusted Phase 9 registry; database-provided configuration never becomes executable code. Learner
+session and report reads are profile-scoped. Report HTML escapes user content and the PDF exporter
+serializes a deterministic text/data representation without evaluating formulas or embedding
+untrusted markup.
+
+Migration `0010_phase10_laboratory.sql` adds the eight laboratory tables and indexes. Seed data
+adds seven published activities spanning motion, pendulum gravity, Ohm's law, gas laws, enzyme
+activity, planetary periods, and LED Planck-constant estimation. Study planning remains Phase 11.

@@ -1,14 +1,15 @@
 import Database from "better-sqlite3";
-import postgres from "postgres";
+import postgres, { type Sql } from "postgres";
 import { DEFAULT_MASTERY_RULES, DEFAULT_RECOMMENDATION_RULES } from "@/domain/mastery/types";
 import { publicSimulationDefinition, simulationRegistry } from "@/domain/simulation/registry";
+import { laboratoryActivitySeed } from "@/infrastructure/database/laboratory-seed";
 import { env } from "@/lib/env";
 import { resolveSqliteFilename } from "@/infrastructure/database/client";
 import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-9"],
+  ["seed_version", "phase-10"],
 ] as const;
 
 export const simulationSeed = simulationRegistry.map((simulation) => ({
@@ -2969,6 +2970,7 @@ export async function runSeed(
         });
       });
       seedStructure();
+      seedLaboratoriesSqlite(database);
     } finally {
       database.close();
     }
@@ -3569,7 +3571,131 @@ export async function runSeed(
         ],
       );
     });
+    await seedLaboratoriesPostgres(database);
   } finally {
     await database.end({ timeout: 5 });
   }
+}
+
+function seedLaboratoriesSqlite(database: Database.Database): void {
+  const insertActivity = database.prepare(
+    `INSERT INTO laboratory_activities (id, slug, title, description, subject_id, mode, status, objective, theory, materials, safety_notes, analysis_prompt, graphing_instructions, questions, conclusion_prompt, extension_activity, simulation_id, estimated_duration_minutes, published_at)
+     VALUES (@id, @slug, @title, @description, @subjectId, @mode, @status, @objective, @theory, @materials, @safetyNotes, @analysisPrompt, @graphingInstructions, @questions, @conclusionPrompt, @extensionActivity, @simulationId, @estimatedDurationMinutes, CASE WHEN @status = 'published' THEN CURRENT_TIMESTAMP ELSE NULL END)
+     ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, title = excluded.title, description = excluded.description, subject_id = excluded.subject_id, mode = excluded.mode, status = excluded.status, objective = excluded.objective, theory = excluded.theory, materials = excluded.materials, safety_notes = excluded.safety_notes, analysis_prompt = excluded.analysis_prompt, graphing_instructions = excluded.graphing_instructions, questions = excluded.questions, conclusion_prompt = excluded.conclusion_prompt, extension_activity = excluded.extension_activity, simulation_id = excluded.simulation_id, estimated_duration_minutes = excluded.estimated_duration_minutes, published_at = excluded.published_at, updated_at = CURRENT_TIMESTAMP`,
+  );
+  const deleteSteps = database.prepare("DELETE FROM laboratory_steps WHERE activity_id = ?");
+  const deleteVariables = database.prepare(
+    "DELETE FROM laboratory_variables WHERE activity_id = ?",
+  );
+  const insertStep = database.prepare(
+    `INSERT INTO laboratory_steps (id, activity_id, step_type, title, instructions, expected_observation, sort_order, is_required)
+     VALUES (@id, @activityId, @type, @title, @instructions, @expectedObservation, @sortOrder, @isRequired)
+     ON CONFLICT(id) DO UPDATE SET step_type = excluded.step_type, title = excluded.title, instructions = excluded.instructions, expected_observation = excluded.expected_observation, sort_order = excluded.sort_order, is_required = excluded.is_required`,
+  );
+  const insertVariable = database.prepare(
+    `INSERT INTO laboratory_variables (id, activity_id, variable_key, label, symbol, role, data_type, unit, description, default_value, min_value, max_value, uncertainty, significant_figures, theoretical_value, configuration, sort_order)
+     VALUES (@id, @activityId, @key, @label, @symbol, @role, @dataType, @unit, @description, @defaultValue, @minValue, @maxValue, @uncertainty, @significantFigures, @theoreticalValue, @configuration, @sortOrder)
+     ON CONFLICT(id) DO UPDATE SET variable_key = excluded.variable_key, label = excluded.label, symbol = excluded.symbol, role = excluded.role, data_type = excluded.data_type, unit = excluded.unit, description = excluded.description, default_value = excluded.default_value, min_value = excluded.min_value, max_value = excluded.max_value, uncertainty = excluded.uncertainty, significant_figures = excluded.significant_figures, theoretical_value = excluded.theoretical_value, configuration = excluded.configuration, sort_order = excluded.sort_order`,
+  );
+  const seed = database.transaction(() => {
+    for (const activity of laboratoryActivitySeed) {
+      insertActivity.run({
+        ...activity,
+        materials: JSON.stringify(activity.materials),
+        safetyNotes: JSON.stringify(activity.safetyNotes),
+        questions: JSON.stringify(activity.questions),
+        simulationId: activity.simulationId,
+      });
+      deleteSteps.run(activity.id);
+      deleteVariables.run(activity.id);
+      for (const item of activity.steps)
+        insertStep.run({ ...item, activityId: activity.id, isRequired: item.isRequired ? 1 : 0 });
+      for (const item of activity.variables) {
+        insertVariable.run({
+          ...item,
+          activityId: activity.id,
+          defaultValue: JSON.stringify(item.defaultValue),
+          configuration: JSON.stringify(item.configuration),
+        });
+      }
+    }
+  });
+  seed();
+}
+
+async function seedLaboratoriesPostgres(database: Sql): Promise<void> {
+  await database.begin(async (transaction) => {
+    for (const activity of laboratoryActivitySeed) {
+      await transaction.unsafe(
+        `INSERT INTO laboratory_activities (id, slug, title, description, subject_id, mode, status, objective, theory, materials, safety_notes, analysis_prompt, graphing_instructions, questions, conclusion_prompt, extension_activity, simulation_id, estimated_duration_minutes, published_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, CASE WHEN $7 = 'published' THEN NOW() ELSE NULL END)
+         ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, description = EXCLUDED.description, subject_id = EXCLUDED.subject_id, mode = EXCLUDED.mode, status = EXCLUDED.status, objective = EXCLUDED.objective, theory = EXCLUDED.theory, materials = EXCLUDED.materials, safety_notes = EXCLUDED.safety_notes, analysis_prompt = EXCLUDED.analysis_prompt, graphing_instructions = EXCLUDED.graphing_instructions, questions = EXCLUDED.questions, conclusion_prompt = EXCLUDED.conclusion_prompt, extension_activity = EXCLUDED.extension_activity, simulation_id = EXCLUDED.simulation_id, estimated_duration_minutes = EXCLUDED.estimated_duration_minutes, published_at = EXCLUDED.published_at, updated_at = NOW()`,
+        [
+          activity.id,
+          activity.slug,
+          activity.title,
+          activity.description,
+          activity.subjectId,
+          activity.mode,
+          activity.status,
+          activity.objective,
+          activity.theory,
+          JSON.stringify(activity.materials),
+          JSON.stringify(activity.safetyNotes),
+          activity.analysisPrompt,
+          activity.graphingInstructions,
+          JSON.stringify(activity.questions),
+          activity.conclusionPrompt,
+          activity.extensionActivity,
+          activity.simulationId,
+          activity.estimatedDurationMinutes,
+        ],
+      );
+      await transaction.unsafe("DELETE FROM laboratory_steps WHERE activity_id = $1", [
+        activity.id,
+      ]);
+      await transaction.unsafe("DELETE FROM laboratory_variables WHERE activity_id = $1", [
+        activity.id,
+      ]);
+      for (const item of activity.steps) {
+        await transaction.unsafe(
+          "INSERT INTO laboratory_steps (id, activity_id, step_type, title, instructions, expected_observation, sort_order, is_required) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+          [
+            item.id,
+            activity.id,
+            item.type,
+            item.title,
+            item.instructions,
+            item.expectedObservation,
+            item.sortOrder,
+            item.isRequired,
+          ],
+        );
+      }
+      for (const item of activity.variables) {
+        await transaction.unsafe(
+          "INSERT INTO laboratory_variables (id, activity_id, variable_key, label, symbol, role, data_type, unit, description, default_value, min_value, max_value, uncertainty, significant_figures, theoretical_value, configuration, sort_order) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)",
+          [
+            item.id,
+            activity.id,
+            item.key,
+            item.label,
+            item.symbol,
+            item.role,
+            item.dataType,
+            item.unit,
+            item.description,
+            JSON.stringify(item.defaultValue),
+            item.minValue,
+            item.maxValue,
+            item.uncertainty,
+            item.significantFigures,
+            item.theoreticalValue,
+            JSON.stringify(item.configuration),
+            item.sortOrder,
+          ],
+        );
+      }
+    }
+  });
 }

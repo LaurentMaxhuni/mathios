@@ -387,7 +387,9 @@ test("Phase 9 simulation catalog, interactive player, lesson link, and session A
   expect(catalogResponse.ok).toBeTruthy();
   expect(catalogResponse.body.simulations).toHaveLength(17);
 
-  await page.getByRole("link", { name: /One-dimensional motion/ }).click();
+  const simulationLink = page.locator('a[href="/simulations/simulation-one-dimensional-motion"]');
+  await expect(simulationLink).toBeVisible();
+  await simulationLink.click();
   await expect(page).toHaveURL(/\/simulations\/simulation-one-dimensional-motion$/);
   await expect(page.locator("h1").filter({ hasText: "One-dimensional motion" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Explore with a simulation" })).toHaveCount(0);
@@ -406,4 +408,72 @@ test("Phase 9 simulation catalog, interactive player, lesson link, and session A
     "href",
     "/simulations/simulation-one-dimensional-motion",
   );
+});
+
+test("Phase 10 laboratory workspace records data, analyzes it, and exports a report", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/laboratories");
+  await expect(page.getByRole("heading", { name: "Virtual laboratory" })).toBeVisible();
+  await expect(page.getByText("Determine acceleration from motion data")).toBeVisible();
+  const catalogResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/laboratories");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(catalogResponse.ok).toBeTruthy();
+  expect(catalogResponse.body.activities).toHaveLength(7);
+
+  await page.getByRole("link", { name: /Determine acceleration from motion data/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "Determine acceleration from motion data" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Begin experiment" }).click();
+  await expect(page.getByRole("heading", { name: "Procedure and observations" })).toBeVisible();
+  await page.getByRole("button", { name: "Import simulation data" }).click();
+  await expect(page.getByText("Simulation data imported into the data table.")).toBeVisible();
+  await expect(page.getByRole("img", { name: "Laboratory data graph" })).toBeVisible();
+
+  await page
+    .getByLabel("Observation notes")
+    .first()
+    .fill("The track was level and the cart moved smoothly.");
+  await page.getByLabel("Observation notes").first().blur();
+  await page.getByLabel("Time, trial 1", { exact: true }).fill("1.2");
+  await page.getByLabel("Time, trial 1", { exact: true }).blur();
+  await page.getByRole("button", { name: "Complete experiment" }).click();
+  await expect(
+    page.getByText("Experiment completed. Your report can now be submitted."),
+  ).toBeVisible();
+
+  await expect(page.getByRole("heading", { name: "Write up the experiment" })).toBeVisible();
+  await page
+    .getByLabel("Conclusion")
+    .fill(
+      "The measured motion data supports a constant-acceleration model, with timing uncertainty as the main limitation.",
+    );
+  await page.getByRole("button", { name: "Save draft" }).click();
+  await expect(page.getByText("Draft saved.")).toBeVisible();
+  await page.getByRole("button", { name: "Submit report" }).click();
+  await expect(page.getByText("Report submitted for feedback.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "HTML export" })).toBeVisible();
+  const htmlResponse = await page.evaluate(async () => {
+    const href =
+      document.querySelector('a[aria-label="HTML export"]')?.getAttribute("href") ??
+      document.querySelector('a[href*="format=html"]')?.getAttribute("href");
+    const response = await fetch(href ?? "");
+    return {
+      ok: response.ok,
+      contentType: response.headers.get("content-type"),
+      body: await response.text(),
+    };
+  });
+  expect(htmlResponse.ok).toBeTruthy();
+  expect(htmlResponse.contentType).toContain("text/html");
+  expect(htmlResponse.body).toContain("Determine acceleration from motion data report");
 });
