@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 export default function GlobalError({
   reset,
 }: {
@@ -26,6 +28,13 @@ export default function GlobalError({
           }}
         >
           <div>
+            <Image
+              src="/brand/mathios-logo.png"
+              alt="Mathios"
+              width={88}
+              height={88}
+              style={{ objectFit: "contain" }}
+            />
             <p
               style={{
                 fontSize: "0.75rem",

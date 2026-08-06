@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Plus, Pencil, UserRound } from "lucide-react";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { BrandMark } from "@/components/shared/brand-mark";
 import { ProfileAvatar } from "@/components/shared/profile-avatar";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -18,6 +19,10 @@ export default async function ProfilesPage() {
   const profiles = (await repository.listProfiles().catch(() => [])).map(toPublicProfile);
   return (
     <div className="mx-auto w-full max-w-[1200px] px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
+      <Link href="/" className="auth-page-brand mb-6" aria-label="Mathios home">
+        <BrandMark className="auth-page-brand-mark" priority />
+        <span className="auth-page-brand-name">Mathios</span>
+      </Link>
       <Breadcrumbs current="Profiles" />
       <div className="mt-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>

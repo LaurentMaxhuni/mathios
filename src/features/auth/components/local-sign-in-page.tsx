@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, LockKeyhole } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { BrandMark } from "@/components/shared/brand-mark";
 import { ProfileAvatar } from "@/components/shared/profile-avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignInForm } from "@/features/auth/components/sign-in-form";
@@ -21,6 +22,10 @@ export async function LocalSignInPage({
 
   return (
     <div className="auth-local-page">
+      <Link href="/" className="auth-page-brand mb-6" aria-label="Mathios home">
+        <BrandMark className="auth-page-brand-mark" priority />
+        <span className="auth-page-brand-name">Mathios</span>
+      </Link>
       <Breadcrumbs current="Sign in" />
       <Card className="mt-6">
         <CardHeader className="items-center text-center">
