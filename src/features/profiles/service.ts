@@ -20,6 +20,11 @@ export async function createProfile(
   session: AuthSession | null,
   repository: IdentityRepository,
 ): Promise<PublicProfile> {
+  if (env.AUTH_MODE === "neon-auth") {
+    throw new AuthorizationError(
+      "Neon Auth manages accounts in this deployment. Use the account settings page to manage your identity.",
+    );
+  }
   const existingProfiles = await repository.listProfiles();
   if (
     existingProfiles.length > 0 &&

@@ -20,7 +20,7 @@ const nullableIdSchema = z.preprocess(
   (value) => (typeof value === "string" && !value.trim() ? null : value),
   idSchema.nullable(),
 );
-const jsonObjectSchema = z.record(z.any());
+const jsonObjectSchema = z.record(z.string(), z.any());
 
 export const assessmentSchema = z.object({
   id: idSchema.optional(),

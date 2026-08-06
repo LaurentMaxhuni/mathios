@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY NOT NULL,
   identifier TEXT NOT NULL,
-  auth_mode TEXT NOT NULL DEFAULT 'local-profile' CHECK (auth_mode IN ('local-profile', 'local-credential', 'hosted')),
+  auth_mode TEXT NOT NULL DEFAULT 'local-profile' CHECK (auth_mode IN ('neon-auth', 'local-profile', 'local-credential', 'hosted')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

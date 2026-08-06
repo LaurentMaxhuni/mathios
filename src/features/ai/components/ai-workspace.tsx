@@ -38,6 +38,8 @@ const defaultInstruction: Record<AiTask, string> = {
   "misconception-analysis": "What misconception might explain this mistake?",
   "natural-language-search": "Find the most relevant concepts for this request.",
   "study-plan-suggestion": "Suggest a realistic study sequence for this topic.",
+  "lesson-draft":
+    "Create a structured lesson draft as JSON for an author to review. Do not publish it.",
 };
 
 async function responseMessage(response: Response): Promise<string> {

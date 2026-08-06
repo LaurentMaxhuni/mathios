@@ -56,7 +56,7 @@ export const sectionSchema = z.object({
   sortOrder: orderSchema,
 });
 
-const payloadSchema = z.record(z.unknown());
+const payloadSchema = z.record(z.string(), z.unknown());
 
 export const blockSchema = z.object({
   id: idSchema,

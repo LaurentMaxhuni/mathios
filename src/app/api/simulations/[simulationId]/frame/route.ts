@@ -5,8 +5,8 @@ import { getRegisteredSimulation } from "@/domain/simulation/registry";
 import { advanceSimulation } from "@/domain/simulation/rules";
 
 const bodySchema = z.object({
-  inputs: z.record(z.union([z.string(), z.number(), z.boolean()])),
-  state: z.record(z.number()).default({}),
+  inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])),
+  state: z.record(z.string(), z.number()).default({}),
   deltaSeconds: z.number().min(0).max(5).default(0),
 });
 

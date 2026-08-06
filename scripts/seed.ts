@@ -1,3 +1,4 @@
+import "./load-env";
 import { runSeed } from "@/infrastructure/database/seed";
 
 async function main(): Promise<void> {

@@ -18,6 +18,7 @@ export const AI_TASKS = [
   "misconception-analysis",
   "natural-language-search",
   "study-plan-suggestion",
+  "lesson-draft",
 ] as const;
 export type AiTask = (typeof AI_TASKS)[number];
 

@@ -81,10 +81,27 @@ export default async function CoursesPage() {
       {!courses.length ? (
         <Card className="mt-8">
           <CardContent className="py-14 text-center">
-            <p className="font-semibold">No published courses yet.</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              A teacher, content creator, or administrator can author the first path.
+            <p className="font-semibold">
+              {author ? "This content database is empty." : "No published courses yet."}
             </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {author
+                ? "Run npm.cmd run db:setup for the provided reference library, or create a reviewable starter with the content studio."
+                : "A teacher, content creator, or administrator can author the first path."}
+            </p>
+            {author ? (
+              <div className="mt-5 flex flex-wrap justify-center gap-3">
+                <Link href={"/content-studio" as never} className={buttonVariants({ size: "sm" })}>
+                  Open content studio
+                </Link>
+                <Link
+                  href="/courses/manage"
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  Open course editor
+                </Link>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       ) : null}

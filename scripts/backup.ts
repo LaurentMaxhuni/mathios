@@ -1,3 +1,4 @@
+import "./load-env";
 import { mkdir } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import path from "node:path";

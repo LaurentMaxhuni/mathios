@@ -1,17 +1,29 @@
 import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import { AppProviders } from "@/components/providers/app-providers";
 import { AppShell } from "@/components/layout/app-shell";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getIdentityRepository } from "@/infrastructure/database/repositories/identity-repository";
 import { logger } from "@/lib/logger";
+import { env } from "@/lib/env";
 import "@/styles/globals.css";
+
+const geist = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: {
     default: "Mathios · Science workspace",
     template: "%s · Mathios",
   },
-  description: "A local-first science learning platform.",
+  description: "A connected science learning workspace for concepts, practice, and experiments.",
 };
 
 export const dynamic = "force-dynamic";
@@ -31,10 +43,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   }
 
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
+    <html
+      lang="en"
+      className={`${geist.variable} ${geistMono.variable}`}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
+      <body className="antialiased">
         <AppProviders>
-          <AppShell principal={principal} settings={settings}>
+          <AppShell authMode={env.AUTH_MODE} principal={principal} settings={settings}>
             {children}
           </AppShell>
         </AppProviders>

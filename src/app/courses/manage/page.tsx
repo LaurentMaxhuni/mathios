@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ArrowLeft, Edit3, LibraryBig } from "lucide-react";
+import { ArrowLeft, Edit3, LibraryBig, Sparkles } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CourseForm } from "@/features/courses/components/course-forms";
 import { canAuthorCourses } from "@/features/courses/service";
@@ -51,9 +52,17 @@ export default async function CourseManagementPage() {
             lessons.
           </p>
         </div>
-        <Badge variant="success">
-          <LibraryBig className="mr-1 h-3.5 w-3.5" aria-hidden="true" /> Authoring enabled
-        </Badge>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href={"/content-studio" as never}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            <Sparkles className="h-4 w-4" aria-hidden="true" /> AI content studio
+          </Link>
+          <Badge variant="success">
+            <LibraryBig className="mr-1 h-3.5 w-3.5" aria-hidden="true" /> Authoring enabled
+          </Badge>
+        </div>
       </div>
       <div className="mt-8 grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
         <Card>

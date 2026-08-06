@@ -23,8 +23,11 @@ const envSchema = z.object({
     .enum(["development", "test", "local-production", "docker", "hosted-production"])
     .default("development"),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
-  DATABASE_PROVIDER: z.enum(["sqlite", "postgres"]).default("sqlite"),
-  DATABASE_URL: z.string().min(1).default("file:./data/mathios.db"),
+  DATABASE_PROVIDER: z.enum(["sqlite", "postgres"]).default("postgres"),
+  DATABASE_URL: z
+    .string()
+    .min(1)
+    .default("postgresql://neondb_owner:neon-development-only@localhost:5432/neondb"),
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
   DATABASE_CONNECT_TIMEOUT_SECONDS: z.coerce.number().int().min(1).max(120).default(10),
   DATABASE_IDLE_TIMEOUT_SECONDS: z.coerce.number().int().min(0).max(3600).default(20),
@@ -44,7 +47,14 @@ const envSchema = z.object({
   S3_SECRET_ACCESS_KEY: optionalString,
   S3_SESSION_TOKEN: optionalString,
   S3_FORCE_PATH_STYLE: booleanEnv.default(false),
-  AUTH_MODE: z.enum(["local-profile", "local-credential", "hosted"]).default("local-profile"),
+  AUTH_MODE: z
+    .enum(["neon-auth", "local-profile", "local-credential", "hosted"])
+    .default("neon-auth"),
+  NEON_AUTH_BASE_URL: optionalUrl,
+  NEON_AUTH_COOKIE_SECRET: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().min(32).optional(),
+  ),
   HOSTED_AUTH_ISSUER: optionalUrl,
   HOSTED_AUTH_AUDIENCE: optionalString,
   HOSTED_AUTH_SHARED_SECRET: z.preprocess(
@@ -116,6 +126,14 @@ export function parseEnv(input: Record<string, string | undefined>): AppEnv {
     issues.push(
       "HOSTED_AUTH_SHARED_SECRET or HOSTED_AUTH_PUBLIC_KEY is required when AUTH_MODE=hosted",
     );
+  }
+  if (isHostedProduction && configuration.AUTH_MODE === "neon-auth") {
+    if (!configuration.NEON_AUTH_BASE_URL) {
+      issues.push("NEON_AUTH_BASE_URL is required when AUTH_MODE=neon-auth");
+    }
+    if (!configuration.NEON_AUTH_COOKIE_SECRET) {
+      issues.push("NEON_AUTH_COOKIE_SECRET is required when AUTH_MODE=neon-auth");
+    }
   }
   if (isHostedProduction) {
     if (configuration.DATABASE_PROVIDER !== "postgres") {

@@ -1,3 +1,4 @@
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { avatarGlyphs, avatarLabels, profileAvatars } from "@/features/profiles/schemas";
 
 export function ProfileAvatar({
@@ -16,13 +17,19 @@ export function ProfileAvatar({
       : size === "sm"
         ? "h-9 w-9 text-base"
         : "h-12 w-12 text-xl";
+
   return (
-    <span
-      className={`grid shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-sm ${sizeClass}`}
+    <Avatar
+      className={
+        sizeClass +
+        " rounded-2xl border-0 bg-primary text-primary-foreground shadow-sm after:hidden"
+      }
       title={avatarLabels[safeAvatar]}
-      aria-label={`${avatarLabels[safeAvatar]} avatar`}
+      aria-label={avatarLabels[safeAvatar] + " avatar"}
     >
-      {avatarGlyphs[safeAvatar]}
-    </span>
+      <AvatarFallback className="rounded-2xl bg-primary text-inherit">
+        {avatarGlyphs[safeAvatar]}
+      </AvatarFallback>
+    </Avatar>
   );
 }

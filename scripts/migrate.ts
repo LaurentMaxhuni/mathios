@@ -1,3 +1,4 @@
+import "./load-env";
 import { runMigrations } from "@/infrastructure/database/migrations";
 
 async function main(): Promise<void> {

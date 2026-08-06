@@ -67,6 +67,8 @@ const TASK_INSTRUCTIONS: Record<AiTask, string> = {
     "Translate the learner's request into a concise list of relevant topics, concepts, or search terms; do not invent platform content.",
   "study-plan-suggestion":
     "Suggest a realistic short study sequence with prerequisites, practice, review, and a check for understanding.",
+  "lesson-draft":
+    "Create a structured lesson draft as JSON for an author to review. Never claim that the draft is official or ready to publish.",
 };
 
 const TASK_LABELS: Record<AiTask, string> = {
@@ -83,6 +85,7 @@ const TASK_LABELS: Record<AiTask, string> = {
   "misconception-analysis": "Misconception analysis",
   "natural-language-search": "Natural-language search",
   "study-plan-suggestion": "Study-plan suggestion",
+  "lesson-draft": "Lesson draft",
 };
 
 export function taskInstruction(task: AiTask): string {

@@ -1,4 +1,4 @@
-export type AuthMode = "local-profile" | "local-credential" | "hosted";
+export type AuthMode = "neon-auth" | "local-profile" | "local-credential" | "hosted";
 
 export interface AuthenticatedPrincipal {
   subjectId: string;

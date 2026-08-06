@@ -1,0 +1,2 @@
+-- SQLite keeps the auth mode check in the foundation migration; this entry
+-- keeps migration history aligned with the PostgreSQL/Neon deployment.

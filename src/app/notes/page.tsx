@@ -1,16 +1,9 @@
-import dynamicImport from "next/dynamic";
 import { redirect } from "next/navigation";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-import { RouteLoading } from "@/components/shared/route-loading";
+import { NotesWorkspace } from "@/features/notes/components/notes-workspace";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getNotesRepository } from "@/infrastructure/database/repositories/notes-repository";
 import { getNotesDashboard, getPersonalKnowledgeMap } from "@/features/notes/service";
-
-const NotesWorkspace = dynamicImport(
-  () =>
-    import("@/features/notes/components/notes-workspace").then((module) => module.NotesWorkspace),
-  { loading: () => <RouteLoading label="Loading your knowledge base" /> },
-);
 
 export const dynamic = "force-dynamic";
 
