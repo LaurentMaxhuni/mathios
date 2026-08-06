@@ -3,13 +3,14 @@ import postgres, { type Sql } from "postgres";
 import { DEFAULT_MASTERY_RULES, DEFAULT_RECOMMENDATION_RULES } from "@/domain/mastery/types";
 import { publicSimulationDefinition, simulationRegistry } from "@/domain/simulation/registry";
 import { laboratoryActivitySeed } from "@/infrastructure/database/laboratory-seed";
+import * as phase20 from "@/infrastructure/database/phase20-content";
 import { env } from "@/lib/env";
 import { resolveSqliteFilename } from "@/infrastructure/database/client";
 import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-18"],
+  ["seed_version", "phase-20"],
 ] as const;
 
 export const simulationSeed = simulationRegistry.map((simulation) => ({
@@ -199,7 +200,7 @@ export const subjectSeed = [
   ],
 ] as const;
 
-export const domainSeed = [
+const baseDomainSeed = [
   [
     "domain-arithmetic",
     "arithmetic",
@@ -402,6 +403,8 @@ export const domainSeed = [
   ],
 ] as const;
 
+export const domainSeed = [...baseDomainSeed, ...phase20.phase20DomainSeed] as const;
+
 function gradeNumber(slug: string): number | null {
   const match = /^grade-(6|7|8|9|10|11|12)$/.exec(slug);
   return match ? Number(match[1]) : null;
@@ -423,6 +426,12 @@ function subjectAvailable(subjectSlug: string, gradeSlug: string): boolean {
 function domainAvailable(subjectSlug: string, domainIndex: number, gradeSlug: string): boolean {
   if (isSpecialGrade(gradeSlug)) return true;
   const grade = gradeNumber(gradeSlug) ?? 6;
+  const domain = domainSeed.find(
+    ([, , , , candidateSubjectSlug, sortOrder]) =>
+      candidateSubjectSlug === subjectSlug && sortOrder === domainIndex + 1,
+  );
+  const phase20MinimumGrade = domain ? phase20.phase20MinimumGradeForDomain(domain[0]) : null;
+  if (phase20MinimumGrade !== null) return grade >= phase20MinimumGrade;
   const threshold =
     subjectSlug === "mathematics"
       ? [6, 7, 8, 9, 10][domainIndex]
@@ -519,7 +528,7 @@ const objectiveGradeSlugs = new Set([
   "advanced",
   "olympiad",
 ]);
-const learningObjectiveSeed = gradeSubjectSeed
+const baseLearningObjectiveSeed = gradeSubjectSeed
   .filter((mapping) => objectiveGradeSlugs.has(seededGradeSlug(mapping.gradeId)))
   .map((mapping) => {
     const gradeSlug = seededGradeSlug(mapping.gradeId);
@@ -552,7 +561,12 @@ const learningObjectiveSeed = gradeSubjectSeed
     } as const;
   });
 
-export const courseSeed = [
+export const learningObjectiveSeed = [
+  ...baseLearningObjectiveSeed,
+  ...phase20.phase20ObjectiveSeed,
+] as const;
+
+const baseCourseSeed = [
   {
     id: "course-physics-motion",
     slug: "physics-motion",
@@ -586,24 +600,40 @@ export const courseSeed = [
   },
 ] as const;
 
-export const courseCurriculumSeed = [
+export const courseSeed = [...baseCourseSeed, ...phase20.phase20CourseSeed] as const;
+
+const baseCourseCurriculumSeed = [
   ["course-physics-motion", "curriculum-kosovo"],
   ["course-physics-motion", "curriculum-international"],
   ["course-astronomy-observation", "curriculum-international"],
 ] as const;
 
-export const courseGradeSeed = [
+export const courseCurriculumSeed = [
+  ...baseCourseCurriculumSeed,
+  ...phase20.phase20CourseCurriculumSeed,
+] as const;
+
+const baseCourseGradeSeed = [
   ["course-physics-motion", "grade-7", true, 0],
   ["course-physics-motion", "grade-8", true, 1],
   ["course-astronomy-observation", "grade-10", false, 0],
 ] as const;
 
-export const courseObjectiveSeed = [
+export const courseGradeSeed = [...baseCourseGradeSeed, ...phase20.phase20CourseGradeSeed] as const;
+
+const baseCourseObjectiveSeed = [
   ["course-physics-motion", "objective-kosovo-grade-8-subject-physics", 0],
   ["course-physics-motion", "objective-international-grade-8-subject-physics", 1],
 ] as const;
 
-export const moduleSeed = [
+export const courseObjectiveSeed = [
+  ...baseCourseObjectiveSeed,
+  ...phase20.phase20CourseObjectiveSeed,
+] as const;
+
+export const coursePrerequisiteSeed = phase20.phase20CoursePrerequisiteSeed;
+
+const baseModuleSeed = [
   {
     id: "module-motion-language",
     courseId: "course-physics-motion",
@@ -624,7 +654,9 @@ export const moduleSeed = [
   },
 ] as const;
 
-export const lessonSeed = [
+export const moduleSeed = [...baseModuleSeed, ...phase20.phase20ModuleSeed] as const;
+
+const baseLessonSeed = [
   {
     id: "lesson-describing-motion",
     moduleId: "module-motion-language",
@@ -666,7 +698,9 @@ export const lessonSeed = [
   },
 ] as const;
 
-export const sectionSeed = [
+export const lessonSeed = [...baseLessonSeed, ...phase20.phase20LessonSeed] as const;
+
+const baseSectionSeed = [
   [
     "section-motion-introduction",
     "lesson-describing-motion",
@@ -725,7 +759,9 @@ export const sectionSeed = [
   ],
 ] as const;
 
-export const blockSeed = [
+export const sectionSeed = [...baseSectionSeed, ...phase20.phase20SectionSeed] as const;
+
+const baseBlockSeed = [
   [
     "block-motion-observation",
     "section-motion-introduction",
@@ -839,9 +875,16 @@ export const blockSeed = [
   ],
 ] as const;
 
-export const lessonObjectiveSeed = [
+export const blockSeed = [...baseBlockSeed, ...phase20.phase20BlockSeed] as const;
+
+const baseLessonObjectiveSeed = [
   ["lesson-describing-motion", "objective-kosovo-grade-8-subject-physics", 0],
   ["lesson-constant-acceleration", "objective-kosovo-grade-8-subject-physics", 0],
+] as const;
+
+export const lessonObjectiveSeed = [
+  ...baseLessonObjectiveSeed,
+  ...phase20.phase20LessonObjectiveSeed,
 ] as const;
 
 function lessonSnapshot(lessonId: string) {
@@ -912,7 +955,7 @@ export const lessonVersionSeed = lessonSeed.flatMap((lesson) => [
     : []),
 ]);
 
-export const conceptSeed = [
+const baseConceptSeed = [
   {
     id: "concept-position",
     slug: "position",
@@ -1029,7 +1072,9 @@ export const conceptSeed = [
   },
 ] as const;
 
-export const conceptRelationshipSeed = [
+export const conceptSeed = [...baseConceptSeed, ...phase20.phase20ConceptSeed] as const;
+
+const baseConceptRelationshipSeed = [
   ["concept-edge-velocity-position", "concept-velocity", "concept-position", "requires"],
   ["concept-edge-acceleration-velocity", "concept-acceleration", "concept-velocity", "requires"],
   [
@@ -1055,7 +1100,12 @@ export const conceptRelationshipSeed = [
   ["concept-edge-atomic-position", "concept-atomic-model", "concept-position", "related-to"],
 ] as const;
 
-export const conceptObjectiveSeed = [
+export const conceptRelationshipSeed = [
+  ...baseConceptRelationshipSeed,
+  ...phase20.phase20ConceptRelationshipSeed,
+] as const;
+
+const baseConceptObjectiveSeed = [
   ["concept-position", "objective-kosovo-grade-8-subject-physics", 0],
   ["concept-velocity", "objective-kosovo-grade-8-subject-physics", 1],
   ["concept-acceleration", "objective-international-grade-8-subject-physics", 0],
@@ -1067,7 +1117,12 @@ export const conceptObjectiveSeed = [
   ["concept-atomic-model", "objective-kosovo-grade-8-subject-chemistry", 0],
 ] as const;
 
-export const conceptLessonSeed = [
+export const conceptObjectiveSeed = [
+  ...baseConceptObjectiveSeed,
+  ...phase20.phase20ConceptObjectiveSeed,
+] as const;
+
+const baseConceptLessonSeed = [
   ["concept-position", "lesson-describing-motion", 0],
   ["concept-velocity", "lesson-describing-motion", 1],
   ["concept-velocity", "lesson-speed-and-velocity", 0],
@@ -1075,7 +1130,12 @@ export const conceptLessonSeed = [
   ["concept-motion-graphs", "lesson-describing-motion", 2],
 ] as const;
 
-export const conceptApplicationSeed = [
+export const conceptLessonSeed = [
+  ...baseConceptLessonSeed,
+  ...phase20.phase20ConceptLessonSeed,
+] as const;
+
+const baseConceptApplicationSeed = [
   [
     "application-position-navigation",
     "concept-position",
@@ -1106,7 +1166,12 @@ export const conceptApplicationSeed = [
   ],
 ] as const;
 
-export const conceptMisconceptionSeed = [
+export const conceptApplicationSeed = [
+  ...baseConceptApplicationSeed,
+  ...phase20.phase20ConceptApplicationSeed,
+] as const;
+
+const baseConceptMisconceptionSeed = [
   [
     "misconception-velocity-speed",
     "concept-velocity",
@@ -1130,7 +1195,12 @@ export const conceptMisconceptionSeed = [
   ],
 ] as const;
 
-export const questionSeed = [
+export const conceptMisconceptionSeed = [
+  ...baseConceptMisconceptionSeed,
+  ...phase20.phase20ConceptMisconceptionSeed,
+] as const;
+
+const baseQuestionSeed = [
   {
     id: "question-velocity-direction",
     slug: "velocity-direction",
@@ -1481,6 +1551,8 @@ export const questionSeed = [
   },
 ] as const;
 
+export const questionSeed = [...baseQuestionSeed, ...phase20.phase20QuestionSeed] as const;
+
 export const questionTemplateSeed = [
   {
     id: "template-force-randomized",
@@ -1501,7 +1573,7 @@ export const questionTemplateSeed = [
   },
 ] as const;
 
-export const exerciseSetSeed = [
+const baseExerciseSetSeed = [
   {
     id: "exercise-set-motion-practice",
     slug: "motion-practice",
@@ -1517,7 +1589,9 @@ export const exerciseSetSeed = [
   },
 ] as const;
 
-export const exerciseSetQuestionSeed = [
+export const exerciseSetSeed = [...baseExerciseSetSeed, ...phase20.phase20ExerciseSetSeed] as const;
+
+const baseExerciseSetQuestionSeed = [
   ["exercise-set-motion-practice", "question-velocity-direction", 0, 1, true],
   ["exercise-set-motion-practice", "question-acceleration-numeric", 1, 1, true],
   ["exercise-set-motion-practice", "question-force-unit", 2, 1, true],
@@ -1526,7 +1600,12 @@ export const exerciseSetQuestionSeed = [
   ["exercise-set-motion-practice", "question-motion-multi-step", 5, 2, true],
 ] as const;
 
-export const assessmentSeed = [
+export const exerciseSetQuestionSeed = [
+  ...baseExerciseSetQuestionSeed,
+  ...phase20.phase20ExerciseSetQuestionSeed,
+] as const;
+
+const baseAssessmentSeed = [
   {
     id: "assessment-motion-quiz",
     slug: "motion-module-quiz",
@@ -1604,7 +1683,9 @@ export const assessmentSeed = [
   },
 ] as const;
 
-export const assessmentSectionSeed = [
+export const assessmentSeed = [...baseAssessmentSeed, ...phase20.phase20AssessmentSeed] as const;
+
+const baseAssessmentSectionSeed = [
   {
     id: "assessment-section-motion-quiz",
     assessmentId: "assessment-motion-quiz",
@@ -1637,6 +1718,11 @@ export const assessmentSectionSeed = [
   },
 ] as const;
 
+export const assessmentSectionSeed = [
+  ...baseAssessmentSectionSeed,
+  ...phase20.phase20AssessmentSectionSeed,
+] as const;
+
 export const assessmentPoolSeed = [
   {
     id: "assessment-pool-motion-placement",
@@ -1650,7 +1736,7 @@ export const assessmentPoolSeed = [
   },
 ] as const;
 
-export const assessmentQuestionSeed = [
+const baseAssessmentQuestionSeed = [
   {
     id: "assessment-question-quiz-velocity",
     assessmentId: "assessment-motion-quiz",
@@ -1773,7 +1859,12 @@ export const assessmentQuestionSeed = [
   },
 ] as const;
 
-export const roadmapSeed = [
+export const assessmentQuestionSeed = [
+  ...baseAssessmentQuestionSeed,
+  ...phase20.phase20AssessmentQuestionSeed,
+] as const;
+
+const baseRoadmapSeed = [
   {
     id: "roadmap-math-physics-foundations",
     slug: "math-physics-foundations",
@@ -1868,7 +1959,9 @@ export const roadmapSeed = [
   },
 ] as const;
 
-export const roadmapSubjectSeed = [
+export const roadmapSeed = [...baseRoadmapSeed, ...phase20.phase20RoadmapSeed] as const;
+
+const baseRoadmapSubjectSeed = [
   ["roadmap-math-physics-foundations", "subject-mathematics", 0],
   ["roadmap-math-physics-foundations", "subject-physics", 1],
   ["roadmap-algebra-classical-mechanics", "subject-mathematics", 0],
@@ -1886,6 +1979,11 @@ export const roadmapSubjectSeed = [
   ["roadmap-natural-sciences-foundations", "subject-chemistry", 2],
   ["roadmap-natural-sciences-foundations", "subject-biology", 3],
   ["roadmap-natural-sciences-foundations", "subject-astronomy", 4],
+] as const;
+
+export const roadmapSubjectSeed = [
+  ...baseRoadmapSubjectSeed,
+  ...phase20.phase20RoadmapSubjectSeed,
 ] as const;
 
 type SeedRoadmapNode = {
@@ -1943,7 +2041,7 @@ function seedRoadmapNode(
   };
 }
 
-export const roadmapNodeSeed: readonly SeedRoadmapNode[] = [
+const baseRoadmapNodeSeed: readonly SeedRoadmapNode[] = [
   seedRoadmapNode(
     "roadmap-math-physics-foundations",
     "roadmap-node-mpf-ratio",
@@ -2371,6 +2469,11 @@ export const roadmapNodeSeed: readonly SeedRoadmapNode[] = [
   ),
 ];
 
+export const roadmapNodeSeed: readonly SeedRoadmapNode[] = [
+  ...baseRoadmapNodeSeed,
+  ...phase20.phase20RoadmapNodeSeed,
+];
+
 export const roadmapVersionSeed = roadmapSeed.map((roadmap) => ({
   id: `${roadmap.id}-version-1`,
   roadmapId: roadmap.id,
@@ -2381,7 +2484,7 @@ export const roadmapVersionSeed = roadmapSeed.map((roadmap) => ({
   publishedAt: "2026-01-01T00:00:00.000Z",
 }));
 
-export const roadmapEdgeSeed = roadmapNodeSeed.flatMap((node, index, nodes) => {
+const baseRoadmapEdgeSeed = baseRoadmapNodeSeed.flatMap((node, index, nodes) => {
   const roadmapNodes = nodes.filter((candidate) => candidate.roadmapId === node.roadmapId);
   const localIndex = roadmapNodes.findIndex((candidate) => candidate.id === node.id);
   const next = roadmapNodes[localIndex + 1];
@@ -2398,10 +2501,17 @@ export const roadmapEdgeSeed = roadmapNodeSeed.flatMap((node, index, nodes) => {
   ];
 });
 
-export const roadmapPrerequisiteSeed = [
+export const roadmapEdgeSeed = [...baseRoadmapEdgeSeed, ...phase20.phase20RoadmapEdgeSeed];
+
+const baseRoadmapPrerequisiteSeed = [
   ["roadmap-introductory-astrophysics", "roadmap-math-physics-foundations", true],
   ["roadmap-biochemistry-foundations", "roadmap-chemistry-for-biology", true],
   ["roadmap-natural-sciences-foundations", "roadmap-math-physics-foundations", false],
+] as const;
+
+export const roadmapPrerequisiteSeed = [
+  ...baseRoadmapPrerequisiteSeed,
+  ...phase20.phase20RoadmapPrerequisiteSeed,
 ] as const;
 
 export async function runSeed(
@@ -2541,6 +2651,11 @@ export async function runSeed(
         INSERT INTO course_grades (course_id, grade_id, is_required, sort_order)
         VALUES (@courseId, @gradeId, @isRequired, @sortOrder)
         ON CONFLICT(course_id, grade_id) DO UPDATE SET is_required = excluded.is_required, sort_order = excluded.sort_order
+      `);
+      const insertCoursePrerequisite = database.prepare(`
+        INSERT INTO course_prerequisites (course_id, prerequisite_course_id)
+        VALUES (@courseId, @prerequisiteCourseId)
+        ON CONFLICT(course_id, prerequisite_course_id) DO NOTHING
       `);
       const insertCourseObjective = database.prepare(`
         INSERT INTO course_learning_objectives (course_id, objective_id, sort_order)
@@ -2762,6 +2877,11 @@ export async function runSeed(
             sortOrder: objective.sortOrder,
           });
         }
+        for (const objective of phase20.phase20GradeObjectiveSeed)
+          insertGradeObjective.run({
+            ...objective,
+            isRequired: objective.isRequired ? 1 : 0,
+          });
         for (const course of courseSeed) {
           insertCourse.run({
             ...course,
@@ -2772,6 +2892,8 @@ export async function runSeed(
           insertCourseCurriculum.run({ courseId, curriculumId });
         for (const [courseId, gradeId, isRequired, sortOrder] of courseGradeSeed)
           insertCourseGrade.run({ courseId, gradeId, isRequired: isRequired ? 1 : 0, sortOrder });
+        for (const [courseId, prerequisiteCourseId] of coursePrerequisiteSeed)
+          insertCoursePrerequisite.run({ courseId, prerequisiteCourseId });
         for (const [courseId, objectiveId, sortOrder] of courseObjectiveSeed)
           insertCourseObjective.run({ courseId, objectiveId, sortOrder });
         for (const courseModule of moduleSeed) insertModule.run(courseModule);
@@ -3113,6 +3235,14 @@ export async function runSeed(
             sort_order = EXCLUDED.sort_order, updated_at = NOW()
         `;
       }
+      for (const objective of phase20.phase20GradeObjectiveSeed) {
+        await transaction`
+          INSERT INTO grade_learning_objectives (curriculum_id, grade_id, objective_id, is_required, sort_order)
+          VALUES (${objective.curriculumId}, ${objective.gradeId}, ${objective.objectiveId}, ${objective.isRequired}, ${objective.sortOrder})
+          ON CONFLICT (curriculum_id, grade_id, objective_id) DO UPDATE SET is_required = EXCLUDED.is_required,
+            sort_order = EXCLUDED.sort_order, updated_at = NOW()
+        `;
+      }
       for (const course of courseSeed) {
         await transaction`
           INSERT INTO courses (id, slug, title, description, subject_id, difficulty, estimated_duration_minutes, grade_min_id, grade_max_id, course_image, is_required, status, created_by_profile_id)
@@ -3134,6 +3264,12 @@ export async function runSeed(
           INSERT INTO course_grades (course_id, grade_id, is_required, sort_order)
           VALUES (${courseId}, ${gradeId}, ${isRequired}, ${sortOrder})
           ON CONFLICT (course_id, grade_id) DO UPDATE SET is_required = EXCLUDED.is_required, sort_order = EXCLUDED.sort_order
+        `;
+      }
+      for (const [courseId, prerequisiteCourseId] of coursePrerequisiteSeed) {
+        await transaction`
+          INSERT INTO course_prerequisites (course_id, prerequisite_course_id)
+          VALUES (${courseId}, ${prerequisiteCourseId}) ON CONFLICT DO NOTHING
         `;
       }
       for (const [courseId, objectiveId, sortOrder] of courseObjectiveSeed) {

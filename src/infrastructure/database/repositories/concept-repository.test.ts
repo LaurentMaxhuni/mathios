@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import type { DatabaseHandle } from "@/infrastructure/database/client";
-import { runSeed } from "@/infrastructure/database/seed";
+import { conceptRelationshipSeed, conceptSeed, runSeed } from "@/infrastructure/database/seed";
 import { SqlConceptRepository } from "@/infrastructure/database/repositories/concept-repository";
 
 describe("concept repository", () => {
@@ -29,8 +29,8 @@ describe("concept repository", () => {
       expect(detail?.courseIds).toContain("course-physics-motion");
       expect(detail?.exerciseReferences).toContain("question-velocity-direction");
       const graph = await repository.getGraph();
-      expect(graph.nodes).toHaveLength(9);
-      expect(graph.edges).toHaveLength(8);
+      expect(graph.nodes).toHaveLength(conceptSeed.length);
+      expect(graph.edges).toHaveLength(conceptRelationshipSeed.length);
       expect(graph.requiredCycle).toBeNull();
       expect(graph.orphanedConceptIds).toEqual([]);
       expect(graph.nodes.find((node) => node.id === "concept-velocity")?.locked).toBe(true);

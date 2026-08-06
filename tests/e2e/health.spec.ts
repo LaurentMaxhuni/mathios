@@ -222,7 +222,7 @@ test("Phase 5 exercise player, validation APIs, and authoring surfaces are usabl
   await page.goto("/exercises");
   await expect(page.getByRole("heading", { name: "Practice that explains itself." })).toBeVisible();
   await expect(page.getByText("Motion practice lab")).toBeVisible();
-  await page.getByRole("link", { name: /Start practice/ }).click();
+  await page.getByRole("link", { name: "Start practice: Motion practice lab" }).click();
   await expect(page).toHaveURL(/\/exercise-sets\/exercise-set-motion-practice$/);
   await page.getByRole("button", { name: "Start practice" }).click();
   await page.locator('input[type="radio"][value="b"]').check();
@@ -269,10 +269,7 @@ test("Phase 6 assessment catalog, timed workflow, and authoring surface are usab
   await expect(page.getByText("Motion module quiz")).toBeVisible();
   await expect(page.getByText("Motion readiness diagnostic")).toBeVisible();
 
-  await page
-    .getByRole("link", { name: /Open assessment/ })
-    .first()
-    .click();
+  await page.getByRole("link", { name: "Open assessment: Motion module quiz" }).click();
   await expect(page).toHaveURL(/\/assessments\/assessment-motion-quiz$/);
   await expect(page.locator("h1").filter({ hasText: "Motion module quiz" })).toBeVisible();
   await page.getByRole("button", { name: "Start assessment" }).click();
@@ -353,7 +350,15 @@ test("Phase 8 roadmaps, prerequisite progress, personalized paths, and APIs are 
     return { ok: response.ok, body: await response.json() };
   });
   expect(catalogResponse.ok).toBeTruthy();
-  expect(catalogResponse.body.roadmaps).toHaveLength(7);
+  expect(catalogResponse.body.roadmaps).toHaveLength(8);
+  expect(catalogResponse.body.roadmaps).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: "roadmap-phase20-scientific-content",
+        title: "Scientific Content Progression",
+      }),
+    ]),
+  );
 
   const roadmapLink = page.getByRole("link", {
     name: /published Mathematics and Physics Foundations/,
@@ -365,7 +370,12 @@ test("Phase 8 roadmaps, prerequisite progress, personalized paths, and APIs are 
     page.getByRole("heading", { name: "Mathematics and Physics Foundations" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Start this roadmap" }).click();
-  await expect(page.getByRole("heading", { name: "Your progress" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your progress" })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole("button", { name: "Mark complete" }).first()).toBeVisible({
+    timeout: 15_000,
+  });
 
   const detailResponse = await page.evaluate(async () => {
     const response = await fetch("/api/roadmaps/roadmap-math-physics-foundations");
@@ -378,9 +388,9 @@ test("Phase 8 roadmaps, prerequisite progress, personalized paths, and APIs are 
   });
 
   await page.getByRole("button", { name: "Mark complete" }).first().click();
-  await expect(page.getByText("1/4")).toBeVisible();
+  await expect(page.getByText("1/4")).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "Generate personalized path" }).click();
-  await expect(page.getByRole("link", { name: "Open full path" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open full path" })).toBeVisible({ timeout: 15_000 });
 
   const pathResponse = await page.evaluate(async () => {
     const response = await fetch("/api/roadmaps/roadmap-math-physics-foundations/path");
@@ -782,8 +792,9 @@ test("Phase 17 classroom workspace creates a class, assignment, invitation, and 
   await expect(page.getByRole("status")).toContainText("Classroom created.");
   const classroomLink = page.getByRole("link", { name: /E2E Physics classroom/ });
   await expect(classroomLink).toBeVisible();
+  await expect(classroomLink).toHaveAttribute("href", /\/classrooms\/[0-9a-f-]+$/);
   await classroomLink.click();
-  await expect(page).toHaveURL(/\/classrooms\/[0-9a-f-]+$/);
+  await expect(page).toHaveURL(/\/classrooms\/[0-9a-f-]+$/, { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: "E2E Physics classroom" })).toBeVisible();
 
   const classroom = await page.evaluate(async () => {

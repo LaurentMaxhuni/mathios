@@ -8,7 +8,7 @@ import {
   getCurriculumRepository,
   SqlCurriculumRepository,
 } from "@/infrastructure/database/repositories/curriculum-repository";
-import { runSeed } from "@/infrastructure/database/seed";
+import { domainSeed, runSeed } from "@/infrastructure/database/seed";
 
 describe("curriculum repository", () => {
   it("hydrates curriculum, grade, subject, domain, and objective explorers", async () => {
@@ -43,7 +43,9 @@ describe("curriculum repository", () => {
         "subject-mathematics",
         "curriculum-kosovo",
       );
-      expect(subject?.domains.length).toBe(5);
+      expect(subject?.domains.length).toBe(
+        domainSeed.filter(([, , , , subjectSlug]) => subjectSlug === "mathematics").length,
+      );
       expect(subject?.grades.some((placement) => placement.gradeId === "grade-6")).toBe(true);
       expect(subject?.objectives.length).toBeGreaterThan(0);
       expect(getCurriculumRepository(handle)).toBeInstanceOf(SqlCurriculumRepository);
