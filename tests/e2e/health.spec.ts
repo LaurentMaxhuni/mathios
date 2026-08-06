@@ -584,7 +584,7 @@ test("Phase 12 notes, captures, search, and personal map are usable", async ({ p
   await expect(page.getByRole("status")).toContainText("Highlight captured.");
 
   await page.getByLabel("Search notes").fill("Energy review");
-  await expect(page.getByRole("button", { name: /Energy review/ }).first()).toBeVisible();
+  await expect(page.getByRole("option", { name: /Energy review/ }).first()).toBeVisible();
   await page.getByRole("button", { name: "Open map" }).click();
   await expect(
     page.getByRole("img", { name: "Map of personal notes and learning resources" }),
@@ -851,4 +851,59 @@ test("Phase 17 classroom workspace creates a class, assignment, invitation, and 
   }, classroom!.id);
   expect(analyticsResponse.ok).toBeTruthy();
   expect(analyticsResponse.body).toMatchObject({ memberCount: 1, assignmentCount: 1 });
+});
+
+test("Phase 19 shell navigation preserves keyboard focus and document structure", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).first().click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  const skipLink = page.getByRole("link", { name: "Skip to main content" });
+  await expect(skipLink).toBeAttached();
+  await skipLink.focus();
+  await skipLink.click();
+  await expect(page.locator("#main-content")).toBeFocused();
+  await expect(page.locator("main#main-content")).toHaveCount(1);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+  const openNavigation = page.getByRole("button", { name: "Open navigation" });
+  await openNavigation.click();
+  await expect(openNavigation).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("button", { name: "Close navigation" }).last()).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(openNavigation).toHaveAttribute("aria-expanded", "false");
+  await expect(openNavigation).toBeFocused();
+
+  const duplicateIds = await page.evaluate(() => {
+    const counts = new Map<string, number>();
+    for (const element of document.querySelectorAll<HTMLElement>("[id]")) {
+      counts.set(element.id, (counts.get(element.id) ?? 0) + 1);
+    }
+    return [...counts.entries()].filter(([, count]) => count > 1).map(([id]) => id);
+  });
+  expect(duplicateIds).toEqual([]);
+});
+
+test("Phase 19 semantic alternatives and status surfaces are exposed", async ({ page }) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).first().click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/search");
+  await expect(page.getByRole("combobox", { name: /search/i })).toBeVisible();
+
+  await page.goto("/knowledge-graph");
+  await expect(page.getByRole("heading", { name: "The knowledge graph" })).toBeVisible();
+  await expect(page.getByText("View graph as a list")).toBeVisible();
+
+  await page.goto("/lessons/lesson-describing-motion");
+  await expect(page.getByRole("progressbar", { name: "Lesson completion" })).toBeVisible();
+  await expect(page.locator('[role="math"]').first()).toBeVisible();
 });

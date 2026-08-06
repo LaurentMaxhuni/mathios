@@ -308,11 +308,14 @@ export function PlannerWorkspace({
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <main className="min-w-0 space-y-5">
+        <section className="min-w-0 space-y-5" aria-labelledby="planner-calendar-heading">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
               <p className="eyebrow">Calendar cockpit</p>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight">
+              <h2
+                id="planner-calendar-heading"
+                className="mt-1 text-2xl font-semibold tracking-tight"
+              >
                 {view === "agenda" ? "Your next sessions" : monthTitle(anchor)}
               </h2>
             </div>
@@ -327,6 +330,8 @@ export function PlannerWorkspace({
                     key={option}
                     type="button"
                     role="tab"
+                    id={`planner-${option}-tab`}
+                    aria-controls={`planner-${option}-panel`}
                     aria-selected={view === option}
                     onClick={() => setView(option)}
                     className={`rounded-md px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${view === option ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
@@ -365,7 +370,11 @@ export function PlannerWorkspace({
           </div>
 
           {message ? (
-            <div className="flex items-center gap-2 rounded-lg border border-accent/25 bg-accent/10 px-4 py-3 text-sm text-accent">
+            <div
+              className="flex items-center gap-2 rounded-lg border border-accent/25 bg-accent/10 px-4 py-3 text-sm text-accent"
+              role="status"
+              aria-live="polite"
+            >
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
               {message}
             </div>
@@ -396,19 +405,26 @@ export function PlannerWorkspace({
             </Card>
           )}
 
-          {view === "agenda" ? (
-            <AgendaView dates={dates} sessions={sessions} onStatus={setSessionStatus} />
-          ) : (
-            <CalendarViewGrid
-              view={view}
-              dates={dates}
-              anchor={anchor}
-              sessions={sessions}
-              onStatus={setSessionStatus}
-              onMove={moveSession}
-            />
-          )}
-        </main>
+          <div
+            id={`planner-${view}-panel`}
+            role="tabpanel"
+            aria-labelledby={`planner-${view}-tab`}
+            tabIndex={0}
+          >
+            {view === "agenda" ? (
+              <AgendaView dates={dates} sessions={sessions} onStatus={setSessionStatus} />
+            ) : (
+              <CalendarViewGrid
+                view={view}
+                dates={dates}
+                anchor={anchor}
+                sessions={sessions}
+                onStatus={setSessionStatus}
+                onMove={moveSession}
+              />
+            )}
+          </div>
+        </section>
 
         <aside className="space-y-5">
           {showGoalForm || !dashboard.goals.length ? (
@@ -563,12 +579,27 @@ function CalendarViewGrid({
 }) {
   const columns = view === "week" ? dates : dates;
   const gridClass = view === "week" ? "grid-cols-7" : "grid-cols-7";
+  const sessionsByDate = React.useMemo(() => {
+    const grouped = new Map<string, StudySessionRecord[]>();
+    for (const session of sessions) {
+      const dateSessions = grouped.get(session.scheduledDate) ?? [];
+      dateSessions.push(session);
+      grouped.set(session.scheduledDate, dateSessions);
+    }
+    return grouped;
+  }, [sessions]);
   return (
-    <Card className="overflow-hidden">
-      <div className={`grid ${gridClass} border-b bg-muted/35`}>
+    <Card
+      className="overflow-hidden"
+      role="grid"
+      aria-label={view === "week" ? "Weekly study calendar" : "Monthly study calendar"}
+    >
+      <div className={`grid ${gridClass} border-b bg-muted/35`} role="row">
         {weekdayLabels.map((day) => (
           <div
             key={day.value}
+            role="columnheader"
+            aria-label={day.name}
             className="border-r px-2 py-2 text-center text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground last:border-r-0 sm:px-3"
           >
             <span className="sm:hidden">{day.short.slice(0, 1)}</span>
@@ -576,13 +607,13 @@ function CalendarViewGrid({
           </div>
         ))}
       </div>
-      <div className={`grid ${gridClass}`}>
+      <div className={`grid ${gridClass}`} role="row">
         {columns.map((date) => (
           <CalendarDay
             key={date}
             date={date}
             currentMonth={date.slice(0, 7) === anchor.slice(0, 7)}
-            sessions={sessions.filter((session) => session.scheduledDate === date)}
+            sessions={sessionsByDate.get(date) ?? []}
             onStatus={onStatus}
             onMove={onMove}
           />
@@ -608,6 +639,8 @@ function CalendarDay({
   const isToday = date === new Date().toISOString().slice(0, 10);
   return (
     <div
+      role="gridcell"
+      aria-label={`${humanDate(date, { weekday: "long", month: "long", day: "numeric" })}${sessions.length ? `, ${sessions.length} ${sessions.length === 1 ? "session" : "sessions"}` : ", no sessions"}`}
       onDragOver={(event) => event.preventDefault()}
       onDrop={(event) => {
         const sessionId = event.dataTransfer.getData("text/plain");
@@ -648,6 +681,8 @@ function SessionChip({
       draggable={!closed}
       onDragStart={(event) => event.dataTransfer.setData("text/plain", session.id)}
       className={`group rounded-md border border-l-[3px] px-2 py-1.5 text-left text-xs shadow-sm ${itemColors[session.itemType]} ${closed ? "opacity-60" : ""}`}
+      role="group"
+      aria-label={`${session.title}, ${formatMinute(session.startMinute)}, ${session.durationMinutes} minutes, ${session.status}`}
       title={`${session.title} · ${formatMinute(session.startMinute)} · ${session.durationMinutes} minutes`}
     >
       <div className="flex items-start gap-1.5">
@@ -670,7 +705,7 @@ function SessionChip({
             <button
               type="button"
               aria-label={`Skip ${session.title}`}
-              className="rounded px-1 py-0.5 text-[0.6rem] font-semibold opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
+              className="rounded px-1 py-0.5 text-[0.6rem] font-semibold opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100 focus:opacity-100"
               onClick={() => onStatus(session.id, "skipped")}
             >
               Skip
@@ -678,7 +713,7 @@ function SessionChip({
             <button
               type="button"
               aria-label={`Complete ${session.title}`}
-              className="rounded p-0.5 opacity-0 transition-opacity hover:bg-accent/20 group-hover:opacity-100"
+              className="rounded p-0.5 opacity-0 transition-opacity hover:bg-accent/20 group-hover:opacity-100 focus:opacity-100"
               onClick={() => onStatus(session.id, "completed")}
             >
               <Check className="h-3 w-3" aria-hidden="true" />

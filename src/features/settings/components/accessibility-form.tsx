@@ -15,7 +15,8 @@ export function AccessibilityForm({ settings }: { settings: UserSettingsRecord }
   const preference = settings.accessibilityPreferences;
   return (
     <form action={formAction} className="space-y-6">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <fieldset className="grid gap-3 sm:grid-cols-2">
+        <legend className="sr-only">Accessibility preferences</legend>
         <label className="flex items-start gap-3 rounded-lg border p-4 text-sm">
           <input
             type="checkbox"
@@ -86,8 +87,9 @@ export function AccessibilityForm({ settings }: { settings: UserSettingsRecord }
             </span>
           </span>
         </label>
-      </div>
-      <div className="grid gap-5 sm:grid-cols-2">
+      </fieldset>
+      <fieldset className="grid gap-5 sm:grid-cols-2">
+        <legend className="sr-only">Display preferences</legend>
         <div className="space-y-2">
           <label htmlFor="textSize" className="text-sm font-medium">
             Text size
@@ -118,7 +120,7 @@ export function AccessibilityForm({ settings }: { settings: UserSettingsRecord }
             <option value="plain">Plain-text fallback</option>
           </select>
         </div>
-      </div>
+      </fieldset>
       <ActionFeedback state={state} />
       <Button type="submit" disabled={pending}>
         {pending ? "Saving…" : "Save accessibility settings"}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useId } from "react";
 import { Bookmark, FileText, GitBranch, Link2, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { PersonalKnowledgeMap, PersonalKnowledgeMapNode } from "@/domain/notes/types";
@@ -15,6 +16,7 @@ export function KnowledgeMapView({ map }: { map: PersonalKnowledgeMap }) {
   const byId = new Map(map.nodes.map((node) => [node.id, node]));
   const maxX = Math.max(760, ...map.nodes.map((node) => node.x + 180));
   const maxY = Math.max(420, ...map.nodes.map((node) => node.y + 90));
+  const mapId = useId().replaceAll(":", "");
   return (
     <section className="space-y-4" aria-label="Personal knowledge map">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -49,10 +51,11 @@ export function KnowledgeMapView({ map }: { map: PersonalKnowledgeMap }) {
               viewBox={`0 0 ${maxX} ${maxY}`}
               role="img"
               aria-label="Map of personal notes and learning resources"
+              aria-describedby={`${mapId}-description`}
             >
               <defs>
                 <marker
-                  id="personal-map-arrow"
+                  id={`${mapId}-arrow`}
                   markerWidth="8"
                   markerHeight="8"
                   refX="7"
@@ -76,7 +79,7 @@ export function KnowledgeMapView({ map }: { map: PersonalKnowledgeMap }) {
                       stroke="hsl(var(--muted-foreground))"
                       strokeWidth={edge.kind === "backlink" ? 3 : 2}
                       strokeDasharray={edge.kind === "bookmark" ? "6 5" : undefined}
-                      markerEnd="url(#personal-map-arrow)"
+                      markerEnd={`url(#${mapId}-arrow)`}
                     />
                   </g>
                 );
@@ -130,6 +133,31 @@ export function KnowledgeMapView({ map }: { map: PersonalKnowledgeMap }) {
               })}
             </svg>
           </div>
+          <p id={`${mapId}-description`} className="sr-only">
+            A visual map of {map.nodes.length} notes and learning resources with {map.edges.length}{" "}
+            connections.
+          </p>
+          <details className="rounded-xl border bg-card p-4">
+            <summary className="cursor-pointer text-sm font-semibold focus-visible:outline-none">
+              View map as a list
+            </summary>
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+              {map.nodes.map((node) => (
+                <li key={`map-text-${node.id}`} className="rounded-lg border p-3 text-sm">
+                  {node.href ? (
+                    <a href={node.href} className="font-medium text-accent hover:underline">
+                      {node.label}
+                    </a>
+                  ) : (
+                    <span className="font-medium">{node.label}</span>
+                  )}
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    {node.resourceType ?? node.kind}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </details>
           <div className="grid gap-3 md:grid-cols-2">
             {map.edges.map((edge) => {
               const source = byId.get(edge.sourceId);

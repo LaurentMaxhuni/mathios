@@ -1,9 +1,18 @@
+import dynamicImport from "next/dynamic";
 import { redirect } from "next/navigation";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-import { LearnerAnalyticsWorkspace } from "@/features/analytics/components/analytics-ui";
+import { RouteLoading } from "@/components/shared/route-loading";
 import { analyticsRangeSchema } from "@/features/analytics/schemas";
 import { getLearnerAnalytics } from "@/features/analytics/service";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
+
+const LearnerAnalyticsWorkspace = dynamicImport(
+  () =>
+    import("@/features/analytics/components/analytics-ui").then(
+      (module) => module.LearnerAnalyticsWorkspace,
+    ),
+  { loading: () => <RouteLoading label="Loading learning analytics" /> },
+);
 
 export const dynamic = "force-dynamic";
 

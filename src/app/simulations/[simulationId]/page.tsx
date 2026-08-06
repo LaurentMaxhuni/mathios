@@ -1,13 +1,22 @@
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { RouteLoading } from "@/components/shared/route-loading";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getSimulationRepository } from "@/infrastructure/database/repositories/simulation-repository";
 import { getSimulation } from "@/features/simulations/service";
-import { SimulationPlayer } from "@/features/simulations/components/simulation-player";
+
+const SimulationPlayer = dynamic(
+  () =>
+    import("@/features/simulations/components/simulation-player").then(
+      (module) => module.SimulationPlayer,
+    ),
+  { loading: () => <RouteLoading label="Loading simulation player" /> },
+);
 
 export default async function SimulationPage({
   params,

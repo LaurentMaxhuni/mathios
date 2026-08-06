@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { Menu, Search, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +11,18 @@ import { signOutAction } from "@/features/auth/actions";
 import type { AuthenticatedPrincipal } from "@/infrastructure/auth/auth-provider";
 
 interface HeaderProps {
+  mobileNavigationOpen: boolean;
   onMobileMenuOpen: () => void;
+  mobileMenuButtonRef: React.RefObject<HTMLButtonElement | null>;
   principal: AuthenticatedPrincipal | null;
 }
 
-export function Header({ onMobileMenuOpen, principal }: HeaderProps) {
+export function Header({
+  mobileMenuButtonRef,
+  mobileNavigationOpen,
+  onMobileMenuOpen,
+  principal,
+}: HeaderProps) {
   return (
     <header className="flex min-h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur sm:px-6 lg:px-10">
       <div className="flex items-center gap-3">
@@ -24,6 +32,9 @@ export function Header({ onMobileMenuOpen, principal }: HeaderProps) {
           size="icon"
           className="lg:hidden"
           aria-label="Open navigation"
+          aria-controls="primary-navigation"
+          aria-expanded={mobileNavigationOpen}
+          ref={mobileMenuButtonRef}
           onClick={onMobileMenuOpen}
         >
           <Menu className="h-5 w-5" aria-hidden="true" />

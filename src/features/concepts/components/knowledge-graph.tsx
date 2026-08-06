@@ -84,6 +84,7 @@ export function KnowledgeGraphView({
   const [fullscreen, setFullscreen] = React.useState(false);
   const [dragging, setDragging] = React.useState(false);
   const dragOrigin = React.useRef({ x: 0, y: 0, panX: 0, panY: 0 });
+  const graphId = React.useId().replaceAll(":", "");
 
   const filteredNodes = React.useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -165,6 +166,7 @@ export function KnowledgeGraphView({
   const selected = selectedId ? graph.nodes.find((node) => node.id === selectedId) : null;
 
   function startDrag(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.target instanceof Element && event.target.closest('[role="button"]')) return;
     setDragging(true);
     dragOrigin.current = { x: event.clientX, y: event.clientY, panX: pan.x, panY: pan.y };
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -197,6 +199,9 @@ export function KnowledgeGraphView({
       }
       aria-label="Knowledge graph"
     >
+      <p id={`${graphId}-description`} className="sr-only">
+        Interactive concept graph. Use the text view below to navigate concepts by keyboard.
+      </p>
       <div className="flex flex-col gap-4 rounded-xl border bg-card p-4 lg:flex-row lg:items-end">
         <div className="min-w-56 flex-1 space-y-2">
           <label
@@ -284,7 +289,7 @@ export function KnowledgeGraphView({
             type="button"
             variant="outline"
             size="icon"
-            title="Reset graph view"
+            aria-label="Reset graph view"
             onClick={resetView}
           >
             <RotateCcw className="h-4 w-4" aria-hidden="true" />
@@ -293,7 +298,7 @@ export function KnowledgeGraphView({
             type="button"
             variant="outline"
             size="icon"
-            title="Toggle fullscreen"
+            aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
             onClick={() => setFullscreen((value) => !value)}
           >
             {fullscreen ? (
@@ -328,10 +333,11 @@ export function KnowledgeGraphView({
           viewBox={`0 0 ${maxX} ${maxY}`}
           role="img"
           aria-label="Interactive concept relationship graph"
+          aria-describedby={`${graphId}-description`}
         >
           <defs>
             <marker
-              id="graph-arrow"
+              id={`${graphId}-arrow`}
               markerWidth="8"
               markerHeight="8"
               refX="7"
@@ -355,7 +361,7 @@ export function KnowledgeGraphView({
                     y2={points.target.y}
                     stroke={active ? "hsl(var(--accent))" : "hsl(var(--muted-foreground))"}
                     strokeWidth={active ? 3.5 : 1.6}
-                    markerEnd="url(#graph-arrow)"
+                    markerEnd={`url(#${graphId}-arrow)`}
                   />
                   <text
                     x={(points.source.x + points.target.x) / 2}
@@ -377,12 +383,17 @@ export function KnowledgeGraphView({
                   role="button"
                   tabIndex={0}
                   aria-label={`${node.name}, ${node.subjectName}`}
+                  aria-pressed={selectedNode}
                   onClick={(event) => {
                     event.stopPropagation();
                     setSelectedId(node.id);
                   }}
                   onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") setSelectedId(node.id);
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setSelectedId(node.id);
+                    }
                   }}
                   opacity={selectedId && !active ? 0.3 : 1}
                   className="cursor-pointer"
@@ -437,7 +448,7 @@ export function KnowledgeGraphView({
             type="button"
             variant="ghost"
             size="icon"
-            title="Zoom out"
+            aria-label="Zoom out"
             onClick={() => setZoom((value) => Math.max(0.45, value - 0.1))}
           >
             <Minus className="h-4 w-4" aria-hidden="true" />
@@ -449,7 +460,7 @@ export function KnowledgeGraphView({
             type="button"
             variant="ghost"
             size="icon"
-            title="Zoom in"
+            aria-label="Zoom in"
             onClick={() => setZoom((value) => Math.min(1.7, value + 0.1))}
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
@@ -463,7 +474,7 @@ export function KnowledgeGraphView({
           <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             <Expand className="h-3 w-3" aria-hidden="true" /> Map
           </div>
-          <svg width="150" height="78" viewBox={`0 0 ${maxX} ${maxY}`}>
+          <svg width="150" height="78" viewBox={`0 0 ${maxX} ${maxY}`} aria-hidden="true">
             {filteredEdges.map((edge) => {
               const points = edgePoints(edge, nodesById);
               return points ? (
@@ -531,6 +542,33 @@ export function KnowledgeGraphView({
           </aside>
         ) : null}
       </div>
+
+      <details className="content-visibility-auto rounded-xl border bg-card p-4">
+        <summary className="cursor-pointer text-sm font-semibold focus-visible:outline-none">
+          View graph as a list
+        </summary>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Select a concept to open its details and highlight its prerequisite path.
+        </p>
+        <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredNodes.map((node) => (
+            <li key={`text-${node.id}`}>
+              <button
+                type="button"
+                className="w-full rounded-lg border p-3 text-left text-sm hover:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-pressed={selectedId === node.id}
+                onClick={() => setSelectedId(node.id)}
+              >
+                <span className="font-medium">{node.name}</span>
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  {node.subjectName} · {node.masteryState}
+                  {node.locked ? " · prerequisites required" : " · unlocked"}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </details>
 
       {graph.orphanedConceptIds.length ? (
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">

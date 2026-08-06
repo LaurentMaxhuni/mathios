@@ -63,13 +63,26 @@ function MetricCard({
   );
 }
 
-function ProgressBar({ value, className = "bg-accent" }: { value: number; className?: string }) {
+function ProgressBar({
+  value,
+  className = "bg-accent",
+  label = "Progress",
+}: {
+  value: number;
+  className?: string;
+  label?: string;
+}) {
+  const percentage = Math.round(Math.max(0, Math.min(1, value)) * 100);
   return (
-    <div className="h-2 overflow-hidden rounded-full bg-muted" aria-hidden="true">
-      <div
-        className={`h-full rounded-full ${className}`}
-        style={{ width: `${Math.max(0, Math.min(100, value * 100))}%` }}
-      />
+    <div
+      className="h-2 overflow-hidden rounded-full bg-muted"
+      role="progressbar"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={percentage}
+    >
+      <div className={`h-full rounded-full ${className}`} style={{ width: `${percentage}%` }} />
     </div>
   );
 }
@@ -477,6 +490,15 @@ export function LearnerAnalyticsWorkspace({ data }: { data: LearnerAnalyticsData
               </div>
             ))}
           </div>
+          <ul className="sr-only" aria-label="Daily study progress values">
+            {data.daily.map((item) => (
+              <li key={`daily-text-${item.date}`}>
+                {item.date}: {duration(item.timeStudiedSeconds)}, {item.lessonsCompleted} lessons
+                completed, {item.questionsAttempted} questions attempted, {percent(item.accuracy)}
+                accuracy.
+              </li>
+            ))}
+          </ul>
           <div className="mt-4 flex justify-between text-xs text-muted-foreground">
             <span>{data.range.from}</span>
             <span>{data.range.to}</span>
@@ -693,14 +715,27 @@ export function TeacherAnalyticsWorkspace({ data }: { data: TeacherAnalyticsData
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-sm">
+              <caption className="sr-only">Learner progress and support status</caption>
               <thead className="border-b text-xs uppercase tracking-[0.12em] text-muted-foreground">
                 <tr>
-                  <th className="pb-3 pr-3">Learner</th>
-                  <th className="pb-3 pr-3">Grade</th>
-                  <th className="pb-3 pr-3">Lessons</th>
-                  <th className="pb-3 pr-3">Accuracy</th>
-                  <th className="pb-3 pr-3">Mastery</th>
-                  <th className="pb-3">Status</th>
+                  <th scope="col" className="pb-3 pr-3">
+                    Learner
+                  </th>
+                  <th scope="col" className="pb-3 pr-3">
+                    Grade
+                  </th>
+                  <th scope="col" className="pb-3 pr-3">
+                    Lessons
+                  </th>
+                  <th scope="col" className="pb-3 pr-3">
+                    Accuracy
+                  </th>
+                  <th scope="col" className="pb-3 pr-3">
+                    Mastery
+                  </th>
+                  <th scope="col" className="pb-3">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody>

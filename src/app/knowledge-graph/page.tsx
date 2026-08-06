@@ -1,14 +1,23 @@
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft, Network } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
-import { KnowledgeGraphView } from "@/features/concepts/components/knowledge-graph";
+import { RouteLoading } from "@/components/shared/route-loading";
 import { canAuthorConcepts } from "@/features/concepts/service";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getConceptRepository } from "@/infrastructure/database/repositories/concept-repository";
 import { getCurriculumRepository } from "@/infrastructure/database/repositories/curriculum-repository";
+
+const KnowledgeGraphView = dynamic(
+  () =>
+    import("@/features/concepts/components/knowledge-graph").then(
+      (module) => module.KnowledgeGraphView,
+    ),
+  { loading: () => <RouteLoading label="Loading knowledge graph" /> },
+);
 
 export default async function KnowledgeGraphPage() {
   const session = await getCurrentSession().catch(() => null);

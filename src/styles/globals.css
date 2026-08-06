@@ -64,6 +64,16 @@
     scroll-behavior: smooth;
   }
 
+  :focus-visible {
+    outline: 3px solid hsl(var(--ring));
+    outline-offset: 3px;
+  }
+
+  html[data-focus-indicators="false"] :focus-visible {
+    outline-width: 2px;
+    outline-offset: 2px;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     background-image:
@@ -103,6 +113,10 @@
     transition-duration: 0.01ms !important;
   }
 
+  html[data-screen-reader-optimizations="true"] [aria-hidden="true"] {
+    speak: never;
+  }
+
   ::selection {
     background: hsl(var(--accent) / 0.22);
   }
@@ -126,6 +140,11 @@
       linear-gradient(hsl(var(--border) / 0.38) 1px, transparent 1px),
       linear-gradient(90deg, hsl(var(--border) / 0.38) 1px, transparent 1px);
     background-size: 24px 24px;
+  }
+
+  .content-visibility-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 9rem;
   }
 }
 

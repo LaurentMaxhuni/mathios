@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -30,6 +31,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getFocusableElements } from "@/lib/focus";
 import type { AuthenticatedPrincipal } from "@/infrastructure/auth/auth-provider";
 
 const navigation: Array<{
@@ -81,16 +83,75 @@ const navigation: Array<{
 interface SidebarProps {
   mobileOpen: boolean;
   onMobileClose: () => void;
+  mobileMenuButtonRef: React.RefObject<HTMLButtonElement | null>;
   principal: AuthenticatedPrincipal | null;
 }
 
-export function Sidebar({ mobileOpen, onMobileClose, principal }: SidebarProps) {
+export function Sidebar({
+  mobileOpen,
+  mobileMenuButtonRef,
+  onMobileClose,
+  principal,
+}: SidebarProps) {
   const pathname = usePathname();
+  const sidebarRef = React.useRef<HTMLElement>(null);
+  const closeButtonRef = React.useRef<HTMLButtonElement>(null);
+  const restoreFocusRef = React.useRef<HTMLElement | null>(null);
   const visibleNavigation = navigation.filter(
     (item) =>
       (!item.requiresAnalytics || principal?.permissions.includes("view_analytics")) &&
       (!item.requiresSettings || principal?.permissions.includes("manage_application_settings")),
   );
+
+  React.useEffect(() => {
+    const sidebar = sidebarRef.current;
+    if (!sidebar) return;
+
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
+    const updateInert = () => {
+      if (mediaQuery.matches && !mobileOpen) sidebar.setAttribute("inert", "");
+      else sidebar.removeAttribute("inert");
+    };
+    updateInert();
+    mediaQuery.addEventListener("change", updateInert);
+    return () => mediaQuery.removeEventListener("change", updateInert);
+  }, [mobileOpen]);
+
+  React.useEffect(() => {
+    if (mobileOpen) {
+      restoreFocusRef.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : mobileMenuButtonRef.current;
+      closeButtonRef.current?.focus();
+      const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onMobileClose();
+          return;
+        }
+        if (event.key !== "Tab" || !sidebarRef.current) return;
+        const focusable = getFocusableElements(sidebarRef.current);
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      };
+      window.addEventListener("keydown", onKeyDown);
+      return () => window.removeEventListener("keydown", onKeyDown);
+    }
+
+    const restore = restoreFocusRef.current;
+    if (restore && document.contains(restore)) restore.focus();
+    else mobileMenuButtonRef.current?.focus();
+    restoreFocusRef.current = null;
+  }, [mobileMenuButtonRef, mobileOpen, onMobileClose]);
 
   return (
     <>
@@ -103,6 +164,9 @@ export function Sidebar({ mobileOpen, onMobileClose, principal }: SidebarProps) 
         />
       ) : null}
       <aside
+        ref={sidebarRef}
+        id="primary-navigation"
+        aria-label="Primary navigation"
         className={cn(
           "fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r bg-card/95 px-4 py-5 backdrop-blur transition-transform lg:static lg:z-auto lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
@@ -123,6 +187,7 @@ export function Sidebar({ mobileOpen, onMobileClose, principal }: SidebarProps) 
           <button
             type="button"
             aria-label="Close navigation"
+            ref={closeButtonRef}
             className="rounded-md p-2 hover:bg-muted lg:hidden"
             onClick={onMobileClose}
           >
@@ -133,10 +198,14 @@ export function Sidebar({ mobileOpen, onMobileClose, principal }: SidebarProps) 
         <div className="mt-10 px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           Workspace
         </div>
-        <nav aria-label="Primary navigation" className="mt-3 space-y-1">
+        <nav
+          aria-label="Primary navigation links"
+          className="mt-3 min-h-0 flex-1 space-y-1 overflow-y-auto"
+        >
           {visibleNavigation.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href;
+            const active =
+              pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`));
             return (
               <Link
                 key={item.href}
@@ -166,7 +235,7 @@ export function Sidebar({ mobileOpen, onMobileClose, principal }: SidebarProps) 
             Profiles, permissions, settings, and onboarding stay available on this device.
           </p>
           <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Phase 18 - Production readiness
+            Phase 19 - Quality audit
           </p>
         </div>
       </aside>

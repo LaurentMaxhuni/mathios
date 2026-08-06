@@ -8,7 +8,10 @@ export async function GET(request: Request): Promise<NextResponse> {
   try {
     const { profileId } = await requireSearchProfile();
     const query = new URL(request.url).searchParams.get("q") ?? "";
-    return NextResponse.json({ suggestions: await searchSuggestions(profileId, query) });
+    return NextResponse.json(
+      { suggestions: await searchSuggestions(profileId, query) },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     return searchErrorResponse(error);
   }

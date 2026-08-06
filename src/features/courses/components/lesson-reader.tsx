@@ -17,6 +17,55 @@ function text(payload: Record<string, unknown>, key: string, fallback = "") {
   return typeof payload[key] === "string" ? (payload[key] as string) : fallback;
 }
 
+function cellText(value: unknown): string {
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean")
+    return String(value);
+  return value == null ? "" : JSON.stringify(value);
+}
+
+function StructuredTable({ payload, title }: { payload: Record<string, unknown>; title: string }) {
+  const headers = Array.isArray(payload.headers)
+    ? payload.headers.filter((header): header is string => typeof header === "string")
+    : [];
+  const rows = Array.isArray(payload.rows)
+    ? payload.rows.map((row) => (Array.isArray(row) ? row : [row]))
+    : [];
+  if (!headers.length || !rows.length) {
+    return (
+      <div className="my-4 overflow-x-auto rounded-xl border">
+        <pre className="min-w-full p-4 text-sm leading-6">{JSON.stringify(payload, null, 2)}</pre>
+      </div>
+    );
+  }
+  return (
+    <div className="my-4 overflow-x-auto rounded-xl border">
+      <table className="w-full min-w-[32rem] text-left text-sm">
+        <caption className="sr-only">{title || "Lesson table"}</caption>
+        <thead className="bg-muted/40">
+          <tr>
+            {headers.map((header, index) => (
+              <th key={`${header}-${index}`} scope="col" className="px-3 py-2 font-semibold">
+                {header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={rowIndex} className="border-t">
+              {headers.map((_, columnIndex) => (
+                <td key={columnIndex} className="px-3 py-2 align-top">
+                  {cellText(row[columnIndex])}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function Block({ block }: { block: LessonBlockRecord }) {
   const payload = block.payload;
   const title = block.title;
@@ -78,6 +127,8 @@ function Block({ block }: { block: LessonBlockRecord }) {
         <img
           src={text(payload, "sourceUrl", text(payload, "url"))}
           alt={text(payload, "altText", "Educational illustration")}
+          loading="lazy"
+          decoding="async"
           className="max-h-[30rem] w-full rounded-xl border object-contain"
         />
         <figcaption className="mt-2 text-center text-xs text-muted-foreground">
@@ -92,11 +143,7 @@ function Block({ block }: { block: LessonBlockRecord }) {
       </pre>
     );
   if (block.type === "table" || block.type === "comparison")
-    return (
-      <div className="my-4 overflow-x-auto rounded-xl border">
-        <pre className="min-w-full p-4 text-sm leading-6">{JSON.stringify(payload, null, 2)}</pre>
-      </div>
-    );
+    return <StructuredTable payload={payload} title={title ?? "Lesson table"} />;
   if (["video", "audio", "file", "exercise-reference", "simulation-reference"].includes(block.type))
     return (
       <div className="my-4 flex items-center justify-between gap-3 rounded-xl border p-4">
@@ -122,6 +169,7 @@ function ProgressControls({ data }: { data: LessonReaderData }) {
     initialActionState,
   );
   const completed = data.progress?.completionPercentage === 100;
+  const completionPercentage = data.progress?.completionPercentage ?? 0;
   return (
     <aside className="rounded-xl border bg-card p-4" aria-label="Lesson progress">
       <div className="flex items-center justify-between gap-3">
@@ -131,14 +179,19 @@ function ProgressControls({ data }: { data: LessonReaderData }) {
             {data.lesson.estimatedDurationMinutes} min lesson
           </span>
         </div>
-        <span className="text-sm text-muted-foreground">
-          {data.progress?.completionPercentage ?? 0}% complete
-        </span>
+        <span className="text-sm text-muted-foreground">{completionPercentage}% complete</span>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+      <div
+        className="mt-3 h-2 overflow-hidden rounded-full bg-muted"
+        role="progressbar"
+        aria-label="Lesson completion"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={completionPercentage}
+      >
         <div
           className="h-full rounded-full bg-accent transition-all"
-          style={{ width: `${data.progress?.completionPercentage ?? 0}%` }}
+          style={{ width: `${completionPercentage}%` }}
         />
       </div>
       <form action={formAction} className="mt-4 flex flex-wrap items-center gap-3">
@@ -183,7 +236,7 @@ export function LessonReader({ data }: { data: LessonReaderData }) {
         {data.version.snapshot.sections.map(({ section, blocks }) => (
           <section
             key={section.id}
-            className="mb-10"
+            className="content-visibility-auto mb-10"
             aria-labelledby={`reader-section-${section.id}`}
           >
             <div className="mb-4">
