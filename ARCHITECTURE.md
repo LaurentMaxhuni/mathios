@@ -194,3 +194,15 @@ existing identity repository resolves permissions. `src/server/security.ts`, `sr
 operational diagnostics, and observability without importing React or database drivers into the
 domain. See `docs/phase18-deployment-hardening.md` for the deployment contract and operational
 risks.
+
+## Phase 19 dependency direction
+
+Phase 19 remains cross-cutting quality infrastructure. `src/lib/focus.ts` owns the small browser
+focusable-element primitive used by the shell and dialog components; accessibility preference
+synchronization remains in the layout layer, while route loading boundaries remain in the app layer.
+Feature components own their own semantic alternatives and loading/error/status states. Search and
+simulation request cancellation stay at their browser client boundaries, and the search provider
+continues to own SQLite/PostgreSQL-specific projections so domain search contracts do not change.
+
+No Phase 19 migration or seed data is required. The audit and its verification contract are documented
+in `docs/phase19-accessibility-performance-quality.md`.

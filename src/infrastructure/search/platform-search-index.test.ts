@@ -43,6 +43,9 @@ describe("platform search index", () => {
       expect(results.some((result) => result.document.type === "lesson")).toBe(true);
       expect(results.some((result) => result.document.type === "course")).toBe(true);
       await expect(provider.search({ text: "!!!", profileId: null })).resolves.toEqual([]);
+      const facets = await provider.listFacets({ profileId: null, includeUnpublished: false });
+      expect(facets.types.some((facet) => facet.value === "lesson")).toBe(true);
+      expect(facets.subjects.some((facet) => facet.label === "Physics")).toBe(true);
     } finally {
       database?.close();
       await rm(directory, { recursive: true, force: true });

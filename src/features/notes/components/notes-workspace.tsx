@@ -337,16 +337,19 @@ export function NotesWorkspace({
     setStatus("Highlight removed.");
   }
 
-  const visibleNotes = notes.filter((note) => {
-    const matchesQuery =
-      !query ||
-      `${note.title} ${note.bodyMarkdown} ${note.tags.map((tag) => tag.name).join(" ")}`
-        .toLocaleLowerCase()
-        .includes(query.toLocaleLowerCase());
-    const matchesFolder = folderFilter === "all" || note.folderId === folderFilter;
-    const matchesTag = tagFilter === "all" || note.tags.some((tag) => tag.id === tagFilter);
-    return matchesQuery && matchesFolder && matchesTag;
-  });
+  const visibleNotes = React.useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase();
+    return notes.filter((note) => {
+      const matchesQuery =
+        !normalizedQuery ||
+        `${note.title} ${note.bodyMarkdown} ${note.tags.map((tag) => tag.name).join(" ")}`
+          .toLocaleLowerCase()
+          .includes(normalizedQuery);
+      const matchesFolder = folderFilter === "all" || note.folderId === folderFilter;
+      const matchesTag = tagFilter === "all" || note.tags.some((tag) => tag.id === tagFilter);
+      return matchesQuery && matchesFolder && matchesTag;
+    });
+  }, [folderFilter, notes, query, tagFilter]);
 
   return (
     <div className="space-y-6">
@@ -434,13 +437,20 @@ export function NotesWorkspace({
                   </option>
                 ))}
               </select>
-              <div className="max-h-[31rem] space-y-1 overflow-y-auto pr-1">
+              <div
+                className="max-h-[31rem] space-y-1 overflow-y-auto pr-1"
+                role="listbox"
+                aria-label="Notes"
+                aria-busy={busy}
+              >
                 {visibleNotes.map((note) => (
                   <button
                     key={note.id}
                     type="button"
+                    role="option"
+                    aria-selected={selectedId === note.id}
                     onClick={() => void loadNote(note.id)}
-                    className={`w-full rounded-lg border px-3 py-3 text-left transition ${selectedId === note.id ? "border-accent bg-accent/10" : "border-transparent hover:border-border hover:bg-muted/60"}`}
+                    className={`content-visibility-auto w-full rounded-lg border px-3 py-3 text-left transition ${selectedId === note.id ? "border-accent bg-accent/10" : "border-transparent hover:border-border hover:bg-muted/60"}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <span className="line-clamp-2 text-sm font-medium">{note.title}</span>

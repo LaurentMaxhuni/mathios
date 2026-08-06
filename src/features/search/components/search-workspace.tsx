@@ -11,6 +11,8 @@ import type { SearchPageData } from "@/features/search/service";
 import { SEARCH_DOCUMENT_TYPES } from "@/domain/search/types";
 import type { SearchDocumentType, SearchResult } from "@/domain/search/types";
 
+const SUGGESTION_CACHE_LIMIT = 20;
+
 interface SearchWorkspaceProps {
   initialData: SearchPageData;
 }
@@ -38,9 +40,15 @@ export function SearchWorkspace({ initialData }: SearchWorkspaceProps) {
   const [error, setError] = React.useState<string | null>(null);
   const [activeIndex, setActiveIndex] = React.useState(-1);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const searchAbortRef = React.useRef<AbortController | null>(null);
+  const suggestionAbortRef = React.useRef<AbortController | null>(null);
+  const suggestionCacheRef = React.useRef(new Map<string, SearchPageData["suggestions"]>());
 
   const runSearch = React.useCallback(
     async (submittedQuery = query) => {
+      searchAbortRef.current?.abort();
+      const controller = new AbortController();
+      searchAbortRef.current = controller;
       setLoading(true);
       setError(null);
       setActiveIndex(-1);
@@ -54,7 +62,10 @@ export function SearchWorkspace({ initialData }: SearchWorkspaceProps) {
       if (masteryState) params.set("mastery", masteryState);
       if (publicationStatus) params.set("publicationStatus", publicationStatus);
       try {
-        const response = await fetch(`/api/search?${params.toString()}`, { cache: "no-store" });
+        const response = await fetch(`/api/search?${params.toString()}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
         const data = (await response.json()) as SearchPageData & { message?: string };
         if (!response.ok) throw new Error(data.message ?? "Search is unavailable.");
         setResults(data.results);
@@ -62,9 +73,13 @@ export function SearchWorkspace({ initialData }: SearchWorkspaceProps) {
         setRecentSearches(data.recentSearches);
         window.history.replaceState(null, "", `/search?${params.toString()}`);
       } catch (searchError) {
+        if (controller.signal.aborted) return;
         setError(searchError instanceof Error ? searchError.message : "Search is unavailable.");
       } finally {
-        setLoading(false);
+        if (searchAbortRef.current === controller) {
+          searchAbortRef.current = null;
+          setLoading(false);
+        }
       }
     },
     [curriculumId, difficulty, gradeId, masteryState, publicationStatus, query, subjectId, types],
@@ -86,26 +101,55 @@ export function SearchWorkspace({ initialData }: SearchWorkspaceProps) {
   }, []);
 
   React.useEffect(() => {
+    suggestionAbortRef.current?.abort();
     if (!query.trim()) {
       setSuggestions(initialData.suggestions);
       return;
     }
+    const normalizedQuery = query.trim().toLocaleLowerCase();
+    const cached = suggestionCacheRef.current.get(normalizedQuery);
+    if (cached) {
+      setSuggestions(cached);
+      return;
+    }
+    const controller = new AbortController();
+    suggestionAbortRef.current = controller;
     const timer = window.setTimeout(async () => {
       const response = await fetch(`/api/search/suggestions?q=${encodeURIComponent(query)}`, {
         cache: "no-store",
+        signal: controller.signal,
       }).catch(() => null);
       if (!response?.ok) return;
       const data = (await response.json()) as { suggestions: SearchPageData["suggestions"] };
+      if (suggestionCacheRef.current.size >= SUGGESTION_CACHE_LIMIT) {
+        const oldest = suggestionCacheRef.current.keys().next().value;
+        if (oldest) suggestionCacheRef.current.delete(oldest);
+      }
+      suggestionCacheRef.current.set(normalizedQuery, data.suggestions);
       setSuggestions(data.suggestions);
     }, 180);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+      if (suggestionAbortRef.current === controller) suggestionAbortRef.current = null;
+    };
   }, [initialData.suggestions, query]);
+
+  React.useEffect(
+    () => () => {
+      searchAbortRef.current?.abort();
+      suggestionAbortRef.current?.abort();
+    },
+    [],
+  );
 
   const onInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown") {
+      if (!results.length) return;
       event.preventDefault();
       setActiveIndex((current) => Math.min(results.length - 1, current + 1));
     } else if (event.key === "ArrowUp") {
+      if (!results.length) return;
       event.preventDefault();
       setActiveIndex((current) => Math.max(0, current - 1));
     } else if (event.key === "Enter") {
@@ -173,12 +217,21 @@ export function SearchWorkspace({ initialData }: SearchWorkspaceProps) {
               />
               <Input
                 ref={inputRef}
+                type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={onInputKeyDown}
                 placeholder="Search the Mathios workspace…"
                 aria-label="Global search"
-                aria-controls="search-results"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded={Boolean(suggestions.length && query.trim())}
+                aria-activedescendant={
+                  activeIndex >= 0 && results[activeIndex]
+                    ? `search-result-${results[activeIndex]?.document.id}`
+                    : undefined
+                }
+                aria-controls="search-suggestions search-results"
                 className="h-12 pl-11 pr-20 text-base"
               />
               <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border bg-muted px-2 py-1 text-[0.68rem] text-muted-foreground sm:block">
@@ -190,11 +243,19 @@ export function SearchWorkspace({ initialData }: SearchWorkspaceProps) {
             </Button>
           </form>
           {suggestions.length && query.trim() ? (
-            <div className="mt-2 flex flex-wrap gap-2" aria-label="Search suggestions">
-              {suggestions.map((suggestion) => (
+            <div
+              id="search-suggestions"
+              className="mt-2 flex flex-wrap gap-2"
+              role="listbox"
+              aria-label="Search suggestions"
+            >
+              {suggestions.map((suggestion, index) => (
                 <button
                   key={`${suggestion.type}-${suggestion.text}`}
                   type="button"
+                  id={`search-suggestion-${index}`}
+                  role="option"
+                  aria-selected={false}
                   className="rounded-full border bg-background px-3 py-1.5 text-xs text-muted-foreground hover:border-accent hover:text-foreground"
                   onClick={() => {
                     setQuery(suggestion.text);
@@ -318,7 +379,7 @@ export function SearchWorkspace({ initialData }: SearchWorkspaceProps) {
           </Card>
         </aside>
 
-        <section id="search-results" aria-live="polite" aria-busy={loading}>
+        <section id="search-results" aria-live="polite" aria-atomic="false" aria-busy={loading}>
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
               <p className="eyebrow">Search results</p>
@@ -335,7 +396,7 @@ export function SearchWorkspace({ initialData }: SearchWorkspaceProps) {
             ) : null}
           </div>
           {error ? (
-            <Card className="mt-5 border-destructive/40">
+            <Card className="mt-5 border-destructive/40" role="alert">
               <CardContent className="py-7 text-sm text-destructive">{error}</CardContent>
             </Card>
           ) : null}
@@ -379,10 +440,11 @@ function SearchResultCard({ result, active }: { result: SearchResult; active: bo
   const document = result.document;
   return (
     <Card
+      id={`search-result-${document.id}`}
       className={
         active
           ? "border-accent ring-2 ring-accent/20"
-          : "transition hover:-translate-y-0.5 hover:border-accent/50"
+          : "content-visibility-auto transition hover:-translate-y-0.5 hover:border-accent/50"
       }
       role="option"
       aria-selected={active}

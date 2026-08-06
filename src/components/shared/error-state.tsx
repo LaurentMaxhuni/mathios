@@ -12,7 +12,7 @@ export function ErrorState({
   onRetry?: () => void;
 }) {
   return (
-    <Card className="border-destructive/30">
+    <Card className="border-destructive/30" role="alert">
       <CardContent className="flex flex-col items-center justify-center px-6 py-12 text-center">
         <span className="grid h-11 w-11 place-items-center rounded-full bg-destructive/10 text-destructive">
           <AlertTriangle className="h-5 w-5" aria-hidden="true" />

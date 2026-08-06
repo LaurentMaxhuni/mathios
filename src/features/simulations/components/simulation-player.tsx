@@ -68,6 +68,8 @@ export function SimulationPlayer({
   const [presetName, setPresetName] = React.useState("");
   const inputsRef = React.useRef(inputs);
   const stateRef = React.useRef(state);
+  const frameAbortRef = React.useRef<AbortController | null>(null);
+  const frameRequestRef = React.useRef(0);
 
   React.useEffect(() => {
     inputsRef.current = inputs;
@@ -75,19 +77,53 @@ export function SimulationPlayer({
 
   const refreshFrame = React.useCallback(
     async (deltaSeconds = 0) => {
-      const response = await fetch(`/api/simulations/${simulationId}/frame`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ inputs: inputsRef.current, state: stateRef.current, deltaSeconds }),
-      });
-      if (!response.ok) return;
-      const next = (await response.json()) as { state: Record<string, number>; frame: Frame };
-      stateRef.current = next.state;
-      setState(next.state);
-      setFrame(next.frame);
+      frameAbortRef.current?.abort();
+      const controller = new AbortController();
+      frameAbortRef.current = controller;
+      const requestId = ++frameRequestRef.current;
+      try {
+        const response = await fetch(`/api/simulations/${simulationId}/frame`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            inputs: inputsRef.current,
+            state: stateRef.current,
+            deltaSeconds,
+          }),
+          signal: controller.signal,
+        });
+        if (!response.ok || requestId !== frameRequestRef.current) return;
+        const next = (await response.json()) as { state: Record<string, number>; frame: Frame };
+        stateRef.current = next.state;
+        setState(next.state);
+        setFrame(next.frame);
+      } catch (error) {
+        if (
+          (error instanceof DOMException && error.name === "AbortError") ||
+          (error instanceof Error && error.name === "AbortError")
+        )
+          return;
+        setMessage("The model could not calculate the next frame.");
+      } finally {
+        if (frameAbortRef.current === controller) frameAbortRef.current = null;
+      }
     },
     [simulationId],
   );
+
+  React.useEffect(() => () => frameAbortRef.current?.abort(), []);
+
+  React.useEffect(() => {
+    if (!fullscreen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setFullscreen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [fullscreen]);
 
   React.useEffect(() => {
     void refreshFrame();
@@ -183,6 +219,9 @@ export function SimulationPlayer({
   return (
     <div
       className={fullscreen ? "fixed inset-0 z-50 overflow-y-auto bg-background p-4 sm:p-8" : ""}
+      role={fullscreen ? "dialog" : undefined}
+      aria-modal={fullscreen ? "true" : undefined}
+      aria-label={fullscreen ? "Fullscreen simulation player" : undefined}
     >
       <Card className="overflow-hidden">
         <CardHeader className="border-b bg-muted/20">
@@ -197,6 +236,7 @@ export function SimulationPlayer({
                 Adjust a control, run the model, and save an evidence-backed result.
               </CardDescription>
             </div>
+            <p className="sr-only">Current model time {frame.time.toFixed(1)} seconds.</p>
             <Button variant="ghost" size="sm" onClick={() => setFullscreen((value) => !value)}>
               <Expand className="h-4 w-4" aria-hidden="true" />
               {fullscreen ? "Exit fullscreen" : "Fullscreen"}
@@ -339,11 +379,14 @@ export function SimulationPlayer({
             <Graph frame={frame} />
             <div className="overflow-x-auto rounded-lg border">
               <table className="w-full text-left text-sm">
+                <caption className="sr-only">Current simulation values</caption>
                 <thead className="bg-muted/40">
                   <tr>
-                    <th className="px-3 py-2">Time</th>
+                    <th scope="col" className="px-3 py-2">
+                      Time
+                    </th>
                     {Object.keys(frame.values).map((key) => (
-                      <th className="px-3 py-2" key={key}>
+                      <th scope="col" className="px-3 py-2" key={key}>
                         {key}
                       </th>
                     ))}
@@ -366,7 +409,11 @@ export function SimulationPlayer({
                 <Download className="h-4 w-4" aria-hidden="true" />
                 Export results
               </Button>
-              {message ? <span className="text-sm text-muted-foreground">{message}</span> : null}
+              {message ? (
+                <span className="text-sm text-muted-foreground" role="status" aria-live="polite">
+                  {message}
+                </span>
+              ) : null}
             </div>
           </div>
         </CardContent>

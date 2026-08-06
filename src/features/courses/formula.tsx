@@ -64,6 +64,9 @@ export function FormulaDisplay({
           )}
         </Button>
       ) : null}
+      <span className="sr-only" aria-live="polite">
+        {copied ? "Formula copied." : ""}
+      </span>
       <span className="sr-only">{accessibleLabel}</span>
     </div>
   );

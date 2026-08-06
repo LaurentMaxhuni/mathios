@@ -20,6 +20,13 @@ export function ProfilePreferenceSync({
     root.dataset.textSize = settings?.textSize ?? "medium";
     root.dataset.reducedMotion = settings?.reducedMotion ? "true" : "false";
     root.dataset.highContrast = settings?.accessibilityPreferences.highContrast ? "true" : "false";
+    root.dataset.focusIndicators = settings?.accessibilityPreferences.focusIndicators
+      ? "true"
+      : "false";
+    root.dataset.screenReaderOptimizations = settings?.accessibilityPreferences
+      .screenReaderOptimizations
+      ? "true"
+      : "false";
     root.dataset.underlineLinks = settings?.accessibilityPreferences.underlineLinks
       ? "true"
       : "false";

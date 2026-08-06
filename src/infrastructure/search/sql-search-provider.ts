@@ -95,14 +95,18 @@ export class SqlSearchProvider implements SearchProvider {
       database.provider === "sqlite"
         ? (database.raw
             .prepare(
-              `SELECT d.* FROM search_documents d
+              `SELECT d.id, d.resource_type, d.resource_id, d.profile_id, d.title, d.href,
+                      d.metadata_json, d.updated_at
+               FROM search_documents d
                WHERE (d.profile_id IS NULL OR d.profile_id = ?)
                  AND LOWER(d.title) LIKE ?
                ORDER BY d.title COLLATE NOCASE, d.updated_at DESC LIMIT ?`,
             )
             .all(profileId, pattern, limit) as DbRow[])
         : ((await database.raw.unsafe(
-            `SELECT d.* FROM search_documents d
+            `SELECT d.id, d.resource_type, d.resource_id, d.profile_id, d.title, d.href,
+                    d.metadata_json, d.updated_at
+             FROM search_documents d
              WHERE (d.profile_id IS NULL OR d.profile_id = $1)
                AND d.title ILIKE $2
              ORDER BY d.title, d.updated_at DESC LIMIT $3`,
@@ -124,10 +128,14 @@ export class SqlSearchProvider implements SearchProvider {
     const database = this.database;
     const rows =
       database.provider === "sqlite"
-        ? (database.raw.prepare("SELECT * FROM search_documents").all() as DbRow[])
-        : ((await database.raw.unsafe("SELECT * FROM search_documents")) as DbRow[]);
+        ? (database.raw
+            .prepare("SELECT resource_type, profile_id, metadata_json FROM search_documents")
+            .all() as DbRow[])
+        : ((await database.raw.unsafe(
+            "SELECT resource_type, profile_id, metadata_json FROM search_documents",
+          )) as DbRow[]);
     const documents = rows
-      .map(mapDocument)
+      .map(mapFacetDocument)
       .filter((document) => isSearchDocumentVisible(document, query));
     return {
       types: countSimple(
@@ -359,6 +367,20 @@ function mapDocument(row: DbRow): SearchDocument {
     href: row.href ? String(row.href) : null,
     metadata: parseMetadata(row.metadata_json),
     updatedAt: toIso(row.updated_at),
+  };
+}
+
+function mapFacetDocument(row: DbRow): SearchDocument {
+  return {
+    id: "facet",
+    type: String(row.resource_type),
+    resourceId: "facet",
+    profileId: row.profile_id ? String(row.profile_id) : null,
+    title: "",
+    content: "",
+    href: null,
+    metadata: parseMetadata(row.metadata_json),
+    updatedAt: new Date(0).toISOString(),
   };
 }
 
