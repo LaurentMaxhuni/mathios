@@ -3100,6 +3100,59 @@ export const restoreRuns = sqliteTable(
   }),
 );
 
+export const aiSettings = sqliteTable("ai_settings", {
+  id: integer("id").primaryKey(),
+  mode: text("mode").notNull().default("disabled"),
+  localBaseUrl: text("local_base_url").notNull().default("http://127.0.0.1:11434"),
+  localModel: text("local_model").notNull().default("llama3.2"),
+  remoteBaseUrl: text("remote_base_url").notNull().default("https://api.openai.com/v1"),
+  remoteModel: text("remote_model").notNull().default("gpt-4o-mini"),
+  remoteApiKeyCiphertext: text("remote_api_key_ciphertext"),
+  maxTokens: integer("max_tokens").notNull().default(800),
+  temperature: real("temperature").notNull().default(0.2),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const aiGenerations = sqliteTable(
+  "ai_generations",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    task: text("task").notNull(),
+    mode: text("mode").notNull(),
+    provider: text("provider").notNull(),
+    model: text("model").notNull(),
+    instruction: text("instruction").notNull(),
+    groundingJson: text("grounding_json").notNull().default("[]"),
+    outputText: text("output_text").notNull(),
+    status: text("status").notNull().default("generated"),
+    reviewedByProfileId: text("reviewed_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    reviewedAt: text("reviewed_at"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    profileCreatedIdx: index("ai_generations_profile_created_idx").on(
+      table.profileId,
+      table.createdAt,
+    ),
+    statusIdx: index("ai_generations_status_idx").on(table.status, table.createdAt),
+  }),
+);
+
 export type SearchIndexState = typeof searchIndexState.$inferSelect;
 export type SearchDocument = typeof searchDocuments.$inferSelect;
 export type SearchRecentQuery = typeof searchRecentQueries.$inferSelect;
@@ -3119,6 +3172,10 @@ export type BackupArtifact = typeof backupArtifacts.$inferSelect;
 export type NewBackupArtifact = typeof backupArtifacts.$inferInsert;
 export type RestoreRun = typeof restoreRuns.$inferSelect;
 export type NewRestoreRun = typeof restoreRuns.$inferInsert;
+export type AiSettings = typeof aiSettings.$inferSelect;
+export type NewAiSettings = typeof aiSettings.$inferInsert;
+export type AiGeneration = typeof aiGenerations.$inferSelect;
+export type NewAiGeneration = typeof aiGenerations.$inferInsert;
 export type LaboratoryActivity = typeof laboratoryActivities.$inferSelect;
 export type NewLaboratoryActivity = typeof laboratoryActivities.$inferInsert;
 export type LaboratoryStep = typeof laboratorySteps.$inferSelect;

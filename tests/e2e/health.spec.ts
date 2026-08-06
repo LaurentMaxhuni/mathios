@@ -697,3 +697,38 @@ test("Phase 15 portability workspace exports data and rejects invalid restores s
   expect(invalidRestore.status).toBe(400);
   expect(invalidRestore.body).toMatchObject({ message: expect.any(String) });
 });
+
+test("Phase 16 AI studio stays disabled safely and preserves core learning access", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/ai");
+  await expect(page.getByRole("heading", { name: "AI studio" })).toBeVisible();
+  await expect(page.getByText("AI disabled", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Core lessons, practice, search, planning, and analytics continue to work"),
+  ).toBeVisible();
+
+  const settingsResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/ai/settings");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(settingsResponse).toMatchObject({
+    ok: true,
+    body: { mode: "disabled", hasRemoteApiKey: false },
+  });
+
+  const healthResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/ai/health");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(healthResponse).toMatchObject({
+    ok: true,
+    body: { provider: "disabled", available: false },
+  });
+});
