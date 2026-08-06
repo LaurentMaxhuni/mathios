@@ -2052,6 +2052,253 @@ export const simulationResults = pgTable(
   }),
 );
 
+export const laboratoryActivities = pgTable(
+  "laboratory_activities",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    subjectId: text("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "restrict" }),
+    mode: text("mode").notNull().default("real-world"),
+    status: text("status").notNull().default("draft"),
+    objective: text("objective").notNull().default(""),
+    theory: text("theory").notNull().default(""),
+    materials: text("materials").notNull().default("[]"),
+    safetyNotes: text("safety_notes").notNull().default("[]"),
+    analysisPrompt: text("analysis_prompt").notNull().default(""),
+    graphingInstructions: text("graphing_instructions").notNull().default(""),
+    questions: text("questions").notNull().default("[]"),
+    conclusionPrompt: text("conclusion_prompt").notNull().default(""),
+    extensionActivity: text("extension_activity").notNull().default(""),
+    simulationId: text("simulation_id").references(() => simulations.id, { onDelete: "set null" }),
+    estimatedDurationMinutes: integer("estimated_duration_minutes").notNull().default(0),
+    createdByProfileId: text("created_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+  },
+  (table) => ({
+    subjectStatusIdx: index("laboratory_activities_subject_status_idx").on(
+      table.subjectId,
+      table.status,
+      table.title,
+    ),
+    modeIdx: index("laboratory_activities_mode_idx").on(table.mode, table.status, table.title),
+  }),
+);
+
+export const laboratorySteps = pgTable(
+  "laboratory_steps",
+  {
+    id: text("id").primaryKey(),
+    activityId: text("activity_id")
+      .notNull()
+      .references(() => laboratoryActivities.id, { onDelete: "cascade" }),
+    stepType: text("step_type").notNull().default("procedure"),
+    title: text("title").notNull(),
+    instructions: text("instructions").notNull().default(""),
+    expectedObservation: text("expected_observation").notNull().default(""),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isRequired: boolean("is_required").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    activityIdx: index("laboratory_steps_activity_idx").on(table.activityId, table.sortOrder),
+  }),
+);
+
+export const laboratoryVariables = pgTable(
+  "laboratory_variables",
+  {
+    id: text("id").primaryKey(),
+    activityId: text("activity_id")
+      .notNull()
+      .references(() => laboratoryActivities.id, { onDelete: "cascade" }),
+    variableKey: text("variable_key").notNull(),
+    label: text("label").notNull(),
+    symbol: text("symbol").notNull().default(""),
+    role: text("role").notNull().default("measured"),
+    dataType: text("data_type").notNull().default("number"),
+    unit: text("unit"),
+    description: text("description").notNull().default(""),
+    defaultValue: text("default_value"),
+    minValue: doublePrecision("min_value"),
+    maxValue: doublePrecision("max_value"),
+    uncertainty: doublePrecision("uncertainty"),
+    significantFigures: integer("significant_figures"),
+    theoreticalValue: doublePrecision("theoretical_value"),
+    configuration: text("configuration").notNull().default("{}"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    activityIdx: index("laboratory_variables_activity_idx").on(
+      table.activityId,
+      table.role,
+      table.sortOrder,
+    ),
+    keyIdx: uniqueIndex("laboratory_variables_activity_key_idx").on(
+      table.activityId,
+      table.variableKey,
+    ),
+  }),
+);
+
+export const laboratorySessions = pgTable(
+  "laboratory_sessions",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    activityId: text("activity_id")
+      .notNull()
+      .references(() => laboratoryActivities.id, { onDelete: "restrict" }),
+    status: text("status").notNull().default("active"),
+    mode: text("mode").notNull(),
+    simulationSessionId: text("simulation_session_id").references(() => userSimulationSessions.id, {
+      onDelete: "set null",
+    }),
+    inputs: text("inputs").notNull().default("{}"),
+    state: text("state").notNull().default("{}"),
+    elapsedSeconds: integer("elapsed_seconds").notNull().default(0),
+    completionPercentage: integer("completion_percentage").notNull().default(0),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    profileActivityIdx: index("laboratory_sessions_profile_activity_idx").on(
+      table.profileId,
+      table.activityId,
+      table.updatedAt,
+    ),
+    statusIdx: index("laboratory_sessions_status_idx").on(
+      table.profileId,
+      table.status,
+      table.updatedAt,
+    ),
+  }),
+);
+
+export const laboratoryObservations = pgTable(
+  "laboratory_observations",
+  {
+    id: text("id").primaryKey(),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => laboratorySessions.id, { onDelete: "cascade" }),
+    stepId: text("step_id").references(() => laboratorySteps.id, { onDelete: "set null" }),
+    prompt: text("prompt").notNull().default(""),
+    notes: text("notes").notNull().default(""),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull().defaultNow(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    metadata: text("metadata").notNull().default("{}"),
+  },
+  (table) => ({
+    sessionIdx: index("laboratory_observations_session_idx").on(
+      table.sessionId,
+      table.sortOrder,
+      table.recordedAt,
+    ),
+  }),
+);
+
+export const laboratoryMeasurements = pgTable(
+  "laboratory_measurements",
+  {
+    id: text("id").primaryKey(),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => laboratorySessions.id, { onDelete: "cascade" }),
+    variableId: text("variable_id")
+      .notNull()
+      .references(() => laboratoryVariables.id, { onDelete: "cascade" }),
+    observationId: text("observation_id").references(() => laboratoryObservations.id, {
+      onDelete: "set null",
+    }),
+    rowIndex: integer("row_index").notNull(),
+    numericValue: doublePrecision("numeric_value"),
+    textValue: text("text_value"),
+    unit: text("unit"),
+    uncertainty: doublePrecision("uncertainty"),
+    significantFigures: integer("significant_figures"),
+    source: text("source").notNull().default("manual"),
+    notes: text("notes").notNull().default(""),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    sessionIdx: index("laboratory_measurements_session_idx").on(
+      table.sessionId,
+      table.rowIndex,
+      table.variableId,
+    ),
+    rowIdx: uniqueIndex("laboratory_measurements_session_variable_row_idx").on(
+      table.sessionId,
+      table.variableId,
+      table.rowIndex,
+    ),
+  }),
+);
+
+export const laboratoryReports = pgTable(
+  "laboratory_reports",
+  {
+    id: text("id").primaryKey(),
+    sessionId: text("session_id")
+      .notNull()
+      .unique()
+      .references(() => laboratorySessions.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("draft"),
+    title: text("title").notNull().default(""),
+    abstract: text("abstract").notNull().default(""),
+    sections: text("sections").notNull().default("[]"),
+    tables: text("tables").notNull().default("[]"),
+    charts: text("charts").notNull().default("[]"),
+    formulas: text("formulas").notNull().default("[]"),
+    images: text("images").notNull().default("[]"),
+    conclusion: text("conclusion").notNull().default(""),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    profileStatusIdx: index("laboratory_reports_profile_status_idx").on(
+      table.profileId,
+      table.status,
+      table.updatedAt,
+    ),
+  }),
+);
+
+export const laboratoryFeedback = pgTable(
+  "laboratory_feedback",
+  {
+    id: text("id").primaryKey(),
+    reportId: text("report_id")
+      .notNull()
+      .references(() => laboratoryReports.id, { onDelete: "cascade" }),
+    authorProfileId: text("author_profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    rubric: text("rubric").notNull().default("{}"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    reportIdx: index("laboratory_feedback_report_idx").on(table.reportId, table.createdAt),
+  }),
+);
+
 export type Roadmap = typeof roadmaps.$inferSelect;
 export type NewRoadmap = typeof roadmaps.$inferInsert;
 export type RoadmapVersion = typeof roadmapVersions.$inferSelect;
@@ -2084,6 +2331,22 @@ export type UserSimulationSession = typeof userSimulationSessions.$inferSelect;
 export type NewUserSimulationSession = typeof userSimulationSessions.$inferInsert;
 export type SimulationResult = typeof simulationResults.$inferSelect;
 export type NewSimulationResult = typeof simulationResults.$inferInsert;
+export type LaboratoryActivity = typeof laboratoryActivities.$inferSelect;
+export type NewLaboratoryActivity = typeof laboratoryActivities.$inferInsert;
+export type LaboratoryStep = typeof laboratorySteps.$inferSelect;
+export type NewLaboratoryStep = typeof laboratorySteps.$inferInsert;
+export type LaboratoryVariable = typeof laboratoryVariables.$inferSelect;
+export type NewLaboratoryVariable = typeof laboratoryVariables.$inferInsert;
+export type LaboratorySession = typeof laboratorySessions.$inferSelect;
+export type NewLaboratorySession = typeof laboratorySessions.$inferInsert;
+export type LaboratoryObservation = typeof laboratoryObservations.$inferSelect;
+export type NewLaboratoryObservation = typeof laboratoryObservations.$inferInsert;
+export type LaboratoryMeasurement = typeof laboratoryMeasurements.$inferSelect;
+export type NewLaboratoryMeasurement = typeof laboratoryMeasurements.$inferInsert;
+export type LaboratoryReport = typeof laboratoryReports.$inferSelect;
+export type NewLaboratoryReport = typeof laboratoryReports.$inferInsert;
+export type LaboratoryFeedback = typeof laboratoryFeedback.$inferSelect;
+export type NewLaboratoryFeedback = typeof laboratoryFeedback.$inferInsert;
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

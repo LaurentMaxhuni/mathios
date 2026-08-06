@@ -39,6 +39,7 @@ const navigation: Array<{ href: string; label: string; icon: typeof Home }> = [
   { href: "/roadmaps" as const, label: "Roadmaps", icon: GitBranch },
   { href: "/personalized-paths" as const, label: "My paths", icon: Route },
   { href: "/simulations" as const, label: "Simulations", icon: Orbit },
+  { href: "/laboratories" as const, label: "Laboratory", icon: FlaskConical },
   { href: "/grades" as const, label: "Grades", icon: GraduationCap },
   { href: "/subjects" as const, label: "Subjects", icon: FlaskConical },
   { href: "/settings" as const, label: "Settings", icon: Settings2 },
@@ -127,7 +128,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             Profiles, permissions, settings, and onboarding stay available on this device.
           </p>
           <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Phase 9 - Interactive simulation framework
+            Phase 10 - Virtual laboratory
           </p>
         </div>
       </aside>
