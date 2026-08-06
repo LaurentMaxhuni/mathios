@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   Sparkles,
   Orbit,
+  StickyNote,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,7 @@ const navigation: Array<{ href: string; label: string; icon: typeof Home }> = [
   { href: "/simulations" as const, label: "Simulations", icon: Orbit },
   { href: "/laboratories" as const, label: "Laboratory", icon: FlaskConical },
   { href: "/planner" as const, label: "Study planner", icon: CalendarDays },
+  { href: "/notes" as const, label: "Knowledge base", icon: StickyNote },
   { href: "/grades" as const, label: "Grades", icon: GraduationCap },
   { href: "/subjects" as const, label: "Subjects", icon: FlaskConical },
   { href: "/settings" as const, label: "Settings", icon: Settings2 },
@@ -130,7 +132,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             Profiles, permissions, settings, and onboarding stay available on this device.
           </p>
           <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Phase 11 - Study planner
+            Phase 12 - Personal knowledge base
           </p>
         </div>
       </aside>

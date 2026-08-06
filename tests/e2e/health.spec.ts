@@ -518,3 +518,60 @@ test("Phase 11 study planner generates a calendar rhythm and records completion"
   await expect(page.getByText("Session complete", { exact: false })).toBeVisible();
   await expect(page.getByText(/1 of .* sessions complete/)).toBeVisible();
 });
+
+test("Phase 12 notes, captures, search, and personal map are usable", async ({ page }) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/notes");
+  await expect(page.getByRole("heading", { name: "Personal knowledge base" })).toBeVisible();
+  await page.getByRole("button", { name: "New note" }).click();
+  await page.getByLabel("Note title").fill("Energy review");
+  await page
+    .getByLabel("Note body (Markdown)")
+    .fill("# Energy\n\nThe useful relationship is **v=u+at** and $E=mc^2$.");
+  await page.getByLabel("Tags").fill("physics, review");
+  await page.getByRole("button", { name: "Save note" }).click();
+  await expect(page.getByRole("status")).toContainText("Note saved.");
+  await expect(page.getByText("Energy review").first()).toBeVisible();
+
+  await page.getByLabel("Resource id", { exact: true }).fill("lesson-constant-acceleration");
+  await page.getByLabel("Resource label", { exact: true }).fill("Motion lesson");
+  await page.getByRole("button", { name: "Add resource link" }).click();
+  await expect(page.getByRole("status")).toContainText("Learning resource linked.");
+
+  await page.getByLabel("Bookmark resource id").fill("lesson-constant-acceleration");
+  await page.getByLabel("Bookmark title").fill("Motion lesson");
+  await page.getByRole("button", { name: "Save bookmark" }).click();
+  await expect(page.getByRole("status")).toContainText("Bookmark saved.");
+
+  await page.getByLabel("Highlight source id").fill("lesson-constant-acceleration");
+  await page.getByLabel("Highlighted text").fill("v=u+at");
+  await page.getByRole("button", { name: "Save highlight" }).click();
+  await expect(page.getByRole("status")).toContainText("Highlight captured.");
+
+  await page.getByLabel("Search notes").fill("Energy review");
+  await expect(page.getByRole("button", { name: /Energy review/ }).first()).toBeVisible();
+  await page.getByRole("button", { name: "Open map" }).click();
+  await expect(
+    page.getByRole("img", { name: "Map of personal notes and learning resources" }),
+  ).toBeVisible();
+
+  const mapResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/knowledge-map");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(mapResponse.ok).toBeTruthy();
+  expect(mapResponse.body.nodes).toEqual(
+    expect.arrayContaining([expect.objectContaining({ kind: "note" })]),
+  );
+  expect(mapResponse.body.edges).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ kind: "resource-link" }),
+      expect.objectContaining({ kind: "bookmark" }),
+    ]),
+  );
+});
