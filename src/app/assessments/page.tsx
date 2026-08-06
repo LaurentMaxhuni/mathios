@@ -70,6 +70,7 @@ export default async function AssessmentsPage() {
               <Link
                 href={`/assessments/${assessment.id}` as never}
                 className={buttonVariants({ className: "mt-4 w-full" })}
+                aria-label={`Open assessment: ${assessment.title}`}
               >
                 <ClipboardCheck className="h-4 w-4" aria-hidden="true" /> Open assessment{" "}
                 <ArrowRight className="ml-auto h-4 w-4" aria-hidden="true" />

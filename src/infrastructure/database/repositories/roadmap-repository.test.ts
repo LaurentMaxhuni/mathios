@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import type { DatabaseHandle } from "@/infrastructure/database/client";
-import { runSeed } from "@/infrastructure/database/seed";
+import { roadmapSeed, runSeed } from "@/infrastructure/database/seed";
 import {
   generatePersonalizedPath,
   reorderRoadmapNodes,
@@ -39,7 +39,7 @@ describe("roadmap repository and learner flow", () => {
       } as unknown as DatabaseHandle;
       const repository = getRoadmapRepository(handle);
       const catalog = await repository.listRoadmaps();
-      expect(catalog).toHaveLength(7);
+      expect(catalog).toHaveLength(roadmapSeed.length);
       expect(catalog.map((item) => item.title)).toContain("Complete Natural Sciences Foundations");
 
       const detail = await repository.getRoadmap("roadmap-math-physics-foundations");

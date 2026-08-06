@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import type { DatabaseHandle } from "@/infrastructure/database/client";
-import { runSeed } from "@/infrastructure/database/seed";
+import { questionSeed, runSeed } from "@/infrastructure/database/seed";
 import { SqlExerciseRepository } from "@/infrastructure/database/repositories/exercise-repository";
 import {
   getLearnerQuestion,
@@ -34,7 +34,7 @@ describe("exercise repository and learner flow", () => {
       } as unknown as DatabaseHandle;
       const repository = new SqlExerciseRepository(handle);
       const questions = await repository.listQuestions();
-      expect(questions).toHaveLength(8);
+      expect(questions).toHaveLength(questionSeed.length);
       const authorDetail = await repository.getQuestion("question-force-unit", {
         includeDraft: true,
       });

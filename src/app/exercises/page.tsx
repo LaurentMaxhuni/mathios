@@ -61,6 +61,7 @@ export default async function ExercisesPage() {
               <Link
                 href={("/exercise-sets/" + set.id) as never}
                 className={buttonVariants({ className: "mt-4 w-full" })}
+                aria-label={`Start practice: ${set.title}`}
               >
                 <BrainCircuit className="h-4 w-4" aria-hidden="true" /> Start practice{" "}
                 <ArrowRight className="ml-auto h-4 w-4" aria-hidden="true" />
