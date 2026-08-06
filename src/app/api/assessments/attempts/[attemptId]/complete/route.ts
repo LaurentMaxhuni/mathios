@@ -3,6 +3,8 @@ import { asApplicationError } from "@/domain/errors/application-error";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getAssessmentRepository } from "@/infrastructure/database/repositories/assessment-repository";
 import { getMasteryRepository } from "@/infrastructure/database/repositories/mastery-repository";
+import { getAnalyticsRepository } from "@/infrastructure/database/repositories/analytics-repository";
+import { trackActivityEvent } from "@/features/analytics/service";
 import { completeAssessmentSchema } from "@/features/assessments/schemas";
 import {
   completeAssessmentAttempt,
@@ -33,10 +35,26 @@ export async function POST(
         },
         { status: 400 },
       );
+    const analyticsRepository = getAnalyticsRepository();
     const result = await completeAssessmentAttempt(
       { attemptId, profileId: principal.profileId },
       getAssessmentRepository(),
       getMasteryRepository(),
+      analyticsRepository,
+    );
+    await trackActivityEvent(
+      {
+        id: `activity-assessment-submission-${result.attempt.id}`,
+        profileId: principal.profileId,
+        eventType: "assessment-submission",
+        resourceType: "assessment",
+        resourceId: result.assessment.id,
+        score: result.attempt.percentage,
+        durationSeconds: result.timeSpentSeconds,
+        dedupeKey: `assessment-submission:${result.attempt.id}`,
+        metadata: { passed: result.attempt.passed },
+      },
+      analyticsRepository,
     );
     return NextResponse.json({ result });
   } catch (error) {

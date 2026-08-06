@@ -3,6 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { ProfileDashboard } from "@/features/profiles/components/profile-dashboard";
+import { LearnerDashboard } from "@/features/analytics/components/analytics-ui";
+import { getLearnerDashboard } from "@/features/analytics/service";
+import { getAnalyticsRepository } from "@/infrastructure/database/repositories/analytics-repository";
 import { ProfileSelector } from "@/features/profiles/components/profile-selector";
 import { toPublicProfile } from "@/features/profiles/service";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
@@ -39,11 +42,16 @@ export default async function HomePage() {
     const session = await getCurrentSession(repository);
     if (session) {
       const onboarding = await repository.getOnboarding(session.principal.profileId);
+      const learnerDashboard = await getLearnerDashboard(
+        session.principal.profileId,
+        getAnalyticsRepository(),
+      ).catch(() => null);
       return (
         <div className="mx-auto w-full max-w-[1440px] px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
           <Breadcrumbs current="Overview" />
           <div className="mt-6">
             <ProfileDashboard principal={session.principal} onboarding={onboarding} />
+            {learnerDashboard ? <LearnerDashboard data={learnerDashboard} /> : null}
           </div>
         </div>
       );

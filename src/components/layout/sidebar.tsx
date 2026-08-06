@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  BarChart3,
   CalendarDays,
   Atom,
   BrainCircuit,
@@ -27,8 +28,14 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { AuthenticatedPrincipal } from "@/infrastructure/auth/auth-provider";
 
-const navigation: Array<{ href: string; label: string; icon: typeof Home }> = [
+const navigation: Array<{
+  href: string;
+  label: string;
+  icon: typeof Home;
+  requiresAnalytics?: boolean;
+}> = [
   { href: "/" as const, label: "Overview", icon: Home },
   { href: "/search" as const, label: "Global search", icon: Search },
   { href: "/profiles" as const, label: "Profiles", icon: IdCard },
@@ -39,6 +46,13 @@ const navigation: Array<{ href: string; label: string; icon: typeof Home }> = [
   { href: "/exercises" as const, label: "Exercises", icon: BrainCircuit },
   { href: "/assessments" as const, label: "Assessments", icon: ClipboardCheck },
   { href: "/mastery" as const, label: "Mastery", icon: Gauge },
+  { href: "/analytics" as const, label: "Learning analytics", icon: BarChart3 },
+  {
+    href: "/analytics/teacher" as const,
+    label: "Teacher analytics",
+    icon: BarChart3,
+    requiresAnalytics: true,
+  },
   { href: "/recommendations" as const, label: "Recommendations", icon: Sparkles },
   { href: "/roadmaps" as const, label: "Roadmaps", icon: GitBranch },
   { href: "/personalized-paths" as const, label: "My paths", icon: Route },
@@ -55,10 +69,14 @@ const navigation: Array<{ href: string; label: string; icon: typeof Home }> = [
 interface SidebarProps {
   mobileOpen: boolean;
   onMobileClose: () => void;
+  principal: AuthenticatedPrincipal | null;
 }
 
-export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
+export function Sidebar({ mobileOpen, onMobileClose, principal }: SidebarProps) {
   const pathname = usePathname();
+  const visibleNavigation = navigation.filter(
+    (item) => !item.requiresAnalytics || principal?.permissions.includes("view_analytics"),
+  );
 
   return (
     <>
@@ -102,7 +120,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           Workspace
         </div>
         <nav aria-label="Primary navigation" className="mt-3 space-y-1">
-          {navigation.map((item) => {
+          {visibleNavigation.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
             return (

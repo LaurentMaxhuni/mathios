@@ -9,7 +9,7 @@ import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-13"],
+  ["seed_version", "phase-14"],
 ] as const;
 
 export const simulationSeed = simulationRegistry.map((simulation) => ({
@@ -2972,6 +2972,7 @@ export async function runSeed(
       seedStructure();
       seedLaboratoriesSqlite(database);
       seedStudyPlannerSqlite(database);
+      seedAnalyticsSqlite(database);
     } finally {
       database.close();
     }
@@ -3574,6 +3575,7 @@ export async function runSeed(
     });
     await seedLaboratoriesPostgres(database);
     await seedStudyPlannerPostgres(database);
+    await seedAnalyticsPostgres(database);
   } finally {
     await database.end({ timeout: 5 });
   }
@@ -3815,4 +3817,432 @@ async function seedStudyPlannerPostgres(database: Sql): Promise<void> {
     VALUES (${`seed-study-session-${profile.id}`}, ${profile.id}, ${planId}, ${itemId}, ${plannerSeedDate(1)}, 1080, 45, 'scheduled')
     ON CONFLICT (id) DO NOTHING
   `;
+}
+
+function analyticsSeedTimestamp(offsetDays: number, hour = 18): string {
+  const date = new Date();
+  date.setUTCHours(hour, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() + offsetDays);
+  return date.toISOString();
+}
+
+function analyticsSeedDate(offsetDays: number): string {
+  return analyticsSeedTimestamp(offsetDays).slice(0, 10);
+}
+
+function seedAnalyticsSqlite(database: Database.Database): void {
+  const profile = database
+    .prepare("SELECT id FROM profiles ORDER BY created_at, id LIMIT 1")
+    .get() as { id: string } | undefined;
+  if (!profile) return;
+
+  const sessionId = `seed-analytics-session-${profile.id}`;
+  database
+    .prepare(
+      `INSERT INTO learning_sessions (id, profile_id, session_type, source_type, source_id, status, started_at, ended_at, duration_seconds, metadata_json)
+       VALUES (?, ?, 'study', 'seed', ?, 'completed', ?, ?, 2700, '{}')
+       ON CONFLICT(id) DO UPDATE SET started_at = excluded.started_at, ended_at = excluded.ended_at, duration_seconds = excluded.duration_seconds, status = excluded.status, metadata_json = excluded.metadata_json, updated_at = CURRENT_TIMESTAMP`,
+    )
+    .run(
+      sessionId,
+      profile.id,
+      `seed-study-session-${profile.id}`,
+      analyticsSeedTimestamp(-6, 17),
+      analyticsSeedTimestamp(-6, 18),
+    );
+
+  const insertEvent = database.prepare(
+    `INSERT INTO activity_events (id, profile_id, event_type, resource_type, resource_id, subject_id, grade_id, concept_id, learning_session_id, occurred_at, duration_seconds, score, is_correct, hints_used, attempt_number, response_time_ms, dedupe_key, metadata_json)
+     VALUES (@id, @profileId, @eventType, @resourceType, @resourceId, @subjectId, @gradeId, @conceptId, @learningSessionId, @occurredAt, @durationSeconds, @score, @isCorrect, @hintsUsed, @attemptNumber, @responseTimeMs, @dedupeKey, @metadata)
+     ON CONFLICT(id) DO UPDATE SET occurred_at = excluded.occurred_at, duration_seconds = excluded.duration_seconds, score = excluded.score, is_correct = excluded.is_correct, hints_used = excluded.hints_used, attempt_number = excluded.attempt_number, response_time_ms = excluded.response_time_ms, dedupe_key = excluded.dedupe_key, metadata_json = excluded.metadata_json`,
+  );
+  const events = [
+    {
+      id: `seed-analytics-lesson-view-${profile.id}`,
+      eventType: "lesson-view",
+      resourceType: "lesson",
+      resourceId: "lesson-constant-acceleration",
+      subjectId: "subject-physics",
+      gradeId: "grade-8",
+      conceptId: "concept-acceleration",
+      occurredAt: analyticsSeedTimestamp(-6),
+      durationSeconds: 0,
+      score: null,
+      isCorrect: null,
+      hintsUsed: 0,
+      attemptNumber: 1,
+      responseTimeMs: null,
+      dedupeKey: `seed-lesson-view:${profile.id}`,
+      metadata: JSON.stringify({ seeded: true }),
+    },
+    {
+      id: `seed-analytics-lesson-completion-${profile.id}`,
+      eventType: "lesson-completion",
+      resourceType: "lesson",
+      resourceId: "lesson-constant-acceleration",
+      subjectId: "subject-physics",
+      gradeId: "grade-8",
+      conceptId: "concept-acceleration",
+      learningSessionId: sessionId,
+      occurredAt: analyticsSeedTimestamp(-5),
+      durationSeconds: 1800,
+      score: 1,
+      isCorrect: 1,
+      hintsUsed: 0,
+      attemptNumber: 1,
+      responseTimeMs: null,
+      dedupeKey: `seed-lesson-completion:${profile.id}`,
+      metadata: JSON.stringify({ seeded: true }),
+    },
+    ...[
+      ["question-velocity-direction", "concept-velocity", 1, 1, 42000],
+      ["question-acceleration-numeric", "concept-acceleration", 0.5, 0, 67000],
+      ["question-force-unit", "concept-acceleration", 1, 1, 39000],
+    ].map(([questionId, conceptId, score, isCorrect, responseTimeMs], index) => ({
+      id: `seed-analytics-question-${profile.id}-${index}`,
+      eventType: "question-attempt",
+      resourceType: "question",
+      resourceId: questionId,
+      subjectId: "subject-physics",
+      gradeId: "grade-8",
+      conceptId,
+      learningSessionId: sessionId,
+      occurredAt: analyticsSeedTimestamp(-4 + index),
+      durationSeconds: 0,
+      score,
+      isCorrect,
+      hintsUsed: index === 1 ? 1 : 0,
+      attemptNumber: 1,
+      responseTimeMs,
+      dedupeKey: `seed-question-attempt:${profile.id}:${questionId}`,
+      metadata: JSON.stringify({ seeded: true }),
+    })),
+    {
+      id: `seed-analytics-assessment-${profile.id}`,
+      eventType: "assessment-submission",
+      resourceType: "assessment",
+      resourceId: "assessment-motion-quiz",
+      subjectId: "subject-physics",
+      gradeId: "grade-8",
+      learningSessionId: sessionId,
+      occurredAt: analyticsSeedTimestamp(-2),
+      durationSeconds: 900,
+      score: 0.75,
+      isCorrect: 1,
+      hintsUsed: 0,
+      attemptNumber: 1,
+      responseTimeMs: null,
+      dedupeKey: `seed-assessment-submission:${profile.id}`,
+      metadata: JSON.stringify({ seeded: true, passed: true }),
+    },
+    {
+      id: `seed-analytics-simulation-${profile.id}`,
+      eventType: "simulation-session",
+      resourceType: "simulation",
+      resourceId: "simulation-one-dimensional-motion",
+      subjectId: "subject-physics",
+      gradeId: "grade-8",
+      learningSessionId: sessionId,
+      occurredAt: analyticsSeedTimestamp(-1),
+      durationSeconds: 1200,
+      score: 0.8,
+      isCorrect: 1,
+      hintsUsed: 0,
+      attemptNumber: 1,
+      responseTimeMs: null,
+      dedupeKey: `seed-simulation-session:${profile.id}`,
+      metadata: JSON.stringify({ seeded: true }),
+    },
+    {
+      id: `seed-analytics-study-completion-${profile.id}`,
+      eventType: "study-session-completion",
+      resourceType: "study-session",
+      resourceId: `seed-study-session-${profile.id}`,
+      learningSessionId: sessionId,
+      occurredAt: analyticsSeedTimestamp(-6, 18),
+      durationSeconds: 2700,
+      score: null,
+      isCorrect: null,
+      hintsUsed: 0,
+      attemptNumber: 1,
+      responseTimeMs: null,
+      dedupeKey: `seed-study-session-completion:${profile.id}`,
+      metadata: JSON.stringify({ seeded: true }),
+    },
+    {
+      id: `seed-analytics-mastery-${profile.id}`,
+      eventType: "mastery-change",
+      resourceType: "concept",
+      resourceId: "concept-velocity",
+      subjectId: "subject-physics",
+      gradeId: "grade-8",
+      conceptId: "concept-velocity",
+      occurredAt: analyticsSeedTimestamp(-1, 19),
+      durationSeconds: 0,
+      score: 0.72,
+      isCorrect: null,
+      hintsUsed: 0,
+      attemptNumber: 1,
+      responseTimeMs: null,
+      dedupeKey: `seed-mastery-change:${profile.id}`,
+      metadata: JSON.stringify({ seeded: true, state: "developing" }),
+    },
+  ];
+  for (const event of events)
+    insertEvent.run({
+      ...event,
+      profileId: profile.id,
+      resourceType: event.resourceType ?? null,
+      resourceId: event.resourceId ?? null,
+      subjectId: event.subjectId ?? null,
+      gradeId: event.gradeId ?? null,
+      conceptId: event.conceptId ?? null,
+      learningSessionId: event.learningSessionId ?? null,
+    });
+
+  database
+    .prepare(
+      `INSERT INTO learner_metrics (id, profile_id, metric_date, time_studied_seconds, lessons_started, lessons_completed, questions_attempted, correct_questions, accuracy, assessment_count, average_assessment_score, hints_used, attempt_count, average_response_time_ms, study_days, streak_days, consistency_score, mastery_score, mastered_concepts, weak_concepts, metadata_json)
+       VALUES (?, ?, ?, 6600, 1, 1, 3, 2, 0.8333, 1, 0.75, 1, 3, 49333, 1, 1, 0.25, 0.58, 0, 2, '{"seeded":true}')
+       ON CONFLICT(profile_id, metric_date) DO UPDATE SET time_studied_seconds = excluded.time_studied_seconds, lessons_started = excluded.lessons_started, lessons_completed = excluded.lessons_completed, questions_attempted = excluded.questions_attempted, correct_questions = excluded.correct_questions, accuracy = excluded.accuracy, assessment_count = excluded.assessment_count, average_assessment_score = excluded.average_assessment_score, hints_used = excluded.hints_used, attempt_count = excluded.attempt_count, average_response_time_ms = excluded.average_response_time_ms, study_days = excluded.study_days, streak_days = excluded.streak_days, consistency_score = excluded.consistency_score, mastery_score = excluded.mastery_score, mastered_concepts = excluded.mastered_concepts, weak_concepts = excluded.weak_concepts, metadata_json = excluded.metadata_json, updated_at = CURRENT_TIMESTAMP`,
+    )
+    .run(
+      `seed-learner-metric-${profile.id}-${analyticsSeedDate(-1)}`,
+      profile.id,
+      analyticsSeedDate(-1),
+    );
+  database
+    .prepare(
+      `INSERT INTO analytics_snapshots (id, profile_id, snapshot_type, snapshot_date, metrics_json) VALUES (?, ?, 'daily', ?, ?) ON CONFLICT(profile_id, snapshot_type, snapshot_date) DO UPDATE SET metrics_json = excluded.metrics_json`,
+    )
+    .run(
+      `seed-analytics-snapshot-${profile.id}-${analyticsSeedDate(-1)}`,
+      profile.id,
+      analyticsSeedDate(-1),
+      JSON.stringify({ seeded: true, masteryScore: 0.58, accuracy: 0.8333 }),
+    );
+  database
+    .prepare(
+      `INSERT INTO content_metrics (id, resource_type, resource_id, metric_date, subject_id, grade_id, concept_id, attempt_count, completion_count, correct_count, accuracy, average_response_time_ms, average_attempts, hint_rate, discrimination_index, support_count, metadata_json)
+       VALUES (?, 'question', 'question-acceleration-numeric', ?, 'subject-physics', 'grade-8', 'concept-acceleration', 1, 1, 0, 0.5, 67000, 1, 1, 0, 1, '{"seeded":true}')
+       ON CONFLICT(resource_type, resource_id, metric_date) DO UPDATE SET accuracy = excluded.accuracy, support_count = excluded.support_count, metadata_json = excluded.metadata_json, updated_at = CURRENT_TIMESTAMP`,
+    )
+    .run(`seed-content-metric-${profile.id}-${analyticsSeedDate(-1)}`, analyticsSeedDate(-1));
+}
+
+async function seedAnalyticsPostgres(database: Sql): Promise<void> {
+  const profiles = await database<
+    { id: string }[]
+  >`SELECT id FROM profiles ORDER BY created_at, id LIMIT 1`;
+  const profile = profiles[0];
+  if (!profile) return;
+  const sessionId = `seed-analytics-session-${profile.id}`;
+  await database.unsafe(
+    `INSERT INTO learning_sessions (id, profile_id, session_type, source_type, source_id, status, started_at, ended_at, duration_seconds, metadata_json)
+     VALUES ($1, $2, 'study', 'seed', $3, 'completed', $4, $5, 2700, '{}')
+     ON CONFLICT(id) DO UPDATE SET started_at = EXCLUDED.started_at, ended_at = EXCLUDED.ended_at, duration_seconds = EXCLUDED.duration_seconds, status = EXCLUDED.status, metadata_json = EXCLUDED.metadata_json, updated_at = NOW()`,
+    [
+      sessionId,
+      profile.id,
+      `seed-study-session-${profile.id}`,
+      analyticsSeedTimestamp(-6, 17),
+      analyticsSeedTimestamp(-6, 18),
+    ],
+  );
+  const events = [
+    [
+      "lesson-view",
+      "lesson",
+      "lesson-constant-acceleration",
+      "subject-physics",
+      "grade-8",
+      "concept-acceleration",
+      analyticsSeedTimestamp(-6),
+      0,
+      null,
+      null,
+      0,
+      1,
+      null,
+      `seed-lesson-view:${profile.id}`,
+    ],
+    [
+      "lesson-completion",
+      "lesson",
+      "lesson-constant-acceleration",
+      "subject-physics",
+      "grade-8",
+      "concept-acceleration",
+      analyticsSeedTimestamp(-5),
+      1800,
+      1,
+      1,
+      0,
+      1,
+      null,
+      `seed-lesson-completion:${profile.id}`,
+    ],
+    [
+      "question-attempt",
+      "question",
+      "question-velocity-direction",
+      "subject-physics",
+      "grade-8",
+      "concept-velocity",
+      analyticsSeedTimestamp(-4),
+      0,
+      1,
+      1,
+      0,
+      1,
+      42000,
+      `seed-question-attempt:${profile.id}:question-velocity-direction`,
+    ],
+    [
+      "question-attempt",
+      "question",
+      "question-acceleration-numeric",
+      "subject-physics",
+      "grade-8",
+      "concept-acceleration",
+      analyticsSeedTimestamp(-3),
+      0,
+      0.5,
+      0,
+      1,
+      1,
+      67000,
+      `seed-question-attempt:${profile.id}:question-acceleration-numeric`,
+    ],
+    [
+      "question-attempt",
+      "question",
+      "question-force-unit",
+      "subject-physics",
+      "grade-8",
+      "concept-acceleration",
+      analyticsSeedTimestamp(-2),
+      0,
+      1,
+      1,
+      0,
+      1,
+      39000,
+      `seed-question-attempt:${profile.id}:question-force-unit`,
+    ],
+    [
+      "assessment-submission",
+      "assessment",
+      "assessment-motion-quiz",
+      "subject-physics",
+      "grade-8",
+      null,
+      analyticsSeedTimestamp(-2),
+      900,
+      0.75,
+      1,
+      0,
+      1,
+      null,
+      `seed-assessment-submission:${profile.id}`,
+    ],
+    [
+      "simulation-session",
+      "simulation",
+      "simulation-one-dimensional-motion",
+      "subject-physics",
+      "grade-8",
+      null,
+      analyticsSeedTimestamp(-1),
+      1200,
+      0.8,
+      1,
+      0,
+      1,
+      null,
+      `seed-simulation-session:${profile.id}`,
+    ],
+    [
+      "study-session-completion",
+      "study-session",
+      `seed-study-session-${profile.id}`,
+      null,
+      null,
+      null,
+      analyticsSeedTimestamp(-6, 18),
+      2700,
+      null,
+      null,
+      0,
+      1,
+      null,
+      `seed-study-session-completion:${profile.id}`,
+    ],
+    [
+      "mastery-change",
+      "concept",
+      "concept-velocity",
+      "subject-physics",
+      "grade-8",
+      "concept-velocity",
+      analyticsSeedTimestamp(-1, 19),
+      0,
+      0.72,
+      null,
+      0,
+      1,
+      null,
+      `seed-mastery-change:${profile.id}`,
+    ],
+  ] as const;
+  for (const [index, event] of events.entries()) {
+    await database.unsafe(
+      `INSERT INTO activity_events (id, profile_id, event_type, resource_type, resource_id, subject_id, grade_id, concept_id, learning_session_id, occurred_at, duration_seconds, score, is_correct, hints_used, attempt_number, response_time_ms, dedupe_key, metadata_json)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 1, $15, $16, '{"seeded":true}')
+       ON CONFLICT(id) DO UPDATE SET occurred_at = EXCLUDED.occurred_at, duration_seconds = EXCLUDED.duration_seconds, score = EXCLUDED.score, is_correct = EXCLUDED.is_correct, hints_used = EXCLUDED.hints_used, response_time_ms = EXCLUDED.response_time_ms, dedupe_key = EXCLUDED.dedupe_key, metadata_json = EXCLUDED.metadata_json`,
+      [
+        `seed-analytics-event-${profile.id}-${index}`,
+        profile.id,
+        event[0],
+        event[1],
+        event[2],
+        event[3],
+        event[4],
+        event[5],
+        sessionId,
+        event[6],
+        event[7],
+        event[8],
+        event[9],
+        event[10],
+        event[12],
+        event[13],
+      ],
+    );
+  }
+  await database.unsafe(
+    `INSERT INTO learner_metrics (id, profile_id, metric_date, time_studied_seconds, lessons_started, lessons_completed, questions_attempted, correct_questions, accuracy, assessment_count, average_assessment_score, hints_used, attempt_count, average_response_time_ms, study_days, streak_days, consistency_score, mastery_score, mastered_concepts, weak_concepts, metadata_json)
+     VALUES ($1, $2, $3, 6600, 1, 1, 3, 2, 0.8333, 1, 0.75, 1, 3, 49333, 1, 1, 0.25, 0.58, 0, 2, '{"seeded":true}')
+     ON CONFLICT(profile_id, metric_date) DO UPDATE SET time_studied_seconds = EXCLUDED.time_studied_seconds, accuracy = EXCLUDED.accuracy, mastery_score = EXCLUDED.mastery_score, metadata_json = EXCLUDED.metadata_json, updated_at = NOW()`,
+    [
+      `seed-learner-metric-${profile.id}-${analyticsSeedDate(-1)}`,
+      profile.id,
+      analyticsSeedDate(-1),
+    ],
+  );
+  await database.unsafe(
+    `INSERT INTO analytics_snapshots (id, profile_id, snapshot_type, snapshot_date, metrics_json) VALUES ($1, $2, 'daily', $3, $4) ON CONFLICT(profile_id, snapshot_type, snapshot_date) DO UPDATE SET metrics_json = EXCLUDED.metrics_json`,
+    [
+      `seed-analytics-snapshot-${profile.id}-${analyticsSeedDate(-1)}`,
+      profile.id,
+      analyticsSeedDate(-1),
+      JSON.stringify({ seeded: true, masteryScore: 0.58, accuracy: 0.8333 }),
+    ],
+  );
+  await database.unsafe(
+    `INSERT INTO content_metrics (id, resource_type, resource_id, metric_date, subject_id, grade_id, concept_id, attempt_count, completion_count, correct_count, accuracy, average_response_time_ms, average_attempts, hint_rate, discrimination_index, support_count, metadata_json)
+     VALUES ($1, 'question', 'question-acceleration-numeric', $2, 'subject-physics', 'grade-8', 'concept-acceleration', 1, 1, 0, 0.5, 67000, 1, 1, 0, 1, '{"seeded":true}')
+     ON CONFLICT(resource_type, resource_id, metric_date) DO UPDATE SET accuracy = EXCLUDED.accuracy, support_count = EXCLUDED.support_count, metadata_json = EXCLUDED.metadata_json, updated_at = NOW()`,
+    [`seed-content-metric-${profile.id}-${analyticsSeedDate(-1)}`, analyticsSeedDate(-1)],
+  );
 }

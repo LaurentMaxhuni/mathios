@@ -613,3 +613,40 @@ test("Phase 13 global search ranks local content and exposes discovery filters",
   await page.keyboard.press("Control+K");
   await expect(page.getByLabel("Global search")).toBeFocused();
 });
+
+test("Phase 14 learner and teacher analytics summarize local activity", async ({ page }) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await expect(page.getByRole("heading", { name: "Learning dashboard" })).toBeVisible();
+  await expect(page.getByText("Weekly study progress").first()).toBeVisible();
+
+  await page.goto("/analytics");
+  await expect(page.getByRole("heading", { name: "Learning analytics" })).toBeVisible();
+  await expect(page.getByText("Study consistency")).toBeVisible();
+  const learnerResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/analytics/learner");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(learnerResponse.ok).toBeTruthy();
+  expect(learnerResponse.body).toMatchObject({
+    summary: expect.objectContaining({ questionsAttempted: expect.any(Number) }),
+    daily: expect.any(Array),
+  });
+
+  await page.goto("/analytics/teacher");
+  await expect(page.getByRole("heading", { name: "Teacher analytics" })).toBeVisible();
+  await expect(page.getByText("Learners requiring support")).toBeVisible();
+  const teacherResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/analytics/teacher");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(teacherResponse.ok).toBeTruthy();
+  expect(teacherResponse.body).toMatchObject({
+    learnerProgress: expect.any(Array),
+    conceptDifficulty: expect.any(Array),
+  });
+});

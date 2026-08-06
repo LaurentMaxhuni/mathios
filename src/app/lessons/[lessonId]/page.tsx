@@ -5,6 +5,9 @@ import { canAuthorCourses } from "@/features/courses/service";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getCourseRepository } from "@/infrastructure/database/repositories/course-repository";
 import { getSimulationRepository } from "@/infrastructure/database/repositories/simulation-repository";
+import { getAnalyticsRepository } from "@/infrastructure/database/repositories/analytics-repository";
+import { trackActivityEvent } from "@/features/analytics/service";
+import { randomUUID } from "node:crypto";
 
 export default async function LessonReaderPage({
   params,
@@ -20,6 +23,17 @@ export default async function LessonReaderPage({
     if (canAuthorCourses(session.principal)) redirect(`/lessons/${lessonId}/edit`);
     notFound();
   }
+  await trackActivityEvent(
+    {
+      id: `activity-lesson-view-${randomUUID()}`,
+      profileId: session.principal.profileId,
+      eventType: "lesson-view",
+      resourceType: "lesson",
+      resourceId: lessonId,
+      dedupeKey: null,
+    },
+    getAnalyticsRepository(),
+  );
   return (
     <div className="mx-auto w-full max-w-[1280px] px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
       <Breadcrumbs current={reader.lesson.title} />

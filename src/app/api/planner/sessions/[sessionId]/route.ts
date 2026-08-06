@@ -3,6 +3,8 @@ import { asApplicationError } from "@/domain/errors/application-error";
 import { requireSession } from "@/features/auth/authorization";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getStudyPlannerRepository } from "@/infrastructure/database/repositories/study-planner-repository";
+import { getAnalyticsRepository } from "@/infrastructure/database/repositories/analytics-repository";
+import { trackActivityEvent } from "@/features/analytics/service";
 import { rescheduleStudySession, updateStudySessionStatus } from "@/features/planner/service";
 import { studySessionMoveSchema, studySessionStatusSchema } from "@/features/planner/schemas";
 
@@ -33,6 +35,21 @@ export async function PATCH(
         parsedStatus.data.reason,
         repository,
       );
+      if (session.status === "completed") {
+        await trackActivityEvent(
+          {
+            id: `activity-study-session-completion-${session.id}`,
+            profileId: principal.profileId,
+            eventType: "study-session-completion",
+            resourceType: "study-session",
+            resourceId: session.id,
+            durationSeconds: session.durationMinutes * 60,
+            dedupeKey: `study-session-completion:${session.id}`,
+            metadata: { itemType: session.itemType, sourceId: session.sourceId },
+          },
+          getAnalyticsRepository(),
+        );
+      }
     }
     if (!session)
       return NextResponse.json({ message: "Provide a move or status update." }, { status: 400 });

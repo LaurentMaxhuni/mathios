@@ -3,6 +3,8 @@ import { z } from "zod";
 import { asApplicationError } from "@/domain/errors/application-error";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getSimulationRepository } from "@/infrastructure/database/repositories/simulation-repository";
+import { getAnalyticsRepository } from "@/infrastructure/database/repositories/analytics-repository";
+import { trackActivityEvent } from "@/features/analytics/service";
 import { completeSimulation, requireSimulationLearner } from "@/features/simulations/service";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +28,20 @@ export async function POST(
       principal.profileId,
       { sessionId, ...body.data },
       getSimulationRepository(),
+    );
+    await trackActivityEvent(
+      {
+        id: `activity-simulation-session-${result.sessionId}`,
+        profileId: principal.profileId,
+        eventType: "simulation-session",
+        resourceType: "simulation",
+        resourceId: result.simulationId,
+        durationSeconds: body.data.elapsedSeconds,
+        score: result.completionPercentage / 100,
+        dedupeKey: `simulation-session:${result.sessionId}`,
+        metadata: { sessionId: result.sessionId },
+      },
+      getAnalyticsRepository(),
     );
     return NextResponse.json({ result }, { status: 201 });
   } catch (error) {
