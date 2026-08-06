@@ -111,6 +111,7 @@ async function applyPostgresMigrations(
   const skipped: string[] = [];
 
   try {
+    await database`SELECT pg_advisory_lock(hashtext('mathios:migrations'))`;
     await database.unsafe(
       `CREATE TABLE IF NOT EXISTS ${migrationTable} (name TEXT PRIMARY KEY NOT NULL, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`,
     );
@@ -131,6 +132,7 @@ async function applyPostgresMigrations(
       });
       applied.push(file.name);
     }
+    await database`SELECT pg_advisory_unlock(hashtext('mathios:migrations'))`;
   } finally {
     await database.end({ timeout: 5 });
   }

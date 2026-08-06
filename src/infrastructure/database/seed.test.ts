@@ -150,7 +150,7 @@ describe("Phase 17 seed data", () => {
       });
       expect(
         database.prepare("SELECT value FROM app_metadata WHERE key = 'seed_version'").get(),
-      ).toEqual({ value: "phase-17" });
+      ).toEqual({ value: "phase-18" });
       expect(database.prepare("SELECT COUNT(*) AS count FROM learning_sessions").get()).toEqual({
         count: 0,
       });

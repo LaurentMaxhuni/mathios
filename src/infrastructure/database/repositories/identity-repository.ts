@@ -299,6 +299,22 @@ export class SqlIdentityRepository implements IdentityRepository {
     return rows[0] ? mapProfile(rows[0]) : null;
   }
 
+  async getProfileByIdentifier(identifier: string): Promise<ProfileRecord | null> {
+    if (this.database.provider === "sqlite") {
+      const row = this.database.raw
+        .prepare(`${profileSelect} JOIN users u ON u.id = p.user_id WHERE u.identifier = ?`)
+        .get(identifier) as ProfileDbRow | undefined;
+      return row ? mapProfile(row) : null;
+    }
+
+    const rows = await this.database.raw<ProfileDbRow[]>`
+      ${this.database.raw.unsafe(profileSelect)}
+      JOIN users u ON u.id = p.user_id
+      WHERE u.identifier = ${identifier}
+    `;
+    return rows[0] ? mapProfile(rows[0]) : null;
+  }
+
   async createProfile(input: CreateProfileRecord): Promise<ProfileRecord> {
     if (this.database.provider === "sqlite") {
       const database = this.database.raw;

@@ -37,6 +37,7 @@ const navigation: Array<{
   label: string;
   icon: typeof Home;
   requiresAnalytics?: boolean;
+  requiresSettings?: boolean;
 }> = [
   { href: "/" as const, label: "Overview", icon: Home },
   { href: "/search" as const, label: "Global search", icon: Search },
@@ -69,6 +70,12 @@ const navigation: Array<{
   { href: "/subjects" as const, label: "Subjects", icon: FlaskConical },
   { href: "/settings" as const, label: "Settings", icon: Settings2 },
   { href: "/settings/roles" as const, label: "Roles", icon: ShieldCheck },
+  {
+    href: "/settings/system" as const,
+    label: "System diagnostics",
+    icon: Activity,
+    requiresSettings: true,
+  },
 ];
 
 interface SidebarProps {
@@ -80,7 +87,9 @@ interface SidebarProps {
 export function Sidebar({ mobileOpen, onMobileClose, principal }: SidebarProps) {
   const pathname = usePathname();
   const visibleNavigation = navigation.filter(
-    (item) => !item.requiresAnalytics || principal?.permissions.includes("view_analytics"),
+    (item) =>
+      (!item.requiresAnalytics || principal?.permissions.includes("view_analytics")) &&
+      (!item.requiresSettings || principal?.permissions.includes("manage_application_settings")),
   );
 
   return (
@@ -157,7 +166,7 @@ export function Sidebar({ mobileOpen, onMobileClose, principal }: SidebarProps) 
             Profiles, permissions, settings, and onboarding stay available on this device.
           </p>
           <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Phase 17 - Multi-user classrooms
+            Phase 18 - Production readiness
           </p>
         </div>
       </aside>

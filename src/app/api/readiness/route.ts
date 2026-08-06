@@ -1,19 +1,19 @@
 import { NextResponse } from "next/server";
-import { getHealthReport } from "@/server/health";
+import { getReadinessReport } from "@/server/health";
 import { recordHttpRequest } from "@/server/metrics";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request): Promise<NextResponse> {
   const startedAt = performance.now();
-  const report = await getHealthReport();
+  const report = await getReadinessReport();
   const response = NextResponse.json(report, {
-    status: report.status === "ok" ? 200 : 503,
+    status: report.status === "ready" ? 200 : 503,
     headers: { "Cache-Control": "no-store" },
   });
   recordHttpRequest({
     method: request.method,
-    path: "/api/health",
+    path: "/api/readiness",
     status: response.status,
     durationMs: Math.round(performance.now() - startedAt),
   });

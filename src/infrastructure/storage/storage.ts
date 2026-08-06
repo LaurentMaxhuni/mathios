@@ -11,6 +11,35 @@ export interface StoredObject {
   size: number;
 }
 
+export interface SignedUrlOptions {
+  key: string;
+  expiresInSeconds: number;
+  contentType?: string;
+  maxBytes?: number;
+}
+
+export interface SignedUploadUrl {
+  url: string;
+  method: "PUT";
+  headers?: Readonly<Record<string, string>>;
+  expiresAt: string;
+}
+
+export interface SignedUrlStorage {
+  createSignedDownloadUrl(options: SignedUrlOptions): Promise<string>;
+  createSignedUploadUrl(options: SignedUrlOptions): Promise<SignedUploadUrl>;
+}
+
+export interface StorageHealth {
+  provider: "local" | "s3";
+  status: "ok" | "error";
+  message?: string;
+}
+
+export interface HealthCheckableStorage {
+  checkHealth(): Promise<StorageHealth>;
+}
+
 export interface Storage {
   put(input: PutObjectInput): Promise<StoredObject>;
   get(key: string): Promise<StoredObject | null>;

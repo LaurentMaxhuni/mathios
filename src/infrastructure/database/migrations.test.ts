@@ -35,6 +35,7 @@ describe("database migrations", () => {
         "0015_phase15_portability.sql",
         "0016_phase16_optional_ai.sql",
         "0017_phase17_classrooms.sql",
+        "0018_phase18_deployment_hardening.sql",
       ]);
       expect(second.applied).toEqual([]);
       expect(second.skipped).toEqual([
@@ -56,6 +57,7 @@ describe("database migrations", () => {
         "0015_phase15_portability.sql",
         "0016_phase16_optional_ai.sql",
         "0017_phase17_classrooms.sql",
+        "0018_phase18_deployment_hardening.sql",
       ]);
       expect(database.prepare("SELECT key FROM app_metadata").all()).toEqual([]);
       expect(
