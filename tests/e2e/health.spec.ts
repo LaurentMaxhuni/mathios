@@ -650,3 +650,50 @@ test("Phase 14 learner and teacher analytics summarize local activity", async ({
     conceptDifficulty: expect.any(Array),
   });
 });
+
+test("Phase 15 portability workspace exports data and rejects invalid restores safely", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/portability");
+  await expect(page.getByRole("heading", { name: "Import, export & backup" })).toBeVisible();
+  await expect(page.getByText("Export data")).toBeVisible();
+  await expect(page.getByText("Automatic backup policy")).toBeVisible();
+  await expect(page.getByText("Restore or import")).toBeVisible();
+
+  const exportResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/portability/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "content", format: "zip" }),
+    });
+    return {
+      ok: response.ok,
+      contentType: response.headers.get("content-type"),
+      byteLength: (await response.arrayBuffer()).byteLength,
+    };
+  });
+  expect(exportResponse).toMatchObject({ ok: true, contentType: "application/zip" });
+  expect(exportResponse.byteLength).toBeGreaterThan(100);
+
+  const invalidRestore = await page.evaluate(async () => {
+    const form = new FormData();
+    form.append(
+      "file",
+      new File(['{"not":"a portability package"}'], "invalid.json", {
+        type: "application/json",
+      }),
+    );
+    form.append("mode", "merge");
+    form.append("preview", "true");
+    const response = await fetch("/api/portability/restore", { method: "POST", body: form });
+    return { status: response.status, body: await response.json() };
+  });
+  expect(invalidRestore.status).toBe(400);
+  expect(invalidRestore.body).toMatchObject({ message: expect.any(String) });
+});
