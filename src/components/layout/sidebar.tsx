@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  CalendarDays,
   Atom,
   BrainCircuit,
   BookOpen,
@@ -40,6 +41,7 @@ const navigation: Array<{ href: string; label: string; icon: typeof Home }> = [
   { href: "/personalized-paths" as const, label: "My paths", icon: Route },
   { href: "/simulations" as const, label: "Simulations", icon: Orbit },
   { href: "/laboratories" as const, label: "Laboratory", icon: FlaskConical },
+  { href: "/planner" as const, label: "Study planner", icon: CalendarDays },
   { href: "/grades" as const, label: "Grades", icon: GraduationCap },
   { href: "/subjects" as const, label: "Subjects", icon: FlaskConical },
   { href: "/settings" as const, label: "Settings", icon: Settings2 },
@@ -128,7 +130,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             Profiles, permissions, settings, and onboarding stay available on this device.
           </p>
           <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Phase 10 - Virtual laboratory
+            Phase 11 - Study planner
           </p>
         </div>
       </aside>

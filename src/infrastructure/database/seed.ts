@@ -9,7 +9,7 @@ import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-10"],
+  ["seed_version", "phase-11"],
 ] as const;
 
 export const simulationSeed = simulationRegistry.map((simulation) => ({
@@ -2971,6 +2971,7 @@ export async function runSeed(
       });
       seedStructure();
       seedLaboratoriesSqlite(database);
+      seedStudyPlannerSqlite(database);
     } finally {
       database.close();
     }
@@ -3572,6 +3573,7 @@ export async function runSeed(
       );
     });
     await seedLaboratoriesPostgres(database);
+    await seedStudyPlannerPostgres(database);
   } finally {
     await database.end({ timeout: 5 });
   }
@@ -3698,4 +3700,119 @@ async function seedLaboratoriesPostgres(database: Sql): Promise<void> {
       }
     }
   });
+}
+
+function plannerSeedDate(offset: number): string {
+  const date = new Date();
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() + offset);
+  return date.toISOString().slice(0, 10);
+}
+
+function seedStudyPlannerSqlite(database: Database.Database): void {
+  const profile = database
+    .prepare("SELECT id FROM profiles ORDER BY created_at, id LIMIT 1")
+    .get() as { id: string } | undefined;
+  if (!profile) return;
+  const availabilityCount = database
+    .prepare("SELECT COUNT(*) AS count FROM study_availability WHERE profile_id = ?")
+    .get(profile.id) as { count: number };
+  if (availabilityCount.count === 0) {
+    const insertAvailability = database.prepare(
+      "INSERT OR IGNORE INTO study_availability (id, profile_id, weekday, start_minute, end_minute, max_minutes, label) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    );
+    for (const slot of [1, 2, 3, 4, 5]) {
+      insertAvailability.run(
+        `seed-availability-${profile.id}-${slot}`,
+        profile.id,
+        slot,
+        1080,
+        1260,
+        90,
+        "Evening study window",
+      );
+    }
+  }
+  const goalId = `seed-study-goal-${profile.id}`;
+  const planId = `seed-study-plan-${profile.id}`;
+  const itemId = `seed-study-item-${profile.id}`;
+  database
+    .prepare(
+      "INSERT INTO study_goals (id, profile_id, title, description, goal_type, target_id, target_title, start_date, target_date, weekly_study_minutes, available_days, session_duration_minutes, priority_subject_ids, rest_days, difficulty_preference, review_frequency_days, status) VALUES (?, ?, ?, ?, 'roadmap-completion', ?, ?, ?, ?, 180, '[1,2,3,4,5]', 45, '[\"subject-mathematics\"]', '[5]', 'balanced', 7, 'active') ON CONFLICT(id) DO NOTHING",
+    )
+    .run(
+      goalId,
+      profile.id,
+      "Build a science foundation",
+      "A small seeded example showing how a roadmap becomes a weekly rhythm.",
+      "roadmap-math-physics-foundations",
+      "Mathematics and physics foundations",
+      plannerSeedDate(0),
+      plannerSeedDate(28),
+    );
+  database
+    .prepare(
+      "INSERT INTO study_plans (id, profile_id, goal_id, source_type, source_id, status, target_date, weekly_study_minutes, total_minutes, scheduled_minutes, unallocated_minutes, capacity_minutes, realism, warnings) VALUES (?, ?, ?, 'roadmap', ?, 'active', ?, 180, 90, 90, 0, 540, 'realistic', '[]') ON CONFLICT(id) DO NOTHING",
+    )
+    .run(planId, profile.id, goalId, "roadmap-math-physics-foundations", plannerSeedDate(28));
+  database
+    .prepare(
+      "INSERT INTO study_plan_items (id, plan_id, item_type, source_id, title, description, subject_id, estimated_minutes, priority, sort_order, metadata) VALUES (?, ?, 'lesson', ?, ?, ?, ?, 45, 20, 0, '{}') ON CONFLICT(id) DO NOTHING",
+    )
+    .run(
+      itemId,
+      planId,
+      "lesson-constant-acceleration",
+      "A first focused lesson",
+      "Seeded planner lesson",
+      "subject-physics",
+    );
+  database
+    .prepare(
+      "INSERT INTO study_sessions (id, profile_id, plan_id, plan_item_id, scheduled_date, start_minute, duration_minutes, status) VALUES (?, ?, ?, ?, ?, 1080, 45, 'scheduled') ON CONFLICT(id) DO NOTHING",
+    )
+    .run(`seed-study-session-${profile.id}`, profile.id, planId, itemId, plannerSeedDate(1));
+}
+
+async function seedStudyPlannerPostgres(database: Sql): Promise<void> {
+  const profiles = await database<
+    { id: string }[]
+  >`SELECT id FROM profiles ORDER BY created_at, id LIMIT 1`;
+  const profile = profiles[0];
+  if (!profile) return;
+  const availability = await database<
+    { count: number }[]
+  >`SELECT COUNT(*)::int AS count FROM study_availability WHERE profile_id = ${profile.id}`;
+  if (!availability[0] || availability[0].count === 0) {
+    for (const weekday of [1, 2, 3, 4, 5]) {
+      await database`
+        INSERT INTO study_availability (id, profile_id, weekday, start_minute, end_minute, max_minutes, label)
+        VALUES (${`seed-availability-${profile.id}-${weekday}`}, ${profile.id}, ${weekday}, 1080, 1260, 90, 'Evening study window')
+        ON CONFLICT DO NOTHING
+      `;
+    }
+  }
+  const goalId = `seed-study-goal-${profile.id}`;
+  const planId = `seed-study-plan-${profile.id}`;
+  const itemId = `seed-study-item-${profile.id}`;
+  await database`
+    INSERT INTO study_goals (id, profile_id, title, description, goal_type, target_id, target_title, start_date, target_date, weekly_study_minutes, available_days, session_duration_minutes, priority_subject_ids, rest_days, difficulty_preference, review_frequency_days, status)
+    VALUES (${goalId}, ${profile.id}, 'Build a science foundation', 'A small seeded example showing how a roadmap becomes a weekly rhythm.', 'roadmap-completion', 'roadmap-math-physics-foundations', 'Mathematics and physics foundations', ${plannerSeedDate(0)}, ${plannerSeedDate(28)}, 180, '[1,2,3,4,5]', 45, '["subject-mathematics"]', '[5]', 'balanced', 7, 'active')
+    ON CONFLICT (id) DO NOTHING
+  `;
+  await database`
+    INSERT INTO study_plans (id, profile_id, goal_id, source_type, source_id, status, target_date, weekly_study_minutes, total_minutes, scheduled_minutes, unallocated_minutes, capacity_minutes, realism, warnings)
+    VALUES (${planId}, ${profile.id}, ${goalId}, 'roadmap', 'roadmap-math-physics-foundations', 'active', ${plannerSeedDate(28)}, 180, 90, 90, 0, 540, 'realistic', '[]')
+    ON CONFLICT (id) DO NOTHING
+  `;
+  await database`
+    INSERT INTO study_plan_items (id, plan_id, item_type, source_id, title, description, subject_id, estimated_minutes, priority, sort_order, metadata)
+    VALUES (${itemId}, ${planId}, 'lesson', 'lesson-constant-acceleration', 'A first focused lesson', 'Seeded planner lesson', 'subject-physics', 45, 20, 0, '{}')
+    ON CONFLICT (id) DO NOTHING
+  `;
+  await database`
+    INSERT INTO study_sessions (id, profile_id, plan_id, plan_item_id, scheduled_date, start_minute, duration_minutes, status)
+    VALUES (${`seed-study-session-${profile.id}`}, ${profile.id}, ${planId}, ${itemId}, ${plannerSeedDate(1)}, 1080, 45, 'scheduled')
+    ON CONFLICT (id) DO NOTHING
+  `;
 }

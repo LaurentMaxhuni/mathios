@@ -28,6 +28,7 @@ describe("database migrations", () => {
         "0008_phase8_roadmaps_paths.sql",
         "0009_phase9_simulations.sql",
         "0010_phase10_laboratory.sql",
+        "0011_phase11_study_planner.sql",
       ]);
       expect(second.applied).toEqual([]);
       expect(second.skipped).toEqual([
@@ -42,6 +43,7 @@ describe("database migrations", () => {
         "0008_phase8_roadmaps_paths.sql",
         "0009_phase9_simulations.sql",
         "0010_phase10_laboratory.sql",
+        "0011_phase11_study_planner.sql",
       ]);
       expect(database.prepare("SELECT key FROM app_metadata").all()).toEqual([]);
       expect(
@@ -115,6 +117,13 @@ describe("database migrations", () => {
         "laboratory_measurements",
         "laboratory_reports",
         "laboratory_feedback",
+        "study_goals",
+        "study_plans",
+        "study_plan_items",
+        "study_sessions",
+        "study_availability",
+        "study_exceptions",
+        "study_completion_events",
       ]) {
         expect(
           database

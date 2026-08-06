@@ -2,7 +2,7 @@
 
 Phase 4 adds the concept explorer and knowledge graph at `/concepts` and `/knowledge-graph`: creators can author reusable concepts, prerequisite relationships, lesson/objective links, applications, and misconceptions, while learners can trace what each concept requires and unlocks.
 
-Mathios is a local-first science learning platform. The repository is being built incrementally from the phases in [PROJECT_PLAN.md](PROJECT_PLAN.md). The current implementation includes Phase 0 through Phase 4: local profiles, authentication, roles, settings, onboarding, curriculum structure, course hierarchy, structured lesson authoring, publishing, learner progress, reusable concepts, prerequisite validation, and graph traversal.
+Mathios is a local-first science learning platform. The repository is being built incrementally from the phases in [PROJECT_PLAN.md](PROJECT_PLAN.md). The current implementation includes Phase 0 through Phase 11: local profiles, curriculum and course structure, authoring and progress, concepts and mastery, assessments, roadmaps, simulations, virtual laboratories, and a deterministic study planner with goals, calendar sessions, exceptions, adaptive catch-up, and progress propagation.
 
 ## Quick start
 
@@ -45,9 +45,11 @@ SQLite is the default for offline development. The migration runner applies chec
 
 `AUTH_MODE=local-profile` is the default local profile selector. `AUTH_MODE=local-credential` uses the same provider-neutral local adapter and secret hash storage, leaving room for a dedicated credential UX later. `AUTH_MODE=hosted` is recognized by configuration but intentionally fails closed until a hosted provider is introduced in a later phase. Local sessions use an HttpOnly, signed cookie and do not require network access.
 
+The study planner is available at `/planner`. It can generate a goal-backed schedule from published roadmaps, courses, grades, subjects, assessments, and concepts. The planner stores date-only sessions, keeps recurring availability separate from one-off exceptions, warns when a target is unrealistic, and carries completed lesson/roadmap work back into the existing progress records. See [the Phase 11 notes](docs/phase11-study-planner.md) for the domain and persistence contract.
+
 ## Project boundaries
 
-The application follows the modular-monolith conventions documented in [ARCHITECTURE.md](ARCHITECTURE.md). Domain modules should depend on ports and application services, not on database drivers or framework details. Phase-specific entities are introduced only when their phase begins. Phase 1 owns `src/features/profiles`, `src/features/auth`, `src/features/settings`, and `src/features/onboarding`; Phase 2 owns `src/features/curricula` and its curriculum repository/domain port; Phase 3 owns `src/features/courses`, `src/domain/course`, and its course repository/domain port; Phase 4 owns `src/features/concepts`, `src/domain/concept`, and its concept repository/domain port. These modules depend on repository ports rather than importing database drivers directly.
+The application follows the modular-monolith conventions documented in [ARCHITECTURE.md](ARCHITECTURE.md). Domain modules should depend on ports and application services, not on database drivers or framework details. Phase-specific entities are introduced only when their phase begins. Phase 1 owns identity, Phase 2 owns curriculum structure, Phase 3 owns courses and lessons, Phase 4 owns concepts, Phase 5 owns exercises, Phase 6 owns assessments, Phase 7 owns mastery, Phase 8 owns roadmaps, Phase 9 owns simulations, Phase 10 owns laboratories, and Phase 11 owns `src/features/planner`, `src/domain/planner`, and its planner repository port. These modules depend on repository ports rather than importing database drivers directly.
 
 ## Phase 2 workspace
 
