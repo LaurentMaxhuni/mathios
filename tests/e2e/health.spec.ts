@@ -477,3 +477,44 @@ test("Phase 10 laboratory workspace records data, analyzes it, and exports a rep
   expect(htmlResponse.contentType).toContain("text/html");
   expect(htmlResponse.body).toContain("Determine acceleration from motion data report");
 });
+
+test("Phase 11 study planner generates a calendar rhythm and records completion", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/planner");
+  await expect(
+    page.getByRole("heading", { name: "Study with a shape, not a wish." }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "New study goal" })).toBeVisible();
+  await page.getByLabel("Target", { exact: true }).selectOption("roadmap-math-physics-foundations");
+  await expect(page.getByLabel("Target", { exact: true })).toHaveValue(
+    "roadmap-math-physics-foundations",
+  );
+  await page.getByLabel("Goal label").fill("E2E science rhythm");
+  await page.getByRole("button", { name: "Generate my plan" }).click();
+  await expect(page.getByRole("heading", { name: "E2E science rhythm" })).toBeVisible();
+
+  const plannerResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/planner");
+    return { ok: response.ok, body: await response.json() };
+  });
+  expect(plannerResponse.ok).toBeTruthy();
+  expect(plannerResponse.body.dashboard.activePlan).toMatchObject({
+    goal: { title: "E2E science rhythm" },
+    sessions: expect.any(Array),
+  });
+
+  await page.getByRole("tab", { name: "agenda" }).click();
+  await expect(page.getByRole("tab", { name: "agenda" })).toHaveAttribute("aria-selected", "true");
+  const completeButton = page.getByRole("button", { name: "Done" }).first();
+  await expect(completeButton).toBeVisible();
+  await completeButton.click();
+  await expect(page.getByText("Session complete", { exact: false })).toBeVisible();
+  await expect(page.getByText(/1 of .* sessions complete/)).toBeVisible();
+});

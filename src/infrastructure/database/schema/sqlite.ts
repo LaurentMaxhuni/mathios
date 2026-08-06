@@ -2527,6 +2527,247 @@ export type UserSimulationSession = typeof userSimulationSessions.$inferSelect;
 export type NewUserSimulationSession = typeof userSimulationSessions.$inferInsert;
 export type SimulationResult = typeof simulationResults.$inferSelect;
 export type NewSimulationResult = typeof simulationResults.$inferInsert;
+export const studyGoals = sqliteTable(
+  "study_goals",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    goalType: text("goal_type").notNull(),
+    targetId: text("target_id"),
+    targetTitle: text("target_title").notNull().default(""),
+    startDate: text("start_date").notNull(),
+    targetDate: text("target_date").notNull(),
+    weeklyStudyMinutes: integer("weekly_study_minutes").notNull(),
+    availableDays: text("available_days").notNull().default("[1,2,3,4,5]"),
+    sessionDurationMinutes: integer("session_duration_minutes").notNull().default(30),
+    prioritySubjectIds: text("priority_subject_ids").notNull().default("[]"),
+    restDays: text("rest_days").notNull().default("[]"),
+    difficultyPreference: text("difficulty_preference").notNull().default("balanced"),
+    reviewFrequencyDays: integer("review_frequency_days").notNull().default(7),
+    status: text("status").notNull().default("active"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    profileStatusIdx: index("study_goals_profile_status_idx").on(
+      table.profileId,
+      table.status,
+      table.updatedAt,
+    ),
+    targetIdx: index("study_goals_target_idx").on(table.targetId, table.goalType),
+  }),
+);
+
+export const studyPlans = sqliteTable(
+  "study_plans",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    goalId: text("goal_id")
+      .notNull()
+      .references(() => studyGoals.id, { onDelete: "cascade" }),
+    sourceType: text("source_type").notNull().default("goal"),
+    sourceId: text("source_id"),
+    status: text("status").notNull().default("active"),
+    generatedAt: text("generated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    targetDate: text("target_date").notNull(),
+    weeklyStudyMinutes: integer("weekly_study_minutes").notNull(),
+    totalMinutes: integer("total_minutes").notNull().default(0),
+    scheduledMinutes: integer("scheduled_minutes").notNull().default(0),
+    unallocatedMinutes: integer("unallocated_minutes").notNull().default(0),
+    capacityMinutes: integer("capacity_minutes").notNull().default(0),
+    realism: text("realism").notNull().default("realistic"),
+    warnings: text("warnings").notNull().default("[]"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    profileStatusIdx: index("study_plans_profile_status_idx").on(
+      table.profileId,
+      table.status,
+      table.updatedAt,
+    ),
+    goalIdx: index("study_plans_goal_idx").on(table.goalId, table.status, table.updatedAt),
+  }),
+);
+
+export const studyPlanItems = sqliteTable(
+  "study_plan_items",
+  {
+    id: text("id").primaryKey(),
+    planId: text("plan_id")
+      .notNull()
+      .references(() => studyPlans.id, { onDelete: "cascade" }),
+    itemType: text("item_type").notNull(),
+    sourceId: text("source_id"),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    subjectId: text("subject_id").references(() => subjects.id, { onDelete: "set null" }),
+    estimatedMinutes: integer("estimated_minutes").notNull(),
+    priority: integer("priority").notNull().default(0),
+    sortOrder: integer("sort_order").notNull().default(0),
+    metadata: text("metadata").notNull().default("{}"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    planOrderIdx: index("study_plan_items_plan_order_idx").on(
+      table.planId,
+      table.sortOrder,
+      table.id,
+    ),
+    sourceIdx: index("study_plan_items_source_idx").on(table.sourceId, table.itemType),
+  }),
+);
+
+export const studySessions = sqliteTable(
+  "study_sessions",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    planId: text("plan_id")
+      .notNull()
+      .references(() => studyPlans.id, { onDelete: "cascade" }),
+    planItemId: text("plan_item_id")
+      .notNull()
+      .references(() => studyPlanItems.id, { onDelete: "cascade" }),
+    scheduledDate: text("scheduled_date").notNull(),
+    startMinute: integer("start_minute").notNull(),
+    durationMinutes: integer("duration_minutes").notNull(),
+    status: text("status").notNull().default("scheduled"),
+    rescheduledFromDate: text("rescheduled_from_date"),
+    skipReason: text("skip_reason"),
+    completedAt: text("completed_at"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    profileDateIdx: index("study_sessions_profile_date_idx").on(
+      table.profileId,
+      table.scheduledDate,
+      table.startMinute,
+    ),
+    planStatusIdx: index("study_sessions_plan_status_idx").on(
+      table.planId,
+      table.status,
+      table.scheduledDate,
+    ),
+    itemIdx: index("study_sessions_item_idx").on(table.planItemId, table.status),
+  }),
+);
+
+export const studyAvailability = sqliteTable(
+  "study_availability",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    weekday: integer("weekday").notNull(),
+    startMinute: integer("start_minute").notNull(),
+    endMinute: integer("end_minute").notNull(),
+    maxMinutes: integer("max_minutes"),
+    label: text("label").notNull().default("Study time"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    profileWeekdayIdx: index("study_availability_profile_weekday_idx").on(
+      table.profileId,
+      table.weekday,
+      table.startMinute,
+    ),
+    windowIdx: uniqueIndex("study_availability_window_idx").on(
+      table.profileId,
+      table.weekday,
+      table.startMinute,
+      table.endMinute,
+    ),
+  }),
+);
+
+export const studyExceptions = sqliteTable(
+  "study_exceptions",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    exceptionDate: text("exception_date").notNull(),
+    kind: text("kind").notNull(),
+    startMinute: integer("start_minute"),
+    endMinute: integer("end_minute"),
+    reason: text("reason").notNull().default(""),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    profileDateIdx: index("study_exceptions_profile_date_idx").on(
+      table.profileId,
+      table.exceptionDate,
+      table.startMinute,
+    ),
+  }),
+);
+
+export const studyCompletionEvents = sqliteTable(
+  "study_completion_events",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => studySessions.id, { onDelete: "cascade" }),
+    planItemId: text("plan_item_id")
+      .notNull()
+      .references(() => studyPlanItems.id, { onDelete: "cascade" }),
+    eventType: text("event_type").notNull(),
+    minutes: integer("minutes").notNull().default(0),
+    metadata: text("metadata").notNull().default("{}"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    sessionEventIdx: uniqueIndex("study_completion_events_session_event_idx").on(
+      table.sessionId,
+      table.eventType,
+    ),
+    profileIdx: index("study_completion_events_profile_idx").on(table.profileId, table.createdAt),
+    itemIdx: index("study_completion_events_item_idx").on(table.planItemId, table.eventType),
+  }),
+);
+
 export type LaboratoryActivity = typeof laboratoryActivities.$inferSelect;
 export type NewLaboratoryActivity = typeof laboratoryActivities.$inferInsert;
 export type LaboratoryStep = typeof laboratorySteps.$inferSelect;
@@ -2542,6 +2783,20 @@ export type NewLaboratoryMeasurement = typeof laboratoryMeasurements.$inferInser
 export type LaboratoryReport = typeof laboratoryReports.$inferSelect;
 export type NewLaboratoryReport = typeof laboratoryReports.$inferInsert;
 export type LaboratoryFeedback = typeof laboratoryFeedback.$inferSelect;
+export type StudyGoal = typeof studyGoals.$inferSelect;
+export type NewStudyGoal = typeof studyGoals.$inferInsert;
+export type StudyPlan = typeof studyPlans.$inferSelect;
+export type NewStudyPlan = typeof studyPlans.$inferInsert;
+export type StudyPlanItem = typeof studyPlanItems.$inferSelect;
+export type NewStudyPlanItem = typeof studyPlanItems.$inferInsert;
+export type StudySession = typeof studySessions.$inferSelect;
+export type NewStudySession = typeof studySessions.$inferInsert;
+export type StudyAvailability = typeof studyAvailability.$inferSelect;
+export type NewStudyAvailability = typeof studyAvailability.$inferInsert;
+export type StudyException = typeof studyExceptions.$inferSelect;
+export type NewStudyException = typeof studyExceptions.$inferInsert;
+export type StudyCompletionEvent = typeof studyCompletionEvents.$inferSelect;
+export type NewStudyCompletionEvent = typeof studyCompletionEvents.$inferInsert;
 export type NewLaboratoryFeedback = typeof laboratoryFeedback.$inferInsert;
 
 export type User = typeof users.$inferSelect;
