@@ -3153,6 +3153,270 @@ export const aiGenerations = sqliteTable(
   }),
 );
 
+export const classes = sqliteTable(
+  "classes",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    description: text("description").notNull().default(""),
+    joinCode: text("join_code").notNull(),
+    subjectIds: text("subject_ids").notNull().default("[]"),
+    gradeIds: text("grade_ids").notNull().default("[]"),
+    createdByProfileId: text("created_by_profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "restrict" }),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    joinCodeIdx: uniqueIndex("classes_join_code_idx").on(table.joinCode),
+    createdByIdx: index("classes_created_by_idx").on(table.createdByProfileId, table.createdAt),
+  }),
+);
+
+export const classMembers = sqliteTable(
+  "class_members",
+  {
+    classId: text("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("active"),
+    joinedAt: text("joined_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.classId, table.profileId] }),
+    profileIdx: index("class_members_profile_idx").on(
+      table.profileId,
+      table.status,
+      table.joinedAt,
+    ),
+  }),
+);
+
+export const classTeachers = sqliteTable(
+  "class_teachers",
+  {
+    classId: text("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    role: text("role").notNull().default("teacher"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.classId, table.profileId] }),
+    profileIdx: index("class_teachers_profile_idx").on(
+      table.profileId,
+      table.role,
+      table.createdAt,
+    ),
+  }),
+);
+
+export const invitations = sqliteTable(
+  "invitations",
+  {
+    id: text("id").primaryKey(),
+    classId: text("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    code: text("code").notNull(),
+    invitedProfileId: text("invited_profile_id").references(() => profiles.id, {
+      onDelete: "cascade",
+    }),
+    invitedByProfileId: text("invited_by_profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "restrict" }),
+    status: text("status").notNull().default("pending"),
+    expiresAt: text("expires_at"),
+    acceptedByProfileId: text("accepted_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    acceptedAt: text("accepted_at"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    codeIdx: uniqueIndex("invitations_code_idx").on(table.code),
+    classStatusIdx: index("invitations_class_status_idx").on(
+      table.classId,
+      table.status,
+      table.createdAt,
+    ),
+    profileStatusIdx: index("invitations_profile_status_idx").on(
+      table.invitedProfileId,
+      table.status,
+      table.createdAt,
+    ),
+  }),
+);
+
+export const assignments = sqliteTable(
+  "assignments",
+  {
+    id: text("id").primaryKey(),
+    classId: text("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    instructions: text("instructions").notNull().default(""),
+    resourceType: text("resource_type").notNull(),
+    resourceId: text("resource_id").notNull(),
+    resourceTitle: text("resource_title").notNull(),
+    targetScope: text("target_scope").notNull(),
+    startAt: text("start_at"),
+    dueAt: text("due_at"),
+    attemptLimit: integer("attempt_limit"),
+    lateSubmissionRule: text("late_submission_rule").notNull().default("flag"),
+    status: text("status").notNull().default("published"),
+    createdByProfileId: text("created_by_profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "restrict" }),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    classStatusIdx: index("assignments_class_status_idx").on(
+      table.classId,
+      table.status,
+      table.dueAt,
+    ),
+    resourceIdx: index("assignments_resource_idx").on(table.resourceType, table.resourceId),
+  }),
+);
+
+export const assignmentTargets = sqliteTable(
+  "assignment_targets",
+  {
+    assignmentId: text("assignment_id")
+      .notNull()
+      .references(() => assignments.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.assignmentId, table.profileId] }),
+    profileIdx: index("assignment_targets_profile_idx").on(table.profileId, table.assignmentId),
+  }),
+);
+
+export const assignmentSubmissions = sqliteTable(
+  "assignment_submissions",
+  {
+    id: text("id").primaryKey(),
+    assignmentId: text("assignment_id")
+      .notNull()
+      .references(() => assignments.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    attemptNumber: integer("attempt_number").notNull(),
+    status: text("status").notNull().default("submitted"),
+    responseJson: text("response_json").notNull().default("{}"),
+    isLate: integer("is_late", { mode: "boolean" }).notNull().default(false),
+    submittedAt: text("submitted_at"),
+    returnedAt: text("returned_at"),
+    grade: real("grade"),
+    gradeMax: real("grade_max").notNull().default(100),
+    reviewedByProfileId: text("reviewed_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    reviewedAt: text("reviewed_at"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    attemptIdx: index("assignment_submissions_assignment_idx").on(
+      table.assignmentId,
+      table.profileId,
+      table.attemptNumber,
+    ),
+    profileIdx: index("assignment_submissions_profile_idx").on(
+      table.profileId,
+      table.status,
+      table.submittedAt,
+    ),
+  }),
+);
+
+export const gradingRubrics = sqliteTable(
+  "grading_rubrics",
+  {
+    id: text("id").primaryKey(),
+    assignmentId: text("assignment_id")
+      .notNull()
+      .references(() => assignments.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    criteriaJson: text("criteria_json").notNull().default("[]"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({ assignmentIdx: index("grading_rubrics_assignment_idx").on(table.assignmentId) }),
+);
+
+export const teacherFeedback = sqliteTable(
+  "teacher_feedback",
+  {
+    id: text("id").primaryKey(),
+    submissionId: text("submission_id")
+      .notNull()
+      .references(() => assignmentSubmissions.id, { onDelete: "cascade" }),
+    teacherProfileId: text("teacher_profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "restrict" }),
+    body: text("body"),
+    grade: real("grade"),
+    gradeMax: real("grade_max").notNull().default(100),
+    rubricScoresJson: text("rubric_scores_json").notNull().default("{}"),
+    returnForResubmission: integer("return_for_resubmission", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    submissionIdx: index("teacher_feedback_submission_idx").on(table.submissionId, table.createdAt),
+  }),
+);
+
 export type SearchIndexState = typeof searchIndexState.$inferSelect;
 export type SearchDocument = typeof searchDocuments.$inferSelect;
 export type SearchRecentQuery = typeof searchRecentQueries.$inferSelect;
@@ -3176,6 +3440,24 @@ export type AiSettings = typeof aiSettings.$inferSelect;
 export type NewAiSettings = typeof aiSettings.$inferInsert;
 export type AiGeneration = typeof aiGenerations.$inferSelect;
 export type NewAiGeneration = typeof aiGenerations.$inferInsert;
+export type Classroom = typeof classes.$inferSelect;
+export type NewClassroom = typeof classes.$inferInsert;
+export type ClassMember = typeof classMembers.$inferSelect;
+export type NewClassMember = typeof classMembers.$inferInsert;
+export type ClassTeacher = typeof classTeachers.$inferSelect;
+export type NewClassTeacher = typeof classTeachers.$inferInsert;
+export type Invitation = typeof invitations.$inferSelect;
+export type NewInvitation = typeof invitations.$inferInsert;
+export type Assignment = typeof assignments.$inferSelect;
+export type NewAssignment = typeof assignments.$inferInsert;
+export type AssignmentTarget = typeof assignmentTargets.$inferSelect;
+export type NewAssignmentTarget = typeof assignmentTargets.$inferInsert;
+export type AssignmentSubmission = typeof assignmentSubmissions.$inferSelect;
+export type NewAssignmentSubmission = typeof assignmentSubmissions.$inferInsert;
+export type GradingRubric = typeof gradingRubrics.$inferSelect;
+export type NewGradingRubric = typeof gradingRubrics.$inferInsert;
+export type TeacherFeedback = typeof teacherFeedback.$inferSelect;
+export type NewTeacherFeedback = typeof teacherFeedback.$inferInsert;
 export type LaboratoryActivity = typeof laboratoryActivities.$inferSelect;
 export type NewLaboratoryActivity = typeof laboratoryActivities.$inferInsert;
 export type LaboratoryStep = typeof laboratorySteps.$inferSelect;

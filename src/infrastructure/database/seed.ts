@@ -9,7 +9,7 @@ import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-16"],
+  ["seed_version", "phase-17"],
 ] as const;
 
 export const simulationSeed = simulationRegistry.map((simulation) => ({
@@ -2973,6 +2973,7 @@ export async function runSeed(
       seedLaboratoriesSqlite(database);
       seedStudyPlannerSqlite(database);
       seedAnalyticsSqlite(database);
+      seedClassroomsSqlite(database);
     } finally {
       database.close();
     }
@@ -3576,9 +3577,162 @@ export async function runSeed(
     await seedLaboratoriesPostgres(database);
     await seedStudyPlannerPostgres(database);
     await seedAnalyticsPostgres(database);
+    await seedClassroomsPostgres(database);
   } finally {
     await database.end({ timeout: 5 });
   }
+}
+
+function classroomSeedDueAt(): string {
+  const dueAt = new Date();
+  dueAt.setUTCDate(dueAt.getUTCDate() + 14);
+  dueAt.setUTCHours(23, 59, 0, 0);
+  return dueAt.toISOString();
+}
+
+function seedClassroomsSqlite(database: Database.Database): void {
+  const profiles = database
+    .prepare("SELECT id FROM profiles ORDER BY created_at, id LIMIT 2")
+    .all() as { id: string }[];
+  const owner = profiles[0];
+  if (!owner) return;
+  const learner = profiles[1];
+  const classId = "seed-classroom-physics";
+  const assignmentId = "seed-assignment-constant-acceleration";
+  const resource = database
+    .prepare(
+      "SELECT title FROM lessons WHERE id = 'lesson-constant-acceleration' AND status = 'published'",
+    )
+    .get() as { title: string } | undefined;
+
+  database
+    .prepare(
+      `INSERT INTO classes (id, name, description, join_code, subject_ids, grade_ids, created_by_profile_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET name = excluded.name, description = excluded.description,
+         join_code = excluded.join_code, subject_ids = excluded.subject_ids, grade_ids = excluded.grade_ids,
+         created_by_profile_id = excluded.created_by_profile_id, updated_at = CURRENT_TIMESTAMP`,
+    )
+    .run(
+      classId,
+      "Physics foundations",
+      "A seeded classroom for exploring motion, forces, and evidence-based explanations.",
+      "MATHIOS17",
+      JSON.stringify(["subject-physics"]),
+      JSON.stringify(["grade-8"]),
+      owner.id,
+    );
+  database
+    .prepare(
+      `INSERT INTO class_teachers (class_id, profile_id, role) VALUES (?, ?, 'owner')
+       ON CONFLICT(class_id, profile_id) DO UPDATE SET role = 'owner'`,
+    )
+    .run(classId, owner.id);
+  if (!learner || !resource) return;
+
+  database
+    .prepare(
+      `INSERT INTO class_members (class_id, profile_id, status) VALUES (?, ?, 'active')
+       ON CONFLICT(class_id, profile_id) DO UPDATE SET status = 'active', updated_at = CURRENT_TIMESTAMP`,
+    )
+    .run(classId, learner.id);
+  database
+    .prepare(
+      `INSERT INTO assignments (id, class_id, title, instructions, resource_type, resource_id, resource_title, target_scope, due_at, attempt_limit, late_submission_rule, status, created_by_profile_id)
+       VALUES (?, ?, ?, ?, 'lesson', ?, ?, 'individual', ?, 2, 'flag', 'published', ?)
+       ON CONFLICT(id) DO UPDATE SET class_id = excluded.class_id, title = excluded.title,
+         instructions = excluded.instructions, resource_id = excluded.resource_id, resource_title = excluded.resource_title,
+         target_scope = excluded.target_scope, due_at = excluded.due_at, attempt_limit = excluded.attempt_limit,
+         late_submission_rule = excluded.late_submission_rule, status = excluded.status,
+         created_by_profile_id = excluded.created_by_profile_id, updated_at = CURRENT_TIMESTAMP`,
+    )
+    .run(
+      assignmentId,
+      classId,
+      "Explain constant acceleration",
+      "Use the seeded lesson to write a concise explanation of how acceleration changes motion.",
+      "lesson-constant-acceleration",
+      resource.title,
+      classroomSeedDueAt(),
+      owner.id,
+    );
+  database
+    .prepare(
+      `INSERT INTO assignment_targets (assignment_id, profile_id) VALUES (?, ?)
+       ON CONFLICT(assignment_id, profile_id) DO NOTHING`,
+    )
+    .run(assignmentId, learner.id);
+  database
+    .prepare(
+      `INSERT INTO grading_rubrics (id, assignment_id, title, criteria_json) VALUES (?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET title = excluded.title, criteria_json = excluded.criteria_json,
+         updated_at = CURRENT_TIMESTAMP`,
+    )
+    .run(
+      "seed-rubric-constant-acceleration",
+      assignmentId,
+      "Explanation rubric",
+      JSON.stringify([
+        { id: "accuracy", label: "Scientific accuracy", maxPoints: 4 },
+        { id: "evidence", label: "Use of evidence", maxPoints: 4 },
+      ]),
+    );
+}
+
+async function seedClassroomsPostgres(database: Sql): Promise<void> {
+  const profiles = await database<{ id: string }[]>`
+    SELECT id FROM profiles ORDER BY created_at, id LIMIT 2
+  `;
+  const owner = profiles[0];
+  if (!owner) return;
+  const learner = profiles[1];
+  const classId = "seed-classroom-physics";
+  const assignmentId = "seed-assignment-constant-acceleration";
+  const resources = await database<{ title: string }[]>`
+    SELECT title FROM lessons WHERE id = 'lesson-constant-acceleration' AND status = 'published'
+  `;
+  const resource = resources[0];
+
+  await database`
+    INSERT INTO classes (id, name, description, join_code, subject_ids, grade_ids, created_by_profile_id)
+    VALUES (${classId}, ${"Physics foundations"}, ${"A seeded classroom for exploring motion, forces, and evidence-based explanations."}, ${"MATHIOS17"}, ${JSON.stringify(["subject-physics"])}, ${JSON.stringify(["grade-8"])}, ${owner.id})
+    ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description,
+      join_code = EXCLUDED.join_code, subject_ids = EXCLUDED.subject_ids, grade_ids = EXCLUDED.grade_ids,
+      created_by_profile_id = EXCLUDED.created_by_profile_id, updated_at = NOW()
+  `;
+  await database`
+    INSERT INTO class_teachers (class_id, profile_id, role) VALUES (${classId}, ${owner.id}, 'owner')
+    ON CONFLICT (class_id, profile_id) DO UPDATE SET role = 'owner'
+  `;
+  if (!learner || !resource) return;
+
+  await database`
+    INSERT INTO class_members (class_id, profile_id, status) VALUES (${classId}, ${learner.id}, 'active')
+    ON CONFLICT (class_id, profile_id) DO UPDATE SET status = 'active', updated_at = NOW()
+  `;
+  await database`
+    INSERT INTO assignments (id, class_id, title, instructions, resource_type, resource_id, resource_title, target_scope, due_at, attempt_limit, late_submission_rule, status, created_by_profile_id)
+    VALUES (${assignmentId}, ${classId}, ${"Explain constant acceleration"}, ${"Use the seeded lesson to write a concise explanation of how acceleration changes motion."}, 'lesson', ${"lesson-constant-acceleration"}, ${resource.title}, 'individual', ${classroomSeedDueAt()}, 2, 'flag', 'published', ${owner.id})
+    ON CONFLICT (id) DO UPDATE SET class_id = EXCLUDED.class_id, title = EXCLUDED.title,
+      instructions = EXCLUDED.instructions, resource_id = EXCLUDED.resource_id, resource_title = EXCLUDED.resource_title,
+      target_scope = EXCLUDED.target_scope, due_at = EXCLUDED.due_at, attempt_limit = EXCLUDED.attempt_limit,
+      late_submission_rule = EXCLUDED.late_submission_rule, status = EXCLUDED.status,
+      created_by_profile_id = EXCLUDED.created_by_profile_id, updated_at = NOW()
+  `;
+  await database`
+    INSERT INTO assignment_targets (assignment_id, profile_id) VALUES (${assignmentId}, ${learner.id})
+    ON CONFLICT (assignment_id, profile_id) DO NOTHING
+  `;
+  await database`
+    INSERT INTO grading_rubrics (id, assignment_id, title, criteria_json)
+    VALUES (${"seed-rubric-constant-acceleration"}, ${assignmentId}, ${"Explanation rubric"}, ${JSON.stringify(
+      [
+        { id: "accuracy", label: "Scientific accuracy", maxPoints: 4 },
+        { id: "evidence", label: "Use of evidence", maxPoints: 4 },
+      ],
+    )})
+    ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, criteria_json = EXCLUDED.criteria_json, updated_at = NOW()
+  `;
 }
 
 function seedLaboratoriesSqlite(database: Database.Database): void {

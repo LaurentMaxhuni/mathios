@@ -5,7 +5,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { runSeed } from "@/infrastructure/database/seed";
 
-describe("Phase 16 seed data", () => {
+describe("Phase 17 seed data", () => {
   it("installs the assessment catalog and reusable curriculum structure and is safe to re-run", async () => {
     const directory = await mkdtemp(path.join(os.tmpdir(), "mathios-seed-"));
     const databaseUrl = `file:${path.join(directory, "seed.db")}`;
@@ -150,7 +150,7 @@ describe("Phase 16 seed data", () => {
       });
       expect(
         database.prepare("SELECT value FROM app_metadata WHERE key = 'seed_version'").get(),
-      ).toEqual({ value: "phase-16" });
+      ).toEqual({ value: "phase-17" });
       expect(database.prepare("SELECT COUNT(*) AS count FROM learning_sessions").get()).toEqual({
         count: 0,
       });
@@ -159,6 +159,55 @@ describe("Phase 16 seed data", () => {
       });
       expect(database.prepare("SELECT mode FROM ai_settings WHERE id = 1").get()).toEqual({
         mode: "disabled",
+      });
+    } finally {
+      database?.close();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("seeds a classroom, learner assignment, and rubric when profiles exist", async () => {
+    const directory = await mkdtemp(path.join(os.tmpdir(), "mathios-classroom-seed-"));
+    const databaseUrl = `file:${path.join(directory, "seed.db")}`;
+    let database: Database.Database | undefined;
+    try {
+      await runSeed({ provider: "sqlite", databaseUrl });
+      database = new Database(path.join(directory, "seed.db"));
+      database.exec(`
+        INSERT INTO users (id, identifier) VALUES ('seed-user-teacher', 'seed-teacher');
+        INSERT INTO profiles (id, user_id, display_name) VALUES ('seed-profile-teacher', 'seed-user-teacher', 'Seed Teacher');
+        INSERT INTO users (id, identifier) VALUES ('seed-user-learner', 'seed-learner');
+        INSERT INTO profiles (id, user_id, display_name) VALUES ('seed-profile-learner', 'seed-user-learner', 'Seed Learner');
+      `);
+      database.close();
+      database = undefined;
+
+      await runSeed({ provider: "sqlite", databaseUrl });
+      await runSeed({ provider: "sqlite", databaseUrl });
+      database = new Database(path.join(directory, "seed.db"));
+      expect(database.prepare("SELECT COUNT(*) AS count FROM classes").get()).toEqual({ count: 1 });
+      expect(
+        database
+          .prepare("SELECT role FROM class_teachers WHERE class_id = 'seed-classroom-physics'")
+          .get(),
+      ).toEqual({ role: "owner" });
+      expect(
+        database
+          .prepare("SELECT status FROM class_members WHERE class_id = 'seed-classroom-physics'")
+          .get(),
+      ).toEqual({ status: "active" });
+      expect(
+        database
+          .prepare(
+            "SELECT resource_type, target_scope, status FROM assignments WHERE id = 'seed-assignment-constant-acceleration'",
+          )
+          .get(),
+      ).toEqual({ resource_type: "lesson", target_scope: "individual", status: "published" });
+      expect(database.prepare("SELECT COUNT(*) AS count FROM assignment_targets").get()).toEqual({
+        count: 1,
+      });
+      expect(database.prepare("SELECT COUNT(*) AS count FROM grading_rubrics").get()).toEqual({
+        count: 1,
       });
     } finally {
       database?.close();

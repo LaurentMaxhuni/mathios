@@ -34,6 +34,7 @@ describe("database migrations", () => {
         "0014_phase14_analytics.sql",
         "0015_phase15_portability.sql",
         "0016_phase16_optional_ai.sql",
+        "0017_phase17_classrooms.sql",
       ]);
       expect(second.applied).toEqual([]);
       expect(second.skipped).toEqual([
@@ -54,6 +55,7 @@ describe("database migrations", () => {
         "0014_phase14_analytics.sql",
         "0015_phase15_portability.sql",
         "0016_phase16_optional_ai.sql",
+        "0017_phase17_classrooms.sql",
       ]);
       expect(database.prepare("SELECT key FROM app_metadata").all()).toEqual([]);
       expect(
@@ -155,6 +157,15 @@ describe("database migrations", () => {
         "restore_runs",
         "ai_settings",
         "ai_generations",
+        "classes",
+        "class_members",
+        "class_teachers",
+        "invitations",
+        "assignments",
+        "assignment_targets",
+        "assignment_submissions",
+        "grading_rubrics",
+        "teacher_feedback",
       ]) {
         expect(
           database
