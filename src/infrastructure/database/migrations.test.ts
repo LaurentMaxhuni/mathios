@@ -29,6 +29,7 @@ describe("database migrations", () => {
         "0009_phase9_simulations.sql",
         "0010_phase10_laboratory.sql",
         "0011_phase11_study_planner.sql",
+        "0012_phase12_notes_knowledge_base.sql",
       ]);
       expect(second.applied).toEqual([]);
       expect(second.skipped).toEqual([
@@ -44,6 +45,7 @@ describe("database migrations", () => {
         "0009_phase9_simulations.sql",
         "0010_phase10_laboratory.sql",
         "0011_phase11_study_planner.sql",
+        "0012_phase12_notes_knowledge_base.sql",
       ]);
       expect(database.prepare("SELECT key FROM app_metadata").all()).toEqual([]);
       expect(
@@ -124,6 +126,14 @@ describe("database migrations", () => {
         "study_availability",
         "study_exceptions",
         "study_completion_events",
+        "folders",
+        "tags",
+        "notes",
+        "note_links",
+        "note_tags",
+        "note_backlinks",
+        "highlights",
+        "bookmarks",
       ]) {
         expect(
           database

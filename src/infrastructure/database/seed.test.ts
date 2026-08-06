@@ -150,7 +150,7 @@ describe("Phase 11 seed data", () => {
       });
       expect(
         database.prepare("SELECT value FROM app_metadata WHERE key = 'seed_version'").get(),
-      ).toEqual({ value: "phase-11" });
+      ).toEqual({ value: "phase-12" });
     } finally {
       database?.close();
       await rm(directory, { recursive: true, force: true });

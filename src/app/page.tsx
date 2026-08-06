@@ -67,7 +67,9 @@ function StartupPage({ profiles }: { profiles: ReturnType<typeof toPublicProfile
           />
           <div className="relative max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="success">Phase 11 - Study planner, goals, and calendar</Badge>
+              <Badge variant="success">
+                Phase 12 - Notes, highlights, bookmarks, and knowledge map
+              </Badge>
               <span className="text-xs text-muted-foreground">
                 Local profiles, roles, settings, onboarding, and a structured learning studio
               </span>
