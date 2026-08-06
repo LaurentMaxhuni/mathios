@@ -31,6 +31,7 @@ import type {
 import type { ExerciseRepository } from "@/domain/ports/exercise-repository";
 import type { AssessmentRepository } from "@/domain/ports/assessment-repository";
 import type { MasteryRepository } from "@/domain/ports/mastery-repository";
+import type { AnalyticsRepository } from "@/domain/ports/analytics-repository";
 import type { AuthSession, AuthenticatedPrincipal } from "@/infrastructure/auth/auth-provider";
 import { requirePermission, requireSession } from "@/features/auth/authorization";
 import { generateQuestionInstance } from "@/domain/exercise/generator";
@@ -430,6 +431,7 @@ export async function completeAssessmentAttempt(
   input: { attemptId: string; profileId: string },
   repository: AssessmentRepository,
   masteryRepository?: MasteryRepository,
+  analyticsRepository?: AnalyticsRepository,
 ): Promise<AssessmentResultDetail> {
   const attempt = ensure(
     await repository.getAttempt(input.attemptId, input.profileId),
@@ -511,7 +513,7 @@ export async function completeAssessmentAttempt(
     attempt.id,
   );
   if (masteryRepository) {
-    await recordAssessmentCompletion(input, masteryRepository);
+    await recordAssessmentCompletion(input, masteryRepository, analyticsRepository);
   }
   return result;
 }

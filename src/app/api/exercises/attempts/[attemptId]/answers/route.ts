@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { asApplicationError } from "@/domain/errors/application-error";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getExerciseRepository } from "@/infrastructure/database/repositories/exercise-repository";
+import { getAnalyticsRepository } from "@/infrastructure/database/repositories/analytics-repository";
+import { trackActivityEvent } from "@/features/analytics/service";
 import { requireExerciseLearner, submitQuestionAnswer } from "@/features/exercises/service";
 import { answerSubmissionSchema } from "@/features/exercises/schemas";
 
@@ -39,6 +41,21 @@ export async function POST(
         profileId: principal.profileId,
       },
       getExerciseRepository(),
+    );
+    await trackActivityEvent(
+      {
+        id: `activity-question-attempt-${submitted.attempt.id}-${parsed.data.questionId}`,
+        profileId: principal.profileId,
+        eventType: "question-attempt",
+        resourceType: "question",
+        resourceId: parsed.data.questionId,
+        score:
+          submitted.result.maxScore > 0 ? submitted.result.score / submitted.result.maxScore : null,
+        isCorrect: submitted.result.status === "correct",
+        dedupeKey: `question-attempt:${submitted.attempt.id}:${parsed.data.questionId}`,
+        metadata: { attemptId: submitted.attempt.id },
+      },
+      getAnalyticsRepository(),
     );
     return NextResponse.json(
       { attempt: submitted.attempt, result: submitted.result },

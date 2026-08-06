@@ -6,7 +6,9 @@ import { formBoolean, formNumber, formString } from "@/lib/form-data";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getCourseRepository } from "@/infrastructure/database/repositories/course-repository";
 import { getMasteryRepository } from "@/infrastructure/database/repositories/mastery-repository";
+import { getAnalyticsRepository } from "@/infrastructure/database/repositories/analytics-repository";
 import { recordLessonCompletion } from "@/features/mastery/service";
+import { trackActivityEvent } from "@/features/analytics/service";
 import {
   archiveLesson,
   autosaveLesson,
@@ -584,12 +586,26 @@ export async function saveLessonProgressAction(
       repository,
     );
     if (parsed.data.completed) {
+      const analyticsRepository = getAnalyticsRepository();
       await recordLessonCompletion(
         {
           profileId: session.principal.profileId,
           lessonId: parsed.data.lessonId,
         },
         getMasteryRepository(),
+        analyticsRepository,
+      );
+      await trackActivityEvent(
+        {
+          id: `activity-lesson-completion-${session.principal.profileId}-${parsed.data.lessonId}`,
+          profileId: session.principal.profileId,
+          eventType: "lesson-completion",
+          resourceType: "lesson",
+          resourceId: parsed.data.lessonId,
+          durationSeconds: parsed.data.timeSpentSeconds,
+          dedupeKey: `lesson-completion:${parsed.data.lessonId}`,
+        },
+        analyticsRepository,
       );
       revalidatePath("/mastery");
       revalidatePath("/recommendations");

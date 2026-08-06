@@ -13,8 +13,10 @@ import type {
   UserConceptMasteryRecord,
 } from "@/domain/mastery/types";
 import type { MasteryRepository } from "@/domain/ports/mastery-repository";
+import type { AnalyticsRepository } from "@/domain/ports/analytics-repository";
 import type { AuthSession, AuthenticatedPrincipal } from "@/infrastructure/auth/auth-provider";
 import { requireSession } from "@/features/auth/authorization";
+import { trackActivityEvent } from "@/features/analytics/service";
 
 function idFor(prefix: string): string {
   return `${prefix}-${randomUUID()}`;
@@ -53,6 +55,7 @@ function normalizeView(
 export async function recordMasteryEvidence(
   input: Omit<MasteryEvidenceInput, "id"> & { id?: string },
   repository: MasteryRepository,
+  analyticsRepository?: AnalyticsRepository,
 ): Promise<UserConceptMasteryRecord> {
   const concept = ensure(await repository.getConcept(input.conceptId), "Concept", input.conceptId);
   const rules = await repository.getRuleConfiguration();
@@ -100,6 +103,23 @@ export async function recordMasteryEvidence(
     reason: `${input.eventType.replaceAll("-", " ")} evidence recorded.`,
   };
   await repository.saveMastery(mastery, snapshot);
+  if (analyticsRepository) {
+    await trackActivityEvent(
+      {
+        id: `activity-mastery-change-${snapshot.id}`,
+        profileId: input.profileId,
+        eventType: "mastery-change",
+        resourceType: "concept",
+        resourceId: input.conceptId,
+        conceptId: input.conceptId,
+        score: mastery.score,
+        occurredAt: now,
+        dedupeKey: `mastery-change:${snapshot.id}`,
+        metadata: { state: mastery.state, evidenceType: input.eventType },
+      },
+      analyticsRepository,
+    );
+  }
   await refreshRecommendations(input.profileId, repository);
   return { ...mastery, currentSnapshotId: snapshot.id };
 }
@@ -107,6 +127,7 @@ export async function recordMasteryEvidence(
 export async function recordLessonCompletion(
   input: { profileId: string; lessonId: string; occurredAt?: string },
   repository: MasteryRepository,
+  analyticsRepository?: AnalyticsRepository,
 ): Promise<readonly UserConceptMasteryRecord[]> {
   const conceptIds = await repository.getLessonConceptIds(input.profileId, input.lessonId);
   const results: UserConceptMasteryRecord[] = [];
@@ -124,6 +145,7 @@ export async function recordLessonCompletion(
           occurredAt: input.occurredAt,
         },
         repository,
+        analyticsRepository,
       ),
     );
   }
@@ -133,6 +155,7 @@ export async function recordLessonCompletion(
 export async function recordExerciseCompletion(
   input: { profileId: string; attemptId: string },
   repository: MasteryRepository,
+  analyticsRepository?: AnalyticsRepository,
 ): Promise<readonly UserConceptMasteryRecord[]> {
   const evidence = await repository.getExerciseEvidence(input.profileId, input.attemptId);
   const results: UserConceptMasteryRecord[] = [];
@@ -153,6 +176,7 @@ export async function recordExerciseCompletion(
           occurredAt: item.occurredAt,
         },
         repository,
+        analyticsRepository,
       ),
     );
   }
@@ -162,6 +186,7 @@ export async function recordExerciseCompletion(
 export async function recordAssessmentCompletion(
   input: { profileId: string; attemptId: string },
   repository: MasteryRepository,
+  analyticsRepository?: AnalyticsRepository,
 ): Promise<readonly UserConceptMasteryRecord[]> {
   const evidence = await repository.getAssessmentEvidence(input.profileId, input.attemptId);
   const results: UserConceptMasteryRecord[] = [];
@@ -187,6 +212,7 @@ export async function recordAssessmentCompletion(
           occurredAt: item.occurredAt,
         },
         repository,
+        analyticsRepository,
       ),
     );
   }

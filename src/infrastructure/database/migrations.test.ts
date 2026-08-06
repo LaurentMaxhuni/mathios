@@ -31,6 +31,7 @@ describe("database migrations", () => {
         "0011_phase11_study_planner.sql",
         "0012_phase12_notes_knowledge_base.sql",
         "0013_phase13_global_search.sql",
+        "0014_phase14_analytics.sql",
       ]);
       expect(second.applied).toEqual([]);
       expect(second.skipped).toEqual([
@@ -48,6 +49,7 @@ describe("database migrations", () => {
         "0011_phase11_study_planner.sql",
         "0012_phase12_notes_knowledge_base.sql",
         "0013_phase13_global_search.sql",
+        "0014_phase14_analytics.sql",
       ]);
       expect(database.prepare("SELECT key FROM app_metadata").all()).toEqual([]);
       expect(
@@ -139,6 +141,11 @@ describe("database migrations", () => {
         "search_index_state",
         "search_documents",
         "search_recent_queries",
+        "learning_sessions",
+        "activity_events",
+        "analytics_snapshots",
+        "learner_metrics",
+        "content_metrics",
       ]) {
         expect(
           database
@@ -155,6 +162,19 @@ describe("database migrations", () => {
       ).toEqual({ name: "search_documents_fts" });
       expect(database.prepare("PRAGMA table_info(question_attempts)").all()).toEqual(
         expect.arrayContaining([expect.objectContaining({ name: "assessment_attempt_id" })]),
+      );
+      for (const name of [
+        "learning_sessions",
+        "activity_events",
+        "analytics_snapshots",
+        "learner_metrics",
+      ]) {
+        expect(database.prepare(`PRAGMA table_info(${name})`).all()).toEqual(
+          expect.arrayContaining([expect.objectContaining({ name: "profile_id" })]),
+        );
+      }
+      expect(database.prepare("PRAGMA table_info(content_metrics)").all()).toEqual(
+        expect.arrayContaining([expect.objectContaining({ name: "resource_id" })]),
       );
     } finally {
       database?.close();

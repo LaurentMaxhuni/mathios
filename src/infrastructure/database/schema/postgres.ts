@@ -2605,9 +2605,194 @@ export const searchRecentQueries = pgTable(
   }),
 );
 
+export const learningSessions = pgTable(
+  "learning_sessions",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    sessionType: text("session_type").notNull(),
+    sourceType: text("source_type"),
+    sourceId: text("source_id"),
+    status: text("status").notNull().default("active"),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    durationSeconds: integer("duration_seconds").notNull().default(0),
+    metadataJson: text("metadata_json").notNull().default("{}"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    profileStartedIdx: index("learning_sessions_profile_started_idx").on(
+      table.profileId,
+      table.startedAt,
+    ),
+    sourceIdx: index("learning_sessions_source_idx").on(
+      table.sourceType,
+      table.sourceId,
+      table.status,
+    ),
+  }),
+);
+
+export const activityEvents = pgTable(
+  "activity_events",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    eventType: text("event_type").notNull(),
+    resourceType: text("resource_type"),
+    resourceId: text("resource_id"),
+    subjectId: text("subject_id").references(() => subjects.id, { onDelete: "set null" }),
+    gradeId: text("grade_id").references(() => grades.id, { onDelete: "set null" }),
+    conceptId: text("concept_id").references(() => concepts.id, { onDelete: "set null" }),
+    learningSessionId: text("learning_session_id").references(() => learningSessions.id, {
+      onDelete: "set null",
+    }),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
+    durationSeconds: integer("duration_seconds").notNull().default(0),
+    score: doublePrecision("score"),
+    isCorrect: integer("is_correct"),
+    hintsUsed: integer("hints_used").notNull().default(0),
+    attemptNumber: integer("attempt_number").notNull().default(1),
+    responseTimeMs: integer("response_time_ms"),
+    dedupeKey: text("dedupe_key"),
+    metadataJson: text("metadata_json").notNull().default("{}"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    profileEventDedupeIdx: uniqueIndex("activity_events_profile_event_dedupe_idx").on(
+      table.profileId,
+      table.eventType,
+      table.dedupeKey,
+    ),
+    profileOccurredIdx: index("activity_events_profile_occurred_idx").on(
+      table.profileId,
+      table.occurredAt,
+      table.eventType,
+    ),
+    resourceIdx: index("activity_events_resource_idx").on(
+      table.resourceType,
+      table.resourceId,
+      table.occurredAt,
+    ),
+    subjectIdx: index("activity_events_subject_idx").on(table.subjectId, table.occurredAt),
+    conceptIdx: index("activity_events_concept_idx").on(table.conceptId, table.occurredAt),
+  }),
+);
+
+export const analyticsSnapshots = pgTable(
+  "analytics_snapshots",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    snapshotType: text("snapshot_type").notNull(),
+    snapshotDate: text("snapshot_date").notNull(),
+    metricsJson: text("metrics_json").notNull().default("{}"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    profileTypeDateIdx: uniqueIndex("analytics_snapshots_profile_type_date_idx").on(
+      table.profileId,
+      table.snapshotType,
+      table.snapshotDate,
+    ),
+    profileDateIdx: index("analytics_snapshots_profile_date_idx").on(
+      table.profileId,
+      table.snapshotDate,
+    ),
+  }),
+);
+
+export const learnerMetrics = pgTable(
+  "learner_metrics",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    metricDate: text("metric_date").notNull(),
+    timeStudiedSeconds: integer("time_studied_seconds").notNull().default(0),
+    lessonsStarted: integer("lessons_started").notNull().default(0),
+    lessonsCompleted: integer("lessons_completed").notNull().default(0),
+    questionsAttempted: integer("questions_attempted").notNull().default(0),
+    correctQuestions: integer("correct_questions").notNull().default(0),
+    accuracy: doublePrecision("accuracy").notNull().default(0),
+    assessmentCount: integer("assessment_count").notNull().default(0),
+    averageAssessmentScore: doublePrecision("average_assessment_score").notNull().default(0),
+    hintsUsed: integer("hints_used").notNull().default(0),
+    attemptCount: integer("attempt_count").notNull().default(0),
+    averageResponseTimeMs: doublePrecision("average_response_time_ms").notNull().default(0),
+    studyDays: integer("study_days").notNull().default(0),
+    streakDays: integer("streak_days").notNull().default(0),
+    consistencyScore: doublePrecision("consistency_score").notNull().default(0),
+    masteryScore: doublePrecision("mastery_score").notNull().default(0),
+    masteredConcepts: integer("mastered_concepts").notNull().default(0),
+    weakConcepts: integer("weak_concepts").notNull().default(0),
+    metadataJson: text("metadata_json").notNull().default("{}"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    profileDateIdx: uniqueIndex("learner_metrics_profile_date_idx").on(
+      table.profileId,
+      table.metricDate,
+    ),
+  }),
+);
+
+export const contentMetrics = pgTable(
+  "content_metrics",
+  {
+    id: text("id").primaryKey(),
+    resourceType: text("resource_type").notNull(),
+    resourceId: text("resource_id").notNull(),
+    metricDate: text("metric_date").notNull(),
+    subjectId: text("subject_id").references(() => subjects.id, { onDelete: "set null" }),
+    gradeId: text("grade_id").references(() => grades.id, { onDelete: "set null" }),
+    conceptId: text("concept_id").references(() => concepts.id, { onDelete: "set null" }),
+    attemptCount: integer("attempt_count").notNull().default(0),
+    completionCount: integer("completion_count").notNull().default(0),
+    correctCount: integer("correct_count").notNull().default(0),
+    accuracy: doublePrecision("accuracy").notNull().default(0),
+    averageResponseTimeMs: doublePrecision("average_response_time_ms").notNull().default(0),
+    averageAttempts: doublePrecision("average_attempts").notNull().default(0),
+    hintRate: doublePrecision("hint_rate").notNull().default(0),
+    discriminationIndex: doublePrecision("discrimination_index").notNull().default(0),
+    supportCount: integer("support_count").notNull().default(0),
+    metadataJson: text("metadata_json").notNull().default("{}"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    resourceDateIdx: uniqueIndex("content_metrics_resource_date_idx").on(
+      table.resourceType,
+      table.resourceId,
+      table.metricDate,
+    ),
+    subjectDateIdx: index("content_metrics_subject_date_idx").on(table.subjectId, table.metricDate),
+    supportIdx: index("content_metrics_support_idx").on(table.supportCount, table.accuracy),
+  }),
+);
+
 export type SearchIndexState = typeof searchIndexState.$inferSelect;
 export type SearchDocument = typeof searchDocuments.$inferSelect;
 export type SearchRecentQuery = typeof searchRecentQueries.$inferSelect;
+export type LearningSession = typeof learningSessions.$inferSelect;
+export type NewLearningSession = typeof learningSessions.$inferInsert;
+export type ActivityEvent = typeof activityEvents.$inferSelect;
+export type NewActivityEvent = typeof activityEvents.$inferInsert;
+export type AnalyticsSnapshot = typeof analyticsSnapshots.$inferSelect;
+export type NewAnalyticsSnapshot = typeof analyticsSnapshots.$inferInsert;
+export type LearnerMetric = typeof learnerMetrics.$inferSelect;
+export type NewLearnerMetric = typeof learnerMetrics.$inferInsert;
+export type ContentMetric = typeof contentMetrics.$inferSelect;
+export type NewContentMetric = typeof contentMetrics.$inferInsert;
 export type LaboratoryActivity = typeof laboratoryActivities.$inferSelect;
 export type NewLaboratoryActivity = typeof laboratoryActivities.$inferInsert;
 export type LaboratoryStep = typeof laboratorySteps.$inferSelect;
