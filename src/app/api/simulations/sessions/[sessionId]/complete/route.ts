@@ -9,8 +9,8 @@ import { completeSimulation, requireSimulationLearner } from "@/features/simulat
 
 export const dynamic = "force-dynamic";
 const bodySchema = z.object({
-  inputs: z.record(z.union([z.string(), z.number(), z.boolean()])),
-  state: z.record(z.number()),
+  inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])),
+  state: z.record(z.string(), z.number()),
   elapsedSeconds: z.number().int().min(0).max(86400),
 });
 

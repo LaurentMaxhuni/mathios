@@ -3,9 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion, useReducedMotion } from "motion/react";
 import {
   Activity,
-  Archive,
   BarChart3,
   CalendarDays,
   Atom,
@@ -16,15 +16,11 @@ import {
   FlaskConical,
   Gauge,
   GitBranch,
-  GraduationCap,
   Home,
-  IdCard,
   Network,
   Route,
-  Search,
   School,
   Settings2,
-  ShieldCheck,
   Sparkles,
   Orbit,
   StickyNote,
@@ -32,58 +28,88 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getFocusableElements } from "@/lib/focus";
-import type { AuthenticatedPrincipal } from "@/infrastructure/auth/auth-provider";
+import type { AuthMode, AuthenticatedPrincipal } from "@/infrastructure/auth/auth-provider";
 
-const navigation: Array<{
+type NavigationSection = "workspace" | "learn" | "plan" | "explore" | "insights" | "settings";
+
+const navigationSections: Array<{ id: NavigationSection; label: string }> = [
+  { id: "workspace", label: "Workspace" },
+  { id: "learn", label: "Learn" },
+  { id: "plan", label: "Plan" },
+  { id: "explore", label: "Explore" },
+  { id: "insights", label: "Insights" },
+  { id: "settings", label: "Settings" },
+];
+
+type NavigationItem = {
   href: string;
   label: string;
   icon: typeof Home;
+  section: NavigationSection;
   requiresAnalytics?: boolean;
-  requiresSettings?: boolean;
-}> = [
-  { href: "/" as const, label: "Overview", icon: Home },
-  { href: "/search" as const, label: "Global search", icon: Search },
-  { href: "/profiles" as const, label: "Profiles", icon: IdCard },
-  { href: "/onboarding" as const, label: "Onboarding", icon: Route },
-  { href: "/curricula" as const, label: "Curricula", icon: BookOpen },
-  { href: "/courses" as const, label: "Courses", icon: BookMarked },
-  { href: "/concepts" as const, label: "Concepts", icon: Network },
-  { href: "/exercises" as const, label: "Exercises", icon: BrainCircuit },
-  { href: "/assessments" as const, label: "Assessments", icon: ClipboardCheck },
-  { href: "/mastery" as const, label: "Mastery", icon: Gauge },
-  { href: "/analytics" as const, label: "Learning analytics", icon: BarChart3 },
+  requiresContentAuthor?: boolean;
+};
+
+const navigation: NavigationItem[] = [
+  { href: "/" as const, label: "Overview", icon: Home, section: "workspace" },
+  { href: "/curricula" as const, label: "Curricula", icon: BookOpen, section: "learn" },
+  { href: "/courses" as const, label: "Courses", icon: BookMarked, section: "learn" },
+  {
+    href: "/content-studio" as const,
+    label: "Content studio",
+    icon: Sparkles,
+    section: "learn",
+    requiresContentAuthor: true,
+  },
+  { href: "/concepts" as const, label: "Concepts", icon: Network, section: "learn" },
+  { href: "/exercises" as const, label: "Exercises", icon: BrainCircuit, section: "learn" },
+  {
+    href: "/assessments" as const,
+    label: "Assessments",
+    icon: ClipboardCheck,
+    section: "learn",
+  },
+  { href: "/mastery" as const, label: "Mastery", icon: Gauge, section: "learn" },
+  {
+    href: "/recommendations" as const,
+    label: "Recommendations",
+    icon: Sparkles,
+    section: "plan",
+  },
+  { href: "/roadmaps" as const, label: "Roadmaps", icon: GitBranch, section: "plan" },
+  { href: "/personalized-paths" as const, label: "My paths", icon: Route, section: "plan" },
+  {
+    href: "/planner" as const,
+    label: "Study planner",
+    icon: CalendarDays,
+    section: "plan",
+  },
+  { href: "/simulations" as const, label: "Simulations", icon: Orbit, section: "explore" },
+  { href: "/laboratories" as const, label: "Laboratory", icon: FlaskConical, section: "explore" },
+  { href: "/notes" as const, label: "Knowledge base", icon: StickyNote, section: "explore" },
+  { href: "/ai" as const, label: "AI studio", icon: Sparkles, section: "explore" },
+  { href: "/classrooms" as const, label: "Classrooms", icon: School, section: "explore" },
+  {
+    href: "/analytics" as const,
+    label: "Learning analytics",
+    icon: BarChart3,
+    section: "insights",
+  },
   {
     href: "/analytics/teacher" as const,
     label: "Teacher analytics",
     icon: BarChart3,
+    section: "insights",
     requiresAnalytics: true,
   },
-  { href: "/classrooms" as const, label: "Classrooms", icon: School },
-  { href: "/recommendations" as const, label: "Recommendations", icon: Sparkles },
-  { href: "/roadmaps" as const, label: "Roadmaps", icon: GitBranch },
-  { href: "/personalized-paths" as const, label: "My paths", icon: Route },
-  { href: "/simulations" as const, label: "Simulations", icon: Orbit },
-  { href: "/laboratories" as const, label: "Laboratory", icon: FlaskConical },
-  { href: "/planner" as const, label: "Study planner", icon: CalendarDays },
-  { href: "/notes" as const, label: "Knowledge base", icon: StickyNote },
-  { href: "/ai" as const, label: "AI studio", icon: Sparkles },
-  { href: "/portability" as const, label: "Import & backup", icon: Archive },
-  { href: "/grades" as const, label: "Grades", icon: GraduationCap },
-  { href: "/subjects" as const, label: "Subjects", icon: FlaskConical },
-  { href: "/settings" as const, label: "Settings", icon: Settings2 },
-  { href: "/settings/roles" as const, label: "Roles", icon: ShieldCheck },
-  {
-    href: "/settings/system" as const,
-    label: "System diagnostics",
-    icon: Activity,
-    requiresSettings: true,
-  },
+  { href: "/settings" as const, label: "Settings", icon: Settings2, section: "settings" },
 ];
 
 interface SidebarProps {
   mobileOpen: boolean;
   onMobileClose: () => void;
   mobileMenuButtonRef: React.RefObject<HTMLButtonElement | null>;
+  authMode: AuthMode;
   principal: AuthenticatedPrincipal | null;
 }
 
@@ -91,17 +117,29 @@ export function Sidebar({
   mobileOpen,
   mobileMenuButtonRef,
   onMobileClose,
+  authMode,
   principal,
 }: SidebarProps) {
   const pathname = usePathname();
   const sidebarRef = React.useRef<HTMLElement>(null);
   const closeButtonRef = React.useRef<HTMLButtonElement>(null);
   const restoreFocusRef = React.useRef<HTMLElement | null>(null);
+  const canAuthorContent = Boolean(
+    principal?.permissions.includes("edit_content") &&
+    principal.roles.some((role) => ["administrator", "content-creator", "teacher"].includes(role)),
+  );
   const visibleNavigation = navigation.filter(
     (item) =>
       (!item.requiresAnalytics || principal?.permissions.includes("view_analytics")) &&
-      (!item.requiresSettings || principal?.permissions.includes("manage_application_settings")),
+      (!item.requiresContentAuthor || canAuthorContent),
   );
+  const settingsNavigation = visibleNavigation.filter((item) => item.section === "settings");
+  const activeHref = visibleNavigation
+    .filter((item) => {
+      if (item.href === "/") return pathname === "/";
+      return pathname === item.href || pathname.startsWith(`${item.href}/`);
+    })
+    .sort((left, right) => right.href.length - left.href.length)[0]?.href;
 
   React.useEffect(() => {
     const sidebar = sidebarRef.current;
@@ -168,18 +206,20 @@ export function Sidebar({
         id="primary-navigation"
         aria-label="Primary navigation"
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r bg-card/95 px-4 py-5 backdrop-blur transition-transform lg:static lg:z-auto lg:translate-x-0",
+          "app-sidebar fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r px-4 py-5 shadow-2xl backdrop-blur transition-transform lg:static lg:z-auto lg:translate-x-0 lg:shadow-none",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <div className="flex items-center justify-between px-3">
           <Link href="/" className="group flex items-center gap-3" onClick={onMobileClose}>
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform group-hover:-rotate-6">
+            <span className="app-brand-mark grid h-10 w-10 place-items-center rounded-xl shadow-sm transition-transform group-hover:-rotate-6">
               <Atom className="h-5 w-5" aria-hidden="true" />
             </span>
             <span>
-              <span className="block text-sm font-bold tracking-[0.2em]">MATHIOS</span>
-              <span className="block text-[0.68rem] uppercase tracking-[0.18em] text-muted-foreground">
+              <span className="app-brand-name block text-sm font-bold tracking-[0.2em]">
+                MATHIOS
+              </span>
+              <span className="app-brand-caption block text-[0.68rem] uppercase tracking-[0.18em]">
                 Science workspace
               </span>
             </span>
@@ -195,50 +235,100 @@ export function Sidebar({
           </button>
         </div>
 
-        <div className="mt-10 px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Workspace
+        <div className="mt-10 min-h-0 flex-1 overflow-y-auto">
+          <nav aria-label="Primary navigation links" className="space-y-5">
+            {navigationSections.map((section) => {
+              if (section.id === "settings") return null;
+              const sectionNavigation = visibleNavigation.filter(
+                (item) => item.section === section.id,
+              );
+              if (!sectionNavigation.length) return null;
+              return (
+                <div key={section.id}>
+                  <p className="app-sidebar-section-label px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em]">
+                    {section.label}
+                  </p>
+                  <div className="mt-2 space-y-1">
+                    {sectionNavigation.map((item) => {
+                      return (
+                        <NavigationLink
+                          key={item.href}
+                          item={item}
+                          active={item.href === activeHref}
+                          onClick={onMobileClose}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </nav>
         </div>
-        <nav
-          aria-label="Primary navigation links"
-          className="mt-3 min-h-0 flex-1 space-y-1 overflow-y-auto"
-        >
-          {visibleNavigation.map((item) => {
-            const Icon = item.icon;
-            const active =
-              pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`));
-            return (
-              <Link
-                key={item.href}
-                href={item.href as never}
-                onClick={onMobileClose}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  active
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
-                aria-current={active ? "page" : undefined}
-              >
-                <Icon className="h-4 w-4" aria-hidden="true" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
 
-        <div className="mt-auto rounded-xl border bg-muted/50 p-4">
-          <div className="flex items-center gap-2 text-xs font-semibold">
-            <Activity className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
-            Local-first identity
+        {settingsNavigation.length ? (
+          <nav aria-label="Settings navigation" className="app-sidebar-settings mt-3 border-t pt-3">
+            {settingsNavigation.map((item) => (
+              <NavigationLink
+                key={item.href}
+                item={item}
+                active={item.href === activeHref}
+                onClick={onMobileClose}
+              />
+            ))}
+          </nav>
+        ) : null}
+
+        <div className="app-sidebar-footer mt-auto rounded-2xl border p-4">
+          <div className="app-sidebar-footer-title flex items-center gap-2 text-xs font-semibold">
+            <Activity className="h-3.5 w-3.5" aria-hidden="true" />
+            {authMode === "neon-auth" ? "Neon Auth identity" : "Local-first identity"}
           </div>
-          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-            Profiles, permissions, settings, and onboarding stay available on this device.
+          <p className="app-sidebar-footer-copy mt-2 text-xs leading-relaxed">
+            {authMode === "neon-auth"
+              ? "Secure accounts, Google sign-in, permissions, settings, and onboarding are connected to Neon."
+              : "Profiles, permissions, settings, and onboarding stay available on this device."}
           </p>
-          <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          <p className="app-sidebar-footer-meta mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em]">
             Phase 19 - Quality audit
           </p>
         </div>
       </aside>
     </>
+  );
+}
+
+function NavigationLink({
+  item,
+  active,
+  onClick,
+}: {
+  item: NavigationItem;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const Icon = item.icon;
+  const reduceMotion = useReducedMotion();
+  return (
+    <Link
+      href={item.href as never}
+      onClick={onClick}
+      className={cn(
+        "app-sidebar-link relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+        active ? "app-sidebar-link-active shadow-sm" : "app-sidebar-link-idle",
+      )}
+      aria-current={active ? "page" : undefined}
+    >
+      {active && !reduceMotion ? (
+        <motion.span
+          layoutId="sidebar-active"
+          className="absolute inset-0 rounded-xl bg-[var(--mathios-accent)]"
+          transition={{ type: "spring", stiffness: 420, damping: 34 }}
+          aria-hidden="true"
+        />
+      ) : null}
+      <Icon className="relative z-10 h-4 w-4" aria-hidden="true" />
+      <span className="relative z-10">{item.label}</span>
+    </Link>
   );
 }

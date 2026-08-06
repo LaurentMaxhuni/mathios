@@ -14,7 +14,7 @@ const slugSchema = z
   .min(2)
   .max(120)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens.");
-const jsonObjectSchema = z.record(z.any());
+const jsonObjectSchema = z.record(z.string(), z.any());
 const nullableIdSchema = z.preprocess(
   (value) => (typeof value === "string" && !value.trim() ? null : value),
   idSchema.nullable(),
@@ -86,7 +86,7 @@ export const questionSchema = z.object({
   explanation: z.string().trim().max(30000).default(""),
   fullSolution: z.string().trim().max(50000).default(""),
   commonWrongAnswers: z.array(z.string().trim().max(2000)).max(100).default([]),
-  errorFeedback: z.record(z.string().trim().max(5000)).default({}),
+  errorFeedback: z.record(z.string(), z.string().trim().max(5000)).default({}),
   partialCreditRules: jsonObjectSchema.nullable().default(null),
   changeSummary: z.string().trim().max(1000).default(""),
   options: z.array(questionOptionSchema).max(100).default([]),

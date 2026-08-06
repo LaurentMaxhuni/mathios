@@ -24,6 +24,36 @@ async function createRepository() {
 }
 
 describe("SqlIdentityRepository", () => {
+  it("provisions a Neon Auth identity and reuses its application profile", async () => {
+    const { directory, raw, repository } = await createRepository();
+    try {
+      const profile = await repository.ensureExternalProfile({
+        userId: "neon-user-1",
+        identifier: "learner@example.com",
+        authMode: "neon-auth",
+        displayName: "Neon Learner",
+      });
+      const repeated = await repository.ensureExternalProfile({
+        userId: "neon-user-1",
+        identifier: "learner@example.com",
+        authMode: "neon-auth",
+        displayName: "Neon Learner",
+      });
+
+      expect(repeated.id).toBe(profile.id);
+      expect(profile.displayName).toBe("Neon Learner");
+      expect(raw.prepare("SELECT auth_mode FROM users WHERE id = ?").get("neon-user-1")).toEqual({
+        auth_mode: "neon-auth",
+      });
+      await expect(repository.getPrincipalByProfileId(profile.id)).resolves.toMatchObject({
+        roles: ["administrator", "learner"],
+      });
+    } finally {
+      raw.close();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   it("creates a profile with settings, roles, and permissions", async () => {
     const { directory, raw, repository } = await createRepository();
     try {

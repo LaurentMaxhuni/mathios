@@ -3,7 +3,7 @@ import { ACTIVITY_EVENT_TYPES, LEARNING_SESSION_TYPES } from "@/domain/analytics
 
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD dates.");
 const idSchema = z.string().trim().min(1).max(160);
-const metadataSchema = z.record(z.unknown()).default({});
+const metadataSchema = z.record(z.string(), z.unknown()).default({});
 
 export const analyticsRangeSchema = z.object({
   from: dateSchema.optional(),

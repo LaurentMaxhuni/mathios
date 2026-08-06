@@ -1,7 +1,6 @@
-import dynamicImport from "next/dynamic";
 import { redirect } from "next/navigation";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-import { RouteLoading } from "@/components/shared/route-loading";
+import { PlannerWorkspace } from "@/features/planner/components/planner-workspace";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getStudyPlannerRepository } from "@/infrastructure/database/repositories/study-planner-repository";
 import {
@@ -9,13 +8,6 @@ import {
   getPlannerOptions,
   plannerWindowAround,
 } from "@/features/planner/service";
-const PlannerWorkspace = dynamicImport(
-  () =>
-    import("@/features/planner/components/planner-workspace").then(
-      (module) => module.PlannerWorkspace,
-    ),
-  { loading: () => <RouteLoading label="Loading study planner" /> },
-);
 
 export const dynamic = "force-dynamic";
 

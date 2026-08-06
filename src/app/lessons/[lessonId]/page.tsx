@@ -1,19 +1,13 @@
-import dynamic from "next/dynamic";
 import { notFound, redirect } from "next/navigation";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-import { RouteLoading } from "@/components/shared/route-loading";
 import { canAuthorCourses } from "@/features/courses/service";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getCourseRepository } from "@/infrastructure/database/repositories/course-repository";
 import { getSimulationRepository } from "@/infrastructure/database/repositories/simulation-repository";
 import { getAnalyticsRepository } from "@/infrastructure/database/repositories/analytics-repository";
+import { LessonReader } from "@/features/courses/components/lesson-reader";
 import { trackActivityEvent } from "@/features/analytics/service";
 import { randomUUID } from "node:crypto";
-
-const LessonReader = dynamic(
-  () => import("@/features/courses/components/lesson-reader").then((module) => module.LessonReader),
-  { loading: () => <RouteLoading label="Loading lesson" /> },
-);
 
 export default async function LessonReaderPage({
   params,

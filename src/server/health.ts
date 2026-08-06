@@ -5,7 +5,7 @@ import { getErrorTracker } from "@/infrastructure/observability/error-tracker";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 
-export const LATEST_MIGRATION = "0018_phase18_deployment_hardening.sql";
+export const LATEST_MIGRATION = "0019_neon_auth.sql";
 
 export interface HealthReport {
   status: "ok" | "degraded";
@@ -147,6 +147,9 @@ async function readLatestMigration(
 }
 
 function validateRuntimeConfiguration(): void {
+  if (env.AUTH_MODE === "neon-auth" && (!env.NEON_AUTH_BASE_URL || !env.NEON_AUTH_COOKIE_SECRET)) {
+    throw new Error("Neon Auth requires NEON_AUTH_BASE_URL and NEON_AUTH_COOKIE_SECRET.");
+  }
   if (env.APP_ENV === "hosted-production") {
     if (env.DATABASE_PROVIDER !== "postgres" || env.STORAGE_PROVIDER !== "s3") {
       throw new Error("Hosted production requires PostgreSQL and S3-compatible storage.");

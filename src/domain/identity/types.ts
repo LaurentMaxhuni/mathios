@@ -1,4 +1,4 @@
-export type IdentityAuthMode = "local-profile" | "local-credential" | "hosted";
+export type IdentityAuthMode = "neon-auth" | "local-profile" | "local-credential" | "hosted";
 
 export type ThemePreference = "system" | "light" | "dark";
 export type TextSizePreference = "small" | "medium" | "large";

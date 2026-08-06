@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { actionStateFromError, actionStateFromZod, type ActionState } from "@/lib/action-state";
 import { getAuthProvider } from "@/infrastructure/auth/local-auth-provider";
+import { env } from "@/lib/env";
 
 const signInSchema = z.object({
   profileId: z.string().uuid("Choose a valid profile."),
@@ -33,5 +34,5 @@ export async function signInAction(
 
 export async function signOutAction(): Promise<void> {
   await getAuthProvider().signOut();
-  redirect("/profiles");
+  redirect(env.AUTH_MODE === "neon-auth" ? "/auth/sign-in" : "/profiles");
 }

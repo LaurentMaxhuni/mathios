@@ -7,7 +7,7 @@ import { requireSimulationLearner, startSimulation } from "@/features/simulation
 
 export const dynamic = "force-dynamic";
 const bodySchema = z.object({
-  presetValues: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
+  presetValues: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
 });
 
 export async function POST(

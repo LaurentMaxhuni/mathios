@@ -39,25 +39,25 @@ export function OnboardingForm({ response }: { response: OnboardingResponseRecor
         <section className="grid gap-5 sm:grid-cols-2" aria-labelledby="pathway-heading">
           <div className="sm:col-span-2">
             <h2 id="pathway-heading" className="text-base font-semibold">
-              Your learning pathway
+              Optional starting preferences
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              These are personal starting points; curricula and grade structures will be
-              configurable in a later phase.
+              The course and concept library is already provided. Use these fields only if you want
+              Mathios to prioritize a particular starting point.
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="curriculum">Curriculum or pathway</Label>
+            <Label htmlFor="curriculum">Preferred curriculum lens</Label>
             <Input
               id="curriculum"
               name="curriculum"
               defaultValue={response?.curriculum ?? ""}
-              placeholder="e.g. National curriculum"
+              placeholder="e.g. Kosovo Curriculum"
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="currentGrade">Current grade or level</Label>
+            <Label htmlFor="currentGrade">Current level</Label>
             <Input
               id="currentGrade"
               name="currentGrade"
@@ -67,7 +67,7 @@ export function OnboardingForm({ response }: { response: OnboardingResponseRecor
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="targetGrade">Target grade or level</Label>
+            <Label htmlFor="targetGrade">Target level</Label>
             <Input
               id="targetGrade"
               name="targetGrade"
@@ -81,7 +81,7 @@ export function OnboardingForm({ response }: { response: OnboardingResponseRecor
         <fieldset>
           <legend className="text-base font-semibold">Subjects</legend>
           <p className="mt-1 text-sm text-muted-foreground">
-            Choose the areas you want to keep close at hand.
+            Choose the provided subjects you want to keep close at hand.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {subjects.map(([value, label]) => (
@@ -105,12 +105,14 @@ export function OnboardingForm({ response }: { response: OnboardingResponseRecor
         <section className="grid gap-5 sm:grid-cols-2" aria-labelledby="goals-heading">
           <div className="sm:col-span-2">
             <h2 id="goals-heading" className="text-base font-semibold">
-              Goals and rhythm
+              Focus and rhythm
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">Put one learning goal per line.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Optional focus areas help prioritize the existing material. Put one per line.
+            </p>
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="learningGoals">Learning goals</Label>
+            <Label htmlFor="learningGoals">Focus areas</Label>
             <textarea
               id="learningGoals"
               name="learningGoals"

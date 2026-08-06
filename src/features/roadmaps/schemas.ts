@@ -46,7 +46,7 @@ export const roadmapNodeSchema = z.object({
   isOptionalBranch: z.boolean().default(false),
   sortOrder: z.number().int().min(0).max(10000),
   estimatedDurationMinutes: z.number().int().min(0).max(100000),
-  metadata: z.record(z.unknown()).default({}),
+  metadata: z.record(z.string(), z.unknown()).default({}),
 });
 
 export const roadmapReorderSchema = z.object({

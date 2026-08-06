@@ -3,7 +3,7 @@ import { LABORATORY_MODES, LABORATORY_STATUSES } from "@/features/laboratory/sch
 
 const idSchema = z.string().trim().min(1).max(200);
 const scalarSchema = z.union([z.string().max(20000), z.number().finite(), z.boolean()]);
-const configurationSchema = z.record(z.unknown()).default({});
+const configurationSchema = z.record(z.string(), z.unknown()).default({});
 
 export const laboratoryStepSchema = z.object({
   id: idSchema,

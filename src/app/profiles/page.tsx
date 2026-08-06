@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Plus, Pencil, UserRound } from "lucide-react";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { ProfileAvatar } from "@/components/shared/profile-avatar";
@@ -8,8 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getIdentityRepository } from "@/infrastructure/database/repositories/identity-repository";
 import { toPublicProfile } from "@/features/profiles/service";
+import { env } from "@/lib/env";
 
 export default async function ProfilesPage() {
+  if (env.AUTH_MODE === "neon-auth") redirect("/account/settings" as never);
   const repository = getIdentityRepository();
   const session = await getCurrentSession(repository).catch(() => null);
   const profiles = (await repository.listProfiles().catch(() => [])).map(toPublicProfile);
@@ -21,8 +24,8 @@ export default async function ProfilesPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Identity</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">Local profiles</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Keep separate learning preferences and roles on this device. An administrator profile
-            can add another local profile.
+            The learning library is already provided. Profiles only keep separate progress,
+            preferences, and roles on this device.
           </p>
         </div>
         {session?.principal.permissions.includes("manage_users") || profiles.length === 0 ? (
@@ -73,7 +76,7 @@ export default async function ProfilesPage() {
           <CardContent className="py-10 text-center">
             <p className="font-semibold">No local profiles yet.</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Create the first profile to unlock the local workspace.
+              Create the first profile to save progress while you use the provided library.
             </p>
           </CardContent>
         </Card>

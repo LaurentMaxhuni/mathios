@@ -1,10 +1,12 @@
 import type { Config } from "drizzle-kit";
 
 export default {
-  schema: "./src/infrastructure/database/schema/sqlite.ts",
+  schema: "./src/infrastructure/database/schema/postgres.ts",
   out: "./drizzle/generated",
-  dialect: "sqlite",
+  dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? "file:./data/mathios.db",
+    url:
+      process.env.DATABASE_URL ??
+      "postgresql://neondb_owner:neon-development-only@localhost:5432/neondb",
   },
 } satisfies Config;

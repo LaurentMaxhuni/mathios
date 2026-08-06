@@ -12,6 +12,8 @@ async function main(): Promise<void> {
   const databaseUrl = `file:${path.join(databaseDirectory, "e2e.db")}`;
   await runSeed({ provider: "sqlite", databaseUrl });
   await copyStandaloneAssets();
+  const mockAi = await startMockAiServer();
+  process.env.E2E_MOCK_AI_BASE_URL = mockAi.baseUrl;
   const serverPath = path.resolve(".next/standalone/server.js");
   const server = spawn(process.execPath, [serverPath], {
     env: {
@@ -22,7 +24,11 @@ async function main(): Promise<void> {
       NEXT_PUBLIC_APP_URL: baseUrl,
       DATABASE_PROVIDER: "sqlite",
       DATABASE_URL: databaseUrl,
+      AUTH_MODE: "local-profile",
       SESSION_SECRET: "mathios-e2e-session-secret-please-change",
+      AI_PROVIDER: "disabled",
+      AI_LOCAL_BASE_URL: mockAi.baseUrl,
+      AI_LOCAL_MODEL: "e2e-model",
     },
     stdio: "inherit",
   });
@@ -37,8 +43,99 @@ async function main(): Promise<void> {
     if (server.exitCode === null) {
       await new Promise<void>((resolve) => server.once("close", () => resolve()));
     }
+    await closeServer(mockAi.server);
+    delete process.env.E2E_MOCK_AI_BASE_URL;
     await rm(databaseDirectory, { recursive: true, force: true });
   }
+}
+
+async function startMockAiServer(): Promise<{ server: http.Server; baseUrl: string }> {
+  const server = http.createServer(async (request, response) => {
+    if (request.method === "GET" && (request.url === "/api/tags" || request.url === "/v1/models")) {
+      writeJson(response, 200, { models: [{ name: "e2e-model" }] });
+      return;
+    }
+    if (request.method === "POST" && request.url === "/api/chat") {
+      await readRequest(request);
+      writeJson(response, 200, {
+        message: {
+          content: JSON.stringify({
+            lessonTitle: "Rate of change",
+            lessonSummary: "Slope describes how one quantity changes as another changes.",
+            moduleTitle: "Linear relationships",
+            estimatedDurationMinutes: 25,
+            sections: [
+              {
+                kind: "intuitive-explanation",
+                title: "A changing relationship",
+                description: "Compare two points to see a rate of change.",
+                blocks: [
+                  {
+                    type: "paragraph",
+                    title: null,
+                    text: "Slope compares the vertical change with the horizontal change.",
+                  },
+                ],
+              },
+              {
+                kind: "summary",
+                title: "Remember",
+                description: "Keep the ratio in view.",
+                blocks: [
+                  {
+                    type: "callout",
+                    title: null,
+                    tone: "info",
+                    text: "Slope is rise divided by run.",
+                  },
+                ],
+              },
+            ],
+          }),
+        },
+      });
+      return;
+    }
+    response.statusCode = 404;
+    response.end();
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    const onError = (error: Error) => reject(error);
+    server.once("error", onError);
+    server.listen(0, "127.0.0.1", () => {
+      server.off("error", onError);
+      resolve();
+    });
+  });
+  const address = server.address();
+  if (!address || typeof address === "string") {
+    await closeServer(server);
+    throw new Error("The mock AI server did not expose a port.");
+  }
+  return { server, baseUrl: `http://127.0.0.1:${address.port}` };
+}
+
+function writeJson(response: http.ServerResponse, statusCode: number, payload: unknown): void {
+  response.writeHead(statusCode, { "Content-Type": "application/json" });
+  response.end(JSON.stringify(payload));
+}
+
+function readRequest(request: http.IncomingMessage): Promise<string> {
+  return new Promise((resolve) => {
+    let body = "";
+    request.setEncoding("utf8");
+    request.on("data", (chunk: string) => {
+      body += chunk;
+    });
+    request.on("end", () => resolve(body));
+  });
+}
+
+function closeServer(server: http.Server): Promise<void> {
+  return new Promise((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
+  });
 }
 
 async function copyStandaloneAssets(): Promise<void> {

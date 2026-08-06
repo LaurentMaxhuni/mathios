@@ -16,7 +16,14 @@ export interface IdentityRepository {
   listProfilesWithRoles(): Promise<readonly ProfileWithRoles[]>;
   getProfileWithRoles(profileId: string): Promise<ProfileWithRoles | null>;
   getProfile(id: string): Promise<ProfileRecord | null>;
+  getProfileByUserId(userId: string): Promise<ProfileRecord | null>;
   getProfileByIdentifier(identifier: string): Promise<ProfileRecord | null>;
+  ensureExternalProfile(input: {
+    userId: string;
+    identifier: string;
+    authMode: "neon-auth";
+    displayName: string;
+  }): Promise<ProfileRecord>;
   createProfile(input: CreateProfileRecord): Promise<ProfileRecord>;
   updateProfile(id: string, input: UpdateProfileRecord): Promise<ProfileRecord>;
   deleteProfile(id: string): Promise<void>;

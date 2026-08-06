@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { ConflictError, NotFoundError } from "@/domain/errors/application-error";
 import {
   DEFAULT_ACCESSIBILITY_PREFERENCES,
@@ -299,6 +300,20 @@ export class SqlIdentityRepository implements IdentityRepository {
     return rows[0] ? mapProfile(rows[0]) : null;
   }
 
+  async getProfileByUserId(userId: string): Promise<ProfileRecord | null> {
+    if (this.database.provider === "sqlite") {
+      const row = this.database.raw.prepare(`${profileSelect} WHERE p.user_id = ?`).get(userId) as
+        ProfileDbRow | undefined;
+      return row ? mapProfile(row) : null;
+    }
+
+    const rows = await this.database.raw<ProfileDbRow[]>`
+      ${this.database.raw.unsafe(profileSelect)}
+      WHERE p.user_id = ${userId}
+    `;
+    return rows[0] ? mapProfile(rows[0]) : null;
+  }
+
   async getProfileByIdentifier(identifier: string): Promise<ProfileRecord | null> {
     if (this.database.provider === "sqlite") {
       const row = this.database.raw
@@ -313,6 +328,118 @@ export class SqlIdentityRepository implements IdentityRepository {
       WHERE u.identifier = ${identifier}
     `;
     return rows[0] ? mapProfile(rows[0]) : null;
+  }
+
+  async ensureExternalProfile(input: {
+    userId: string;
+    identifier: string;
+    authMode: "neon-auth";
+    displayName: string;
+  }): Promise<ProfileRecord> {
+    const existing = await this.getProfileByUserId(input.userId);
+    if (existing) return existing;
+
+    const profileId: string = randomUUID();
+    const roleSlugs = ["learner"] as const;
+
+    if (this.database.provider === "sqlite") {
+      const database = this.database.raw;
+      const ensuredProfileId = database.transaction(() => {
+        const existingProfile = database
+          .prepare(`SELECT id FROM profiles WHERE user_id = ?`)
+          .get(input.userId) as { id: string } | undefined;
+        if (existingProfile) return existingProfile.id;
+
+        database
+          .prepare(
+            `INSERT INTO users (id, identifier, auth_mode) VALUES (@id, @identifier, @authMode)
+             ON CONFLICT(id) DO UPDATE SET auth_mode = excluded.auth_mode, updated_at = CURRENT_TIMESTAMP`,
+          )
+          .run({ id: input.userId, identifier: input.identifier, authMode: input.authMode });
+        const userCount = database.prepare(`SELECT COUNT(*) AS count FROM users`).get() as {
+          count: number;
+        };
+        const assignedRoles = userCount.count === 1 ? ["learner", "administrator"] : roleSlugs;
+        database
+          .prepare(
+            `INSERT INTO profiles (id, user_id, display_name, avatar, preferred_theme, preferred_language, secret_hash)
+             VALUES (@id, @userId, @displayName, 'orbit', 'system', 'en', NULL)`,
+          )
+          .run({ id: profileId, userId: input.userId, displayName: input.displayName });
+        database
+          .prepare(`INSERT INTO user_settings (profile_id, theme) VALUES (?, 'system')`)
+          .run(profileId);
+        for (const roleSlug of assignedRoles) {
+          const role = database.prepare(`SELECT id FROM roles WHERE slug = ?`).get(roleSlug) as
+            { id: string } | undefined;
+          if (!role) throw new ConflictError(`The role '${roleSlug}' is not available.`);
+          database
+            .prepare(`INSERT OR IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)`)
+            .run(input.userId, role.id);
+        }
+        return profileId;
+      })();
+
+      const profile = await this.getProfile(ensuredProfileId);
+      if (!profile) throw new NotFoundError("Profile", ensuredProfileId);
+      return profile;
+    }
+
+    let ensuredProfileId: string = profileId;
+    await this.database.raw.begin(async (transaction) => {
+      const existingProfile = await transaction<{ id: string }[]>`
+        SELECT id FROM profiles WHERE user_id = ${input.userId}
+      `;
+      if (existingProfile[0]) {
+        ensuredProfileId = existingProfile[0].id;
+        return;
+      }
+
+      await transaction`
+        INSERT INTO users (id, identifier, auth_mode)
+        VALUES (${input.userId}, ${input.identifier}, ${input.authMode})
+        ON CONFLICT (id) DO UPDATE SET auth_mode = EXCLUDED.auth_mode, updated_at = NOW()
+      `;
+      const userCount = await transaction<{ count: number }[]>`
+        SELECT COUNT(*)::int AS count FROM users
+      `;
+      const assignedRoles = userCount[0]?.count === 1 ? ["learner", "administrator"] : roleSlugs;
+      const insertedProfiles = await transaction<{ id: string }[]>`
+        INSERT INTO profiles (id, user_id, display_name, avatar, preferred_theme, preferred_language, secret_hash)
+        VALUES (${profileId}, ${input.userId}, ${input.displayName}, 'orbit', 'system', 'en', NULL)
+        ON CONFLICT (user_id) DO NOTHING
+        RETURNING id
+      `;
+      if (!insertedProfiles[0]) {
+        const concurrentProfile = await transaction<{ id: string }[]>`
+          SELECT id FROM profiles WHERE user_id = ${input.userId}
+        `;
+        if (!concurrentProfile[0]) {
+          throw new ConflictError("The Neon Auth profile could not be provisioned.");
+        }
+        ensuredProfileId = concurrentProfile[0].id;
+        return;
+      }
+      ensuredProfileId = insertedProfiles[0].id;
+      await transaction`
+        INSERT INTO user_settings (profile_id, theme) VALUES (${ensuredProfileId}, 'system')
+        ON CONFLICT (profile_id) DO NOTHING
+      `;
+      for (const roleSlug of assignedRoles) {
+        const role = await transaction<{ id: string }[]>`
+          SELECT id FROM roles WHERE slug = ${roleSlug}
+        `;
+        if (!role[0]) throw new ConflictError(`The role '${roleSlug}' is not available.`);
+        await transaction`
+          INSERT INTO user_roles (user_id, role_id) VALUES (${input.userId}, ${role[0].id})
+          ON CONFLICT DO NOTHING
+        `;
+      }
+    });
+
+    const profile = await this.getProfile(ensuredProfileId);
+    if (!profile) throw new NotFoundError("Profile", ensuredProfileId);
+    return profile;
   }
 
   async createProfile(input: CreateProfileRecord): Promise<ProfileRecord> {

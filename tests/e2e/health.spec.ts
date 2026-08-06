@@ -2,12 +2,22 @@ import { expect, test } from "@playwright/test";
 
 test.describe.configure({ mode: "serial" });
 
-test("foundation overview renders and exposes a healthy endpoint", async ({ page, request }) => {
+test("provided learning library is the primary starting point", async ({ page, request }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "A sturdy place to build curious minds." }),
+    page.getByRole("heading", { name: "Your next idea is already here." }),
   ).toBeVisible();
-  await expect(page.getByText("Database foundation")).toBeVisible();
+  await expect(
+    page.getByText("lessons, concepts, practice, simulations, and experiments"),
+  ).toBeVisible();
+  await expect(page.getByText("Included from day one")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Start with the library, not a blank page." }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Start learning" }).first()).toHaveAttribute(
+    "href",
+    "/profiles",
+  );
 
   const response = await request.get("/api/health");
   expect(response.ok()).toBeTruthy();
@@ -38,7 +48,7 @@ test("Phase 18 readiness, security headers, and metrics protection are exposed",
     details: {
       databaseProvider: "sqlite",
       storageProvider: "local",
-      latestMigration: "0018_phase18_deployment_hardening.sql",
+      latestMigration: "0019_neon_auth.sql",
     },
   });
 
@@ -58,7 +68,11 @@ test("local profile setup, PIN sign-in, and settings are usable offline", async 
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page).toHaveURL("/");
-  await expect(page.getByRole("heading", { name: "Welcome back, E2E Learner." })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Your science library is ready, E2E Learner." }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Start with provided content" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Browse course library" }).first()).toBeVisible();
 
   await page.goto("/settings");
   await page.getByLabel("Default curriculum").fill("Local curriculum");
@@ -771,6 +785,79 @@ test("Phase 16 AI studio stays disabled safely and preserves core learning acces
     ok: true,
     body: { provider: "disabled", available: false },
   });
+
+  await page.goto("/content-studio");
+  await expect(page.getByRole("heading", { name: "Content studio" })).toBeVisible();
+  await expect(page.getByText("AI disabled", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Generate lesson draft" })).toBeDisabled();
+  await expect(page.getByRole("link", { name: "AI studio" }).last()).toBeVisible();
+});
+
+test("AI content studio generates and saves a reviewable lesson draft", async ({ page }) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  const mockAiBaseUrl = process.env.E2E_MOCK_AI_BASE_URL ?? "http://127.0.0.1:11434";
+  const settings = await page.evaluate(async (localBaseUrl) => {
+    const response = await fetch("/api/ai/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "local",
+        localBaseUrl,
+        localModel: "e2e-model",
+        remoteBaseUrl: "https://api.openai.com/v1",
+        remoteModel: "gpt-4o-mini",
+        maxTokens: 2048,
+        temperature: 0.2,
+      }),
+    });
+    return { status: response.status, body: await response.json() };
+  }, mockAiBaseUrl);
+  expect(settings.status).toBe(200);
+
+  await page.goto("/content-studio");
+  await expect(page.getByText("AI provider ready", { exact: true })).toBeVisible();
+  await page.getByLabel("Course title").fill("Linear relationships");
+  await page
+    .getByLabel("Topic or author brief")
+    .fill("Explain how slope describes a constant rate of change.");
+  await page.getByRole("button", { name: "Generate lesson draft" }).click();
+  await expect(page.getByRole("heading", { name: "Rate of change" })).toBeVisible();
+  await expect(page.getByText("AI-generated draft", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Save as draft" }).click();
+  await expect(page.getByRole("status")).toContainText("Draft saved.");
+  await expect(page.getByText("Draft is in the library.", { exact: true })).toBeVisible();
+  const lessonEditorLink = page.getByRole("link", { name: "Open lesson editor" });
+  await expect(lessonEditorLink).toBeVisible();
+  await lessonEditorLink.click();
+  await expect(page).toHaveURL(/\/lessons\/[^/]+\/edit$/);
+  await expect(page.getByRole("heading", { name: "Rate of change" })).toBeVisible();
+  await expect(
+    page.getByText("Slope describes how one quantity changes as another changes."),
+  ).toBeVisible();
+
+  const restored = await page.evaluate(async (localBaseUrl) => {
+    const response = await fetch("/api/ai/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "disabled",
+        localBaseUrl,
+        localModel: "e2e-model",
+        remoteBaseUrl: "https://api.openai.com/v1",
+        remoteModel: "gpt-4o-mini",
+        maxTokens: 800,
+        temperature: 0.2,
+      }),
+    });
+    return response.status;
+  }, mockAiBaseUrl);
+  expect(restored).toBe(200);
 });
 
 test("Phase 17 classroom workspace creates a class, assignment, invitation, and analytics view", async ({

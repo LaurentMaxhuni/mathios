@@ -20,6 +20,7 @@ import {
 import { verifyHostedJwt } from "@/infrastructure/auth/hosted-jwt";
 import { recordRequestAuditEvent } from "@/server/audit";
 import { enforceRateLimit, resetRateLimit } from "@/server/rate-limit";
+import { NeonAuthProvider } from "@/infrastructure/auth/neon-auth-provider";
 
 function toPrincipal(
   record: Awaited<ReturnType<IdentityRepository["getPrincipalByProfileId"]>>,
@@ -42,7 +43,10 @@ export class LocalAuthProvider implements AuthProvider {
 
   constructor(
     private readonly repository: IdentityRepository = getIdentityRepository(),
-    mode: AuthMode = env.AUTH_MODE === "hosted" ? "local-profile" : env.AUTH_MODE,
+    mode: Extract<AuthMode, "local-profile" | "local-credential"> = env.AUTH_MODE ===
+    "local-credential"
+      ? "local-credential"
+      : "local-profile",
   ) {
     this.mode = mode;
   }
@@ -170,6 +174,7 @@ export class HostedAuthProvider implements AuthProvider {
 }
 
 export function getAuthProvider(repository?: IdentityRepository): AuthProvider {
+  if (env.AUTH_MODE === "neon-auth") return new NeonAuthProvider(repository);
   if (env.AUTH_MODE === "hosted") return new HostedAuthProvider(repository);
   return new LocalAuthProvider(repository, env.AUTH_MODE);
 }

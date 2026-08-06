@@ -26,7 +26,8 @@ export function ProfileSelector({
             Who is learning today?
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-            Choose a local profile to continue. Nothing here needs an internet connection.
+            Choose a local profile to continue to the provided learning library. Your profile keeps
+            progress and preferences on this device; it does not supply the learning content.
           </p>
         </div>
         {canCreate ? (
