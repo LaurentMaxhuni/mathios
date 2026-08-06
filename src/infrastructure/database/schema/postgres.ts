@@ -2780,6 +2780,75 @@ export const contentMetrics = pgTable(
   }),
 );
 
+export const backupSettings = pgTable("backup_settings", {
+  id: integer("id").primaryKey(),
+  enabled: boolean("enabled").notNull().default(false),
+  schedule: text("schedule").notNull().default("weekly"),
+  backupType: text("backup_type").notNull().default("full"),
+  retentionCount: integer("retention_count").notNull().default(5),
+  location: text("location").notNull().default("backups"),
+  encryptionEnabled: boolean("encryption_enabled").notNull().default(false),
+  lastRunAt: timestamp("last_run_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const backupArtifacts = pgTable(
+  "backup_artifacts",
+  {
+    id: text("id").primaryKey(),
+    kind: text("kind").notNull(),
+    format: text("format").notNull(),
+    storageKey: text("storage_key").notNull(),
+    fileName: text("file_name").notNull(),
+    contentType: text("content_type").notNull(),
+    byteSize: integer("byte_size").notNull().default(0),
+    checksum: text("checksum").notNull(),
+    manifestJson: text("manifest_json").notNull().default("{}"),
+    encryptionEnabled: boolean("encryption_enabled").notNull().default(false),
+    status: text("status").notNull().default("ready"),
+    createdByProfileId: text("created_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    errorMessage: text("error_message"),
+  },
+  (table) => ({
+    createdIdx: index("backup_artifacts_created_idx").on(table.createdAt, table.status),
+    kindIdx: index("backup_artifacts_kind_idx").on(table.kind, table.createdAt),
+    storageKeyIdx: uniqueIndex("backup_artifacts_storage_key_idx").on(table.storageKey),
+  }),
+);
+
+export const restoreRuns = pgTable(
+  "restore_runs",
+  {
+    id: text("id").primaryKey(),
+    backupId: text("backup_id").references(() => backupArtifacts.id, { onDelete: "set null" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    sourceFileName: text("source_file_name"),
+    mode: text("mode").notNull(),
+    status: text("status").notNull(),
+    packageChecksum: text("package_checksum").notNull(),
+    conflictCount: integer("conflict_count").notNull().default(0),
+    insertedCount: integer("inserted_count").notNull().default(0),
+    updatedCount: integer("updated_count").notNull().default(0),
+    previewJson: text("preview_json").notNull().default("{}"),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    errorMessage: text("error_message"),
+  },
+  (table) => ({
+    profileStartedIdx: index("restore_runs_profile_started_idx").on(
+      table.profileId,
+      table.startedAt,
+    ),
+  }),
+);
+
 export type SearchIndexState = typeof searchIndexState.$inferSelect;
 export type SearchDocument = typeof searchDocuments.$inferSelect;
 export type SearchRecentQuery = typeof searchRecentQueries.$inferSelect;
@@ -2793,6 +2862,12 @@ export type LearnerMetric = typeof learnerMetrics.$inferSelect;
 export type NewLearnerMetric = typeof learnerMetrics.$inferInsert;
 export type ContentMetric = typeof contentMetrics.$inferSelect;
 export type NewContentMetric = typeof contentMetrics.$inferInsert;
+export type BackupSettings = typeof backupSettings.$inferSelect;
+export type NewBackupSettings = typeof backupSettings.$inferInsert;
+export type BackupArtifact = typeof backupArtifacts.$inferSelect;
+export type NewBackupArtifact = typeof backupArtifacts.$inferInsert;
+export type RestoreRun = typeof restoreRuns.$inferSelect;
+export type NewRestoreRun = typeof restoreRuns.$inferInsert;
 export type LaboratoryActivity = typeof laboratoryActivities.$inferSelect;
 export type NewLaboratoryActivity = typeof laboratoryActivities.$inferInsert;
 export type LaboratoryStep = typeof laboratorySteps.$inferSelect;

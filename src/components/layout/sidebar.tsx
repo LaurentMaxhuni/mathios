@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  Archive,
   BarChart3,
   CalendarDays,
   Atom,
@@ -60,6 +61,7 @@ const navigation: Array<{
   { href: "/laboratories" as const, label: "Laboratory", icon: FlaskConical },
   { href: "/planner" as const, label: "Study planner", icon: CalendarDays },
   { href: "/notes" as const, label: "Knowledge base", icon: StickyNote },
+  { href: "/portability" as const, label: "Import & backup", icon: Archive },
   { href: "/grades" as const, label: "Grades", icon: GraduationCap },
   { href: "/subjects" as const, label: "Subjects", icon: FlaskConical },
   { href: "/settings" as const, label: "Settings", icon: Settings2 },
@@ -152,7 +154,7 @@ export function Sidebar({ mobileOpen, onMobileClose, principal }: SidebarProps) 
             Profiles, permissions, settings, and onboarding stay available on this device.
           </p>
           <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Phase 13 - Global search and discovery
+            Phase 15 - Import, export, backup, and restore
           </p>
         </div>
       </aside>

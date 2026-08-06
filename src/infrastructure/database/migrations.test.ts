@@ -32,6 +32,7 @@ describe("database migrations", () => {
         "0012_phase12_notes_knowledge_base.sql",
         "0013_phase13_global_search.sql",
         "0014_phase14_analytics.sql",
+        "0015_phase15_portability.sql",
       ]);
       expect(second.applied).toEqual([]);
       expect(second.skipped).toEqual([
@@ -50,6 +51,7 @@ describe("database migrations", () => {
         "0012_phase12_notes_knowledge_base.sql",
         "0013_phase13_global_search.sql",
         "0014_phase14_analytics.sql",
+        "0015_phase15_portability.sql",
       ]);
       expect(database.prepare("SELECT key FROM app_metadata").all()).toEqual([]);
       expect(
@@ -146,6 +148,9 @@ describe("database migrations", () => {
         "analytics_snapshots",
         "learner_metrics",
         "content_metrics",
+        "backup_settings",
+        "backup_artifacts",
+        "restore_runs",
       ]) {
         expect(
           database
