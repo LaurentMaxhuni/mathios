@@ -20,7 +20,8 @@ COPY --from=builder --chown=mathios:mathios /app/.next/standalone ./
 COPY --from=builder --chown=mathios:mathios /app/.next/static ./.next/static
 COPY --from=builder --chown=mathios:mathios /app/public ./public
 COPY --from=builder --chown=mathios:mathios /app/drizzle ./drizzle
+COPY --from=builder --chown=mathios:mathios /app/scripts/migrate-runtime.mjs ./scripts/migrate-runtime.mjs
 
 USER mathios
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "node scripts/migrate-runtime.mjs && node server.js"]

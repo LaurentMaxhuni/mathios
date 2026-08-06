@@ -1,5 +1,11 @@
 export type ApplicationErrorCode =
-  "VALIDATION_ERROR" | "NOT_FOUND" | "UNAUTHORIZED" | "FORBIDDEN" | "CONFLICT" | "INTERNAL_ERROR";
+  | "VALIDATION_ERROR"
+  | "NOT_FOUND"
+  | "UNAUTHORIZED"
+  | "FORBIDDEN"
+  | "CONFLICT"
+  | "RATE_LIMITED"
+  | "INTERNAL_ERROR";
 
 export interface ErrorIssue {
   path: string;
@@ -77,6 +83,16 @@ export class ConflictError extends ApplicationError {
   constructor(message: string) {
     super("CONFLICT", message, 409);
     this.name = "ConflictError";
+  }
+}
+
+export class RateLimitError extends ApplicationError {
+  public readonly retryAfterSeconds: number;
+
+  constructor(retryAfterSeconds: number, message = "Too many requests. Please try again later.") {
+    super("RATE_LIMITED", message, 429);
+    this.name = "RateLimitError";
+    this.retryAfterSeconds = Math.max(1, Math.ceil(retryAfterSeconds));
   }
 }
 

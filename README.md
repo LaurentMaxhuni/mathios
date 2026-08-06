@@ -2,7 +2,7 @@
 
 Phase 4 adds the concept explorer and knowledge graph at `/concepts` and `/knowledge-graph`: creators can author reusable concepts, prerequisite relationships, lesson/objective links, applications, and misconceptions, while learners can trace what each concept requires and unlocks.
 
-Mathios is a local-first science learning platform. The repository is being built incrementally from the phases in [PROJECT_PLAN.md](PROJECT_PLAN.md). The current implementation includes Phase 0 through Phase 17: local profiles, curriculum and course structure, authoring and progress, concepts and mastery, assessments, roadmaps, simulations, virtual laboratories, a deterministic study planner, a profile-scoped personal knowledge base, local global search, portable backups, optional grounded local/remote AI, and teacher classrooms with assignments and feedback.
+Mathios is a local-first science learning platform. The repository is being built incrementally from the phases in [PROJECT_PLAN.md](PROJECT_PLAN.md). The current implementation includes Phase 0 through Phase 18: local profiles, curriculum and course structure, authoring and progress, concepts and mastery, assessments, roadmaps, simulations, virtual laboratories, a deterministic study planner, a profile-scoped personal knowledge base, local global search, portable backups, optional grounded local/remote AI, teacher classrooms with assignments and feedback, and deployment hardening for PostgreSQL, S3-compatible storage, hosted auth, security controls, and observability.
 
 ## Quick start
 
@@ -13,7 +13,7 @@ npm run db:setup
 npm run dev
 ```
 
-Open <http://localhost:3000>. The health endpoint is available at <http://localhost:3000/api/health>.
+Open <http://localhost:3000>. The health endpoint is available at <http://localhost:3000/api/health>; deployment readiness is available at <http://localhost:3000/api/readiness>.
 
 On first launch, create a local profile. The first profile receives the learner and administrator roles. Later profiles can be created by an administrator and start with the learner role. A profile PIN/password is optional and is hashed locally with Node's `scrypt` implementation. `db:seed` installs the three reference curricula, ten grade levels, five subjects, representative domains, mappings, curriculum-specific learning objectives, and an example classroom when profiles exist.
 
@@ -31,19 +31,19 @@ Playwright is configured for the health and local-profile smoke tests. Install i
 
 ## Docker
 
-The Compose file starts the standalone Next.js server with PostgreSQL and a persistent local storage volume:
+The Compose file starts the standalone Next.js server with PostgreSQL and a persistent local storage volume. It runs checked-in migrations before the server starts and keeps PostgreSQL private to the Compose network:
 
 ```powershell
 docker compose up --build
 ```
 
-The app health check is available at <http://localhost:3000/api/health>. The local migration and seed commands remain the canonical database setup commands; set `DATABASE_PROVIDER=postgres` and `DATABASE_URL=postgres://mathios:mathios@localhost:5432/mathios` in the invoking environment when running them against the Compose database.
+The app health check is available at <http://localhost:3000/api/health>, and the Compose healthcheck uses <http://localhost:3000/api/readiness>. The local migration and seed commands remain the canonical database setup commands. See [the Phase 18 deployment notes](docs/phase18-deployment-hardening.md) for PostgreSQL, S3, hosted auth, backups, signed URLs, security, and operations.
 
 ## Database
 
-SQLite is the default for offline development. The migration runner applies checked-in SQL files from `drizzle/sqlite`. PostgreSQL compatibility is kept in parallel migrations under `drizzle/postgres`. Phase 1 adds the identity tables in `0001_phase1_identity.sql`; Phase 2 adds the educational structure in `0002_phase2_curriculum_structure.sql`; Phase 3 adds courses, modules, lessons, structured blocks, versions, and progress in `0003_phase3_courses_lessons.sql`; Phase 4 adds concepts and graph links in `0004_phase4_concepts_knowledge_graph.sql`; Phase 17 adds classroom membership, assignment, submission, rubric, feedback, and invitation tables in `0017_phase17_classrooms.sql`. `npm run db:seed` installs canonical roles, permissions, curriculum reference data, idempotent Phase 3 course content, Phase 4 graph data, and profile-dependent classroom examples. Set `DATABASE_PROVIDER=postgres` and a PostgreSQL connection URL to use the PostgreSQL path.
+SQLite is the default for offline development. The migration runner applies checked-in SQL files from `drizzle/sqlite`. PostgreSQL compatibility is kept in parallel migrations under `drizzle/postgres`. Phase 1 adds the identity tables in `0001_phase1_identity.sql`; Phase 2 adds the educational structure in `0002_phase2_curriculum_structure.sql`; Phase 3 adds courses, modules, lessons, structured blocks, versions, and progress in `0003_phase3_courses_lessons.sql`; Phase 4 adds concepts and graph links in `0004_phase4_concepts_knowledge_graph.sql`; Phase 17 adds classroom membership, assignment, submission, rubric, feedback, and invitation tables in `0017_phase17_classrooms.sql`; Phase 18 adds append-only audit logs in `0018_phase18_deployment_hardening.sql`. `npm run db:seed` installs canonical roles, permissions, curriculum reference data, idempotent Phase 3 course content, Phase 4 graph data, and profile-dependent classroom examples. Set `DATABASE_PROVIDER=postgres` and a PostgreSQL connection URL to use the PostgreSQL path. See [the Phase 18 deployment notes](docs/phase18-deployment-hardening.md) for backups and SQLite-to-PostgreSQL migration.
 
-`AUTH_MODE=local-profile` is the default local profile selector. `AUTH_MODE=local-credential` uses the same provider-neutral local adapter and secret hash storage, leaving room for a dedicated credential UX later. `AUTH_MODE=hosted` is recognized by configuration but intentionally fails closed until a hosted provider is introduced in a later phase. Local sessions use an HttpOnly, signed cookie and do not require network access.
+`AUTH_MODE=local-profile` is the default local profile selector. `AUTH_MODE=local-credential` uses the same provider-neutral local adapter and secret hash storage. `AUTH_MODE=hosted` verifies configured HS256/RS256 bearer tokens and maps their subject to a local user identifier. Local sessions use an HttpOnly, signed, rotating cookie and do not require network access.
 
 The study planner is available at `/planner`. It can generate a goal-backed schedule from published roadmaps, courses, grades, subjects, assessments, and concepts. The planner stores date-only sessions, keeps recurring availability separate from one-off exceptions, warns when a target is unrealistic, and carries completed lesson/roadmap work back into the existing progress records. See [the Phase 11 notes](docs/phase11-study-planner.md) for the domain and persistence contract.
 

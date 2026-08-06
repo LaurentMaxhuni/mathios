@@ -26,14 +26,16 @@ export function getDatabase(): DatabaseHandle {
     const raw = new Database(filename);
     raw.pragma("foreign_keys = ON");
     raw.pragma("busy_timeout = 5000");
+    raw.pragma("journal_mode = WAL");
+    raw.pragma("synchronous = NORMAL");
     databaseHandle = { provider: "sqlite", raw, db: drizzleSqlite(raw, { schema: sqliteSchema }) };
     return databaseHandle;
   }
 
   const raw = postgres(env.DATABASE_URL, {
-    max: 5,
-    connect_timeout: 10,
-    idle_timeout: 20,
+    max: env.DATABASE_POOL_MAX,
+    connect_timeout: env.DATABASE_CONNECT_TIMEOUT_SECONDS,
+    idle_timeout: env.DATABASE_IDLE_TIMEOUT_SECONDS,
   });
   databaseHandle = {
     provider: "postgres",

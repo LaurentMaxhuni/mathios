@@ -19,6 +19,7 @@ async function main(): Promise<void> {
       HOSTNAME: "127.0.0.1",
       PORT: "3000",
       APP_ENV: "test",
+      NEXT_PUBLIC_APP_URL: baseUrl,
       DATABASE_PROVIDER: "sqlite",
       DATABASE_URL: databaseUrl,
       SESSION_SECRET: "mathios-e2e-session-secret-please-change",

@@ -17,6 +17,36 @@ test("foundation overview renders and exposes a healthy endpoint", async ({ page
   });
 });
 
+test("Phase 18 readiness, security headers, and metrics protection are exposed", async ({
+  request,
+}) => {
+  const readiness = await request.get("/api/readiness");
+  expect(readiness.status()).toBe(200);
+  expect(readiness.headers()).toMatchObject({
+    "cache-control": "no-store",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+  });
+  await expect(readiness.json()).resolves.toMatchObject({
+    status: "ready",
+    checks: {
+      database: "ok",
+      migrations: "ok",
+      storage: "ok",
+      configuration: "ok",
+    },
+    details: {
+      databaseProvider: "sqlite",
+      storageProvider: "local",
+      latestMigration: "0018_phase18_deployment_hardening.sql",
+    },
+  });
+
+  const metrics = await request.get("/api/metrics");
+  expect(metrics.status()).toBe(401);
+  await expect(metrics.json()).resolves.toMatchObject({ code: "UNAUTHORIZED" });
+});
+
 test("local profile setup, PIN sign-in, and settings are usable offline", async ({ page }) => {
   await page.goto("/profiles/new");
   await page.getByLabel("Display name").fill("E2E Learner");
