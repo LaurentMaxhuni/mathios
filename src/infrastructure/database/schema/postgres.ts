@@ -2894,6 +2894,238 @@ export const aiGenerations = pgTable(
   }),
 );
 
+export const classes = pgTable(
+  "classes",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    description: text("description").notNull().default(""),
+    joinCode: text("join_code").notNull(),
+    subjectIds: text("subject_ids").notNull().default("[]"),
+    gradeIds: text("grade_ids").notNull().default("[]"),
+    createdByProfileId: text("created_by_profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    joinCodeIdx: uniqueIndex("classes_join_code_idx").on(table.joinCode),
+    createdByIdx: index("classes_created_by_idx").on(table.createdByProfileId, table.createdAt),
+  }),
+);
+
+export const classMembers = pgTable(
+  "class_members",
+  {
+    classId: text("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("active"),
+    joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.classId, table.profileId] }),
+    profileIdx: index("class_members_profile_idx").on(
+      table.profileId,
+      table.status,
+      table.joinedAt,
+    ),
+  }),
+);
+
+export const classTeachers = pgTable(
+  "class_teachers",
+  {
+    classId: text("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    role: text("role").notNull().default("teacher"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.classId, table.profileId] }),
+    profileIdx: index("class_teachers_profile_idx").on(
+      table.profileId,
+      table.role,
+      table.createdAt,
+    ),
+  }),
+);
+
+export const invitations = pgTable(
+  "invitations",
+  {
+    id: text("id").primaryKey(),
+    classId: text("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    code: text("code").notNull(),
+    invitedProfileId: text("invited_profile_id").references(() => profiles.id, {
+      onDelete: "cascade",
+    }),
+    invitedByProfileId: text("invited_by_profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "restrict" }),
+    status: text("status").notNull().default("pending"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    acceptedByProfileId: text("accepted_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    codeIdx: uniqueIndex("invitations_code_idx").on(table.code),
+    classStatusIdx: index("invitations_class_status_idx").on(
+      table.classId,
+      table.status,
+      table.createdAt,
+    ),
+    profileStatusIdx: index("invitations_profile_status_idx").on(
+      table.invitedProfileId,
+      table.status,
+      table.createdAt,
+    ),
+  }),
+);
+
+export const assignments = pgTable(
+  "assignments",
+  {
+    id: text("id").primaryKey(),
+    classId: text("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    instructions: text("instructions").notNull().default(""),
+    resourceType: text("resource_type").notNull(),
+    resourceId: text("resource_id").notNull(),
+    resourceTitle: text("resource_title").notNull(),
+    targetScope: text("target_scope").notNull(),
+    startAt: timestamp("start_at", { withTimezone: true }),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    attemptLimit: integer("attempt_limit"),
+    lateSubmissionRule: text("late_submission_rule").notNull().default("flag"),
+    status: text("status").notNull().default("published"),
+    createdByProfileId: text("created_by_profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    classStatusIdx: index("assignments_class_status_idx").on(
+      table.classId,
+      table.status,
+      table.dueAt,
+    ),
+    resourceIdx: index("assignments_resource_idx").on(table.resourceType, table.resourceId),
+  }),
+);
+
+export const assignmentTargets = pgTable(
+  "assignment_targets",
+  {
+    assignmentId: text("assignment_id")
+      .notNull()
+      .references(() => assignments.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.assignmentId, table.profileId] }),
+    profileIdx: index("assignment_targets_profile_idx").on(table.profileId, table.assignmentId),
+  }),
+);
+
+export const assignmentSubmissions = pgTable(
+  "assignment_submissions",
+  {
+    id: text("id").primaryKey(),
+    assignmentId: text("assignment_id")
+      .notNull()
+      .references(() => assignments.id, { onDelete: "cascade" }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    attemptNumber: integer("attempt_number").notNull(),
+    status: text("status").notNull().default("submitted"),
+    responseJson: text("response_json").notNull().default("{}"),
+    isLate: boolean("is_late").notNull().default(false),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    returnedAt: timestamp("returned_at", { withTimezone: true }),
+    grade: doublePrecision("grade"),
+    gradeMax: doublePrecision("grade_max").notNull().default(100),
+    reviewedByProfileId: text("reviewed_by_profile_id").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    attemptIdx: index("assignment_submissions_assignment_idx").on(
+      table.assignmentId,
+      table.profileId,
+      table.attemptNumber,
+    ),
+    profileIdx: index("assignment_submissions_profile_idx").on(
+      table.profileId,
+      table.status,
+      table.submittedAt,
+    ),
+  }),
+);
+
+export const gradingRubrics = pgTable(
+  "grading_rubrics",
+  {
+    id: text("id").primaryKey(),
+    assignmentId: text("assignment_id")
+      .notNull()
+      .references(() => assignments.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    criteriaJson: text("criteria_json").notNull().default("[]"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({ assignmentIdx: index("grading_rubrics_assignment_idx").on(table.assignmentId) }),
+);
+
+export const teacherFeedback = pgTable(
+  "teacher_feedback",
+  {
+    id: text("id").primaryKey(),
+    submissionId: text("submission_id")
+      .notNull()
+      .references(() => assignmentSubmissions.id, { onDelete: "cascade" }),
+    teacherProfileId: text("teacher_profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "restrict" }),
+    body: text("body"),
+    grade: doublePrecision("grade"),
+    gradeMax: doublePrecision("grade_max").notNull().default(100),
+    rubricScoresJson: text("rubric_scores_json").notNull().default("{}"),
+    returnForResubmission: boolean("return_for_resubmission").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    submissionIdx: index("teacher_feedback_submission_idx").on(table.submissionId, table.createdAt),
+  }),
+);
+
 export type SearchIndexState = typeof searchIndexState.$inferSelect;
 export type SearchDocument = typeof searchDocuments.$inferSelect;
 export type SearchRecentQuery = typeof searchRecentQueries.$inferSelect;
@@ -2917,6 +3149,24 @@ export type AiSettings = typeof aiSettings.$inferSelect;
 export type NewAiSettings = typeof aiSettings.$inferInsert;
 export type AiGeneration = typeof aiGenerations.$inferSelect;
 export type NewAiGeneration = typeof aiGenerations.$inferInsert;
+export type Classroom = typeof classes.$inferSelect;
+export type NewClassroom = typeof classes.$inferInsert;
+export type ClassMember = typeof classMembers.$inferSelect;
+export type NewClassMember = typeof classMembers.$inferInsert;
+export type ClassTeacher = typeof classTeachers.$inferSelect;
+export type NewClassTeacher = typeof classTeachers.$inferInsert;
+export type Invitation = typeof invitations.$inferSelect;
+export type NewInvitation = typeof invitations.$inferInsert;
+export type Assignment = typeof assignments.$inferSelect;
+export type NewAssignment = typeof assignments.$inferInsert;
+export type AssignmentTarget = typeof assignmentTargets.$inferSelect;
+export type NewAssignmentTarget = typeof assignmentTargets.$inferInsert;
+export type AssignmentSubmission = typeof assignmentSubmissions.$inferSelect;
+export type NewAssignmentSubmission = typeof assignmentSubmissions.$inferInsert;
+export type GradingRubric = typeof gradingRubrics.$inferSelect;
+export type NewGradingRubric = typeof gradingRubrics.$inferInsert;
+export type TeacherFeedback = typeof teacherFeedback.$inferSelect;
+export type NewTeacherFeedback = typeof teacherFeedback.$inferInsert;
 export type LaboratoryActivity = typeof laboratoryActivities.$inferSelect;
 export type NewLaboratoryActivity = typeof laboratoryActivities.$inferInsert;
 export type LaboratoryStep = typeof laboratorySteps.$inferSelect;

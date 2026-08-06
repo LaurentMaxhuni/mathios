@@ -732,3 +732,93 @@ test("Phase 16 AI studio stays disabled safely and preserves core learning acces
     body: { provider: "disabled", available: false },
   });
 });
+
+test("Phase 17 classroom workspace creates a class, assignment, invitation, and analytics view", async ({
+  page,
+}) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/");
+
+  await page.goto("/classrooms");
+  await expect(page.getByRole("heading", { name: "Classroom command center" })).toBeVisible();
+  await page.getByLabel("Class name").fill("E2E Physics classroom");
+  await page
+    .getByLabel("Description")
+    .fill("A classroom created through the Phase 17 browser flow.");
+  await page.getByRole("button", { name: "Create classroom" }).click();
+  await expect(page.getByRole("status")).toContainText("Classroom created.");
+  const classroomLink = page.getByRole("link", { name: /E2E Physics classroom/ });
+  await expect(classroomLink).toBeVisible();
+  await classroomLink.click();
+  await expect(page).toHaveURL(/\/classrooms\/[0-9a-f-]+$/);
+  await expect(page.getByRole("heading", { name: "E2E Physics classroom" })).toBeVisible();
+
+  const classroom = await page.evaluate(async () => {
+    const response = await fetch("/api/classrooms");
+    const body = (await response.json()) as {
+      classes: Array<{ id: string; name: string; joinCode: string }>;
+    };
+    return body.classes.find((item) => item.name === "E2E Physics classroom") ?? null;
+  });
+  expect(classroom).not.toBeNull();
+  const joinResponse = await page.evaluate(async (joinCode) => {
+    const response = await fetch("/api/classrooms/join", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ joinCode }),
+    });
+    return { ok: response.ok, body: await response.json() };
+  }, classroom!.joinCode);
+  expect(joinResponse.ok).toBeTruthy();
+  await page.reload();
+
+  await page.getByLabel("Assignment title").fill("E2E explain the evidence");
+  await page.getByLabel("Instructions").fill("Write a short explanation for the teacher.");
+  await page.getByRole("button", { name: "Publish assignment" }).click();
+  await expect(page.getByRole("status")).toContainText("Assignment published");
+
+  const detailResponse = await page.evaluate(async (classId) => {
+    const response = await fetch(`/api/classrooms/${classId}`);
+    return { ok: response.ok, body: await response.json() };
+  }, classroom!.id);
+  expect(detailResponse.ok).toBeTruthy();
+  expect(detailResponse.body).toMatchObject({
+    classroom: { name: "E2E Physics classroom" },
+    members: expect.arrayContaining([expect.any(Object)]),
+    assignments: [
+      expect.objectContaining({ title: "E2E explain the evidence", targetScope: "class" }),
+    ],
+  });
+
+  const invitationResponse = await page.evaluate(async (classId) => {
+    const response = await fetch(`/api/classrooms/${classId}/invitations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: "learner", invitedProfileId: null }),
+    });
+    return { status: response.status, body: await response.json() };
+  }, classroom!.id);
+  expect(invitationResponse.status).toBe(201);
+  expect(invitationResponse.body).toMatchObject({ role: "learner", status: "pending" });
+
+  const acceptedInvitation = await page.evaluate(async (code) => {
+    const response = await fetch("/api/classrooms/invitations/accept", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+    return { ok: response.ok, body: await response.json() };
+  }, invitationResponse.body.code);
+  expect(acceptedInvitation.ok).toBeTruthy();
+  expect(acceptedInvitation.body).toMatchObject({ role: "learner", status: "accepted" });
+
+  const analyticsResponse = await page.evaluate(async (classId) => {
+    const response = await fetch(`/api/classrooms/${classId}/analytics`);
+    return { ok: response.ok, body: await response.json() };
+  }, classroom!.id);
+  expect(analyticsResponse.ok).toBeTruthy();
+  expect(analyticsResponse.body).toMatchObject({ memberCount: 1, assignmentCount: 1 });
+});

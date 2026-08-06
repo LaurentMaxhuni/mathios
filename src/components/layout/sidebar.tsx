@@ -21,6 +21,7 @@ import {
   Network,
   Route,
   Search,
+  School,
   Settings2,
   ShieldCheck,
   Sparkles,
@@ -54,6 +55,7 @@ const navigation: Array<{
     icon: BarChart3,
     requiresAnalytics: true,
   },
+  { href: "/classrooms" as const, label: "Classrooms", icon: School },
   { href: "/recommendations" as const, label: "Recommendations", icon: Sparkles },
   { href: "/roadmaps" as const, label: "Roadmaps", icon: GitBranch },
   { href: "/personalized-paths" as const, label: "My paths", icon: Route },
@@ -155,7 +157,7 @@ export function Sidebar({ mobileOpen, onMobileClose, principal }: SidebarProps) 
             Profiles, permissions, settings, and onboarding stay available on this device.
           </p>
           <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Phase 16 - Optional local and remote AI
+            Phase 17 - Multi-user classrooms
           </p>
         </div>
       </aside>
