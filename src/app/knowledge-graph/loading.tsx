@@ -1,5 +1,5 @@
-import { WorkspaceSkeleton } from "@/components/shared/route-skeletons";
+import { GraphSkeleton } from "@/components/shared/route-skeletons";
 
 export default function Loading() {
-  return <WorkspaceSkeleton />;
+  return <GraphSkeleton />;
 }

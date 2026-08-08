@@ -40,6 +40,8 @@ const defaultInstruction: Record<AiTask, string> = {
   "study-plan-suggestion": "Suggest a realistic study sequence for this topic.",
   "lesson-draft":
     "Create a structured lesson draft as JSON for an author to review. Do not publish it.",
+  "source-lesson-draft":
+    "Turn supplied source pages into cited, level-appropriate lesson drafts for review.",
 };
 
 async function responseMessage(response: Response): Promise<string> {

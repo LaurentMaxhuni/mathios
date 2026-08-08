@@ -606,6 +606,23 @@ export class SqlIdentityRepository implements IdentityRepository {
           ${this.database.raw.unsafe(principalSelect)}
           WHERE p.id = ${profileId}
         `;
+    return this.mapPrincipal(rows);
+  }
+
+  async getPrincipalByUserId(userId: string): Promise<AuthenticatedPrincipalRecord | null> {
+    const rows =
+      this.database.provider === "sqlite"
+        ? (this.database.raw
+            .prepare(`${principalSelect} WHERE p.user_id = ?`)
+            .all(userId) as PrincipalDbRow[])
+        : await this.database.raw<PrincipalDbRow[]>`
+          ${this.database.raw.unsafe(principalSelect)}
+          WHERE p.user_id = ${userId}
+        `;
+    return this.mapPrincipal(rows);
+  }
+
+  private mapPrincipal(rows: readonly PrincipalDbRow[]): AuthenticatedPrincipalRecord | null {
     const first = rows[0];
     if (!first) return null;
     const roles = roleValues(rows);

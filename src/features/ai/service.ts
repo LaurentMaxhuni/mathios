@@ -109,7 +109,10 @@ export async function generateAiContent(
     systemPrompt: prompts.systemPrompt,
     userPrompt: prompts.userPrompt,
     grounding,
-    maxTokens: settings.maxTokens,
+    maxTokens:
+      normalizedInput.task === "source-lesson-draft"
+        ? Math.max(settings.maxTokens, 3000)
+        : settings.maxTokens,
     temperature: settings.temperature,
   });
   const output = sanitizeAiOutput(response.content);
@@ -141,7 +144,7 @@ async function buildGrounding(
   profileId: string,
   input: AiGenerationInput,
 ): Promise<readonly AiGroundingSource[]> {
-  const sources: AiGroundingSource[] = [];
+  const sources: AiGroundingSource[] = [...(input.grounding ?? [])];
   if (input.lessonId) {
     const reader = await getCourseRepository().getLessonReader(input.lessonId, profileId);
     if (reader) {

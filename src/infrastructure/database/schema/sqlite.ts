@@ -3417,6 +3417,166 @@ export const teacherFeedback = sqliteTable(
   }),
 );
 
+export const sourceDocuments = sqliteTable(
+  "source_documents",
+  {
+    id: text("id").primaryKey(),
+    title: text("title").notNull(),
+    originalFilename: text("original_filename").notNull(),
+    storageKey: text("storage_key").notNull(),
+    mimeType: text("mime_type").notNull(),
+    byteSize: integer("byte_size").notNull(),
+    sha256: text("sha256").notNull(),
+    subjectId: text("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "restrict" }),
+    targetGradeId: text("target_grade_id")
+      .notNull()
+      .references(() => grades.id, { onDelete: "restrict" }),
+    difficulty: text("difficulty").notNull(),
+    lessonSize: text("lesson_size").notNull(),
+    rightsStatus: text("rights_status").notNull().default("unknown"),
+    pageCount: integer("page_count"),
+    extractionMethod: text("extraction_method"),
+    processingStatus: text("processing_status").notNull().default("uploaded"),
+    processingError: text("processing_error"),
+    createdByProfileId: text("created_by_profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "restrict" }),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    storageKeyIdx: uniqueIndex("source_documents_storage_key_idx").on(table.storageKey),
+    creatorStatusIdx: index("source_documents_creator_status_idx").on(
+      table.createdByProfileId,
+      table.processingStatus,
+      table.createdAt,
+    ),
+    sha256Idx: index("source_documents_sha256_idx").on(table.sha256),
+  }),
+);
+
+export const sourceDocumentPages = sqliteTable(
+  "source_document_pages",
+  {
+    documentId: text("document_id")
+      .notNull()
+      .references(() => sourceDocuments.id, { onDelete: "cascade" }),
+    pageNumber: integer("page_number").notNull(),
+    extractedText: text("extracted_text").notNull(),
+    characterCount: integer("character_count").notNull(),
+    extractionMethod: text("extraction_method").notNull().default("pdf-text"),
+    warningsJson: text("warnings_json").notNull().default("[]"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({ primaryKey: primaryKey({ columns: [table.documentId, table.pageNumber] }) }),
+);
+
+export const contentImportJobs = sqliteTable(
+  "content_import_jobs",
+  {
+    id: text("id").primaryKey(),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => sourceDocuments.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("queued"),
+    totalUnits: integer("total_units").notNull().default(0),
+    processedUnits: integer("processed_units").notNull().default(0),
+    errorDetails: text("error_details"),
+    startedAt: text("started_at"),
+    finishedAt: text("finished_at"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    documentIdx: uniqueIndex("content_import_jobs_document_idx").on(table.documentId),
+    statusIdx: index("content_import_jobs_status_idx").on(table.status, table.createdAt),
+  }),
+);
+
+export const sourceChunks = sqliteTable(
+  "source_chunks",
+  {
+    id: text("id").primaryKey(),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => sourceDocuments.id, { onDelete: "cascade" }),
+    jobId: text("job_id")
+      .notNull()
+      .references(() => contentImportJobs.id, { onDelete: "cascade" }),
+    pageStart: integer("page_start").notNull(),
+    pageEnd: integer("page_end").notNull(),
+    chunkText: text("chunk_text").notNull(),
+    characterCount: integer("character_count").notNull(),
+    contentHash: text("content_hash").notNull(),
+    sortOrder: integer("sort_order").notNull(),
+    status: text("status").notNull().default("pending"),
+    processingError: text("processing_error"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    orderIdx: uniqueIndex("source_chunks_job_order_idx").on(table.jobId, table.sortOrder),
+    statusIdx: index("source_chunks_job_status_idx").on(table.jobId, table.status, table.sortOrder),
+  }),
+);
+
+export const contentImportItems = sqliteTable(
+  "content_import_items",
+  {
+    id: text("id").primaryKey(),
+    jobId: text("job_id")
+      .notNull()
+      .references(() => contentImportJobs.id, { onDelete: "cascade" }),
+    chunkId: text("chunk_id")
+      .notNull()
+      .references(() => sourceChunks.id, { onDelete: "cascade" }),
+    stableEntityKey: text("stable_entity_key").notNull(),
+    title: text("title").notNull(),
+    pageStart: integer("page_start").notNull(),
+    pageEnd: integer("page_end").notNull(),
+    payloadJson: text("payload_json").notNull(),
+    generationId: text("generation_id").references(() => aiGenerations.id, {
+      onDelete: "set null",
+    }),
+    savedLessonId: text("saved_lesson_id").references(() => lessons.id, { onDelete: "set null" }),
+    status: text("status").notNull().default("draft"),
+    sortOrder: integer("sort_order").notNull(),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    stableKeyIdx: uniqueIndex("content_import_items_stable_key_idx").on(
+      table.jobId,
+      table.stableEntityKey,
+    ),
+    statusIdx: index("content_import_items_job_status_idx").on(
+      table.jobId,
+      table.status,
+      table.sortOrder,
+    ),
+  }),
+);
+
 export type SearchIndexState = typeof searchIndexState.$inferSelect;
 export type SearchDocument = typeof searchDocuments.$inferSelect;
 export type SearchRecentQuery = typeof searchRecentQueries.$inferSelect;
@@ -3458,6 +3618,16 @@ export type GradingRubric = typeof gradingRubrics.$inferSelect;
 export type NewGradingRubric = typeof gradingRubrics.$inferInsert;
 export type TeacherFeedback = typeof teacherFeedback.$inferSelect;
 export type NewTeacherFeedback = typeof teacherFeedback.$inferInsert;
+export type SourceDocument = typeof sourceDocuments.$inferSelect;
+export type NewSourceDocument = typeof sourceDocuments.$inferInsert;
+export type SourceDocumentPage = typeof sourceDocumentPages.$inferSelect;
+export type NewSourceDocumentPage = typeof sourceDocumentPages.$inferInsert;
+export type ContentImportJob = typeof contentImportJobs.$inferSelect;
+export type NewContentImportJob = typeof contentImportJobs.$inferInsert;
+export type SourceChunk = typeof sourceChunks.$inferSelect;
+export type NewSourceChunk = typeof sourceChunks.$inferInsert;
+export type ContentImportItem = typeof contentImportItems.$inferSelect;
+export type NewContentImportItem = typeof contentImportItems.$inferInsert;
 export type LaboratoryActivity = typeof laboratoryActivities.$inferSelect;
 export type NewLaboratoryActivity = typeof laboratoryActivities.$inferInsert;
 export type LaboratoryStep = typeof laboratorySteps.$inferSelect;

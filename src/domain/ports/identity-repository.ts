@@ -28,6 +28,7 @@ export interface IdentityRepository {
   updateProfile(id: string, input: UpdateProfileRecord): Promise<ProfileRecord>;
   deleteProfile(id: string): Promise<void>;
   getPrincipalByProfileId(profileId: string): Promise<AuthenticatedPrincipalRecord | null>;
+  getPrincipalByUserId(userId: string): Promise<AuthenticatedPrincipalRecord | null>;
   listRoles(): Promise<readonly RoleRecord[]>;
   replaceUserRoles(userId: string, roleSlugs: readonly RoleSlug[]): Promise<ProfileWithRoles>;
   getSettings(profileId: string): Promise<UserSettingsRecord | null>;

@@ -48,6 +48,10 @@ describe("SqlIdentityRepository", () => {
       await expect(repository.getPrincipalByProfileId(profile.id)).resolves.toMatchObject({
         roles: ["administrator", "learner"],
       });
+      await expect(repository.getPrincipalByUserId("neon-user-1")).resolves.toMatchObject({
+        profileId: profile.id,
+        roles: ["administrator", "learner"],
+      });
     } finally {
       raw.close();
       await rm(directory, { recursive: true, force: true });

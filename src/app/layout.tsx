@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppProviders } from "@/components/providers/app-providers";
 import { AppShell } from "@/components/layout/app-shell";
@@ -55,15 +56,17 @@ export const dynamic = "force-dynamic";
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   let principal = null;
   let settings = null;
-  try {
-    const repository = getIdentityRepository();
-    const session = await getCurrentSession(repository);
-    principal = session?.principal ?? null;
-    settings = principal ? await repository.getSettings(principal.profileId) : null;
-  } catch (error) {
-    logger.warn("Application context is unavailable until database migrations run", {
-      error: error instanceof Error ? error.message : String(error),
-    });
+  const isPublicRoute = (await headers()).get("x-mathios-public-route") === "1";
+  if (!isPublicRoute) {
+    try {
+      const session = await getCurrentSession();
+      principal = session?.principal ?? null;
+      settings = principal ? await getIdentityRepository().getSettings(principal.profileId) : null;
+    } catch (error) {
+      logger.warn("Application context is unavailable until database migrations run", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   return (
