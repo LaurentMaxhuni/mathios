@@ -10,6 +10,9 @@ import { BrandMark } from "@/components/shared/brand-mark";
 gsap.registerPlugin(ScrollTrigger);
 
 const subjects = ["Mathematics", "Physics", "Chemistry", "Biology", "Astronomy"];
+const manifesto = "When the question stays visible, the answer becomes a place to begin.".split(
+  " ",
+);
 
 interface LandingPageProps {
   primaryHref: string;
@@ -17,9 +20,9 @@ interface LandingPageProps {
   signInHref?: string;
 }
 
-function CtaIcon() {
+function CtaArrow() {
   return (
-    <span className="landing-cta-icon" aria-hidden="true">
+    <span className="studio-cta-arrow" aria-hidden="true">
       ↗
     </span>
   );
@@ -39,169 +42,109 @@ export function LandingPage({
     const desktop = gsap.matchMedia();
     const cleanupListeners: Array<() => void> = [];
     const context = gsap.context(() => {
-      desktop.add("(min-width: 768px)", () => {
-        const intro = gsap.timeline({ defaults: { ease: "power4.out" } });
+      const intro = gsap.timeline({ defaults: { ease: "power4.out" } });
+      intro
+        .from(".studio-nav", { y: -28, opacity: 0, duration: 0.8 })
+        .from(".studio-hero-reveal", { yPercent: 105, duration: 1.05, stagger: 0.1 }, "-=0.32")
+        .from(".studio-hero-copy", { y: 28, opacity: 0, duration: 0.8 }, "-=0.58")
+        .from(
+          ".studio-hero-orbital-shell",
+          { scale: 0.82, rotate: -9, opacity: 0, duration: 1.25 },
+          "-=0.9",
+        )
+        .from(".studio-orbit", { scale: 0.4, opacity: 0, duration: 1.1, stagger: 0.12 }, "-=0.9");
 
-        intro
-          .from(
-            ".landing-hero-kicker, .landing-hero-title, .landing-hero-lede, .landing-hero-actions",
-            {
-              y: 34,
-              opacity: 0,
-              duration: 0.88,
-              stagger: 0.08,
-            },
-          )
-          .from(
-            ".landing-hero-visual-shell",
-            {
-              y: 56,
-              rotateX: 10,
-              rotateY: -12,
-              opacity: 0,
-              duration: 1.2,
-            },
-            "-=0.66",
-          )
-          .from(
-            ".landing-hero-layer",
-            {
-              z: -80,
-              opacity: 0,
-              duration: 0.9,
-              stagger: 0.08,
-            },
-            "-=0.88",
-          );
-
-        gsap.to(".landing-hero-visual-image", {
-          yPercent: 10,
-          scale: 1.08,
-          ease: "none",
-          scrollTrigger: {
-            trigger: ".landing-hero",
-            start: "top top",
-            end: "bottom top",
-            scrub: true,
-          },
-        });
-
-        gsap.to(".landing-hero-visual-orbit", {
-          rotation: 360,
-          transformOrigin: "center center",
-          ease: "none",
-          scrollTrigger: {
-            trigger: ".landing-hero",
-            start: "top top",
-            end: "bottom top",
-            scrub: 1.2,
-          },
-        });
-
-        gsap.to(".landing-hero-visual-shell", {
-          yPercent: -6,
-          rotateX: -4,
-          rotateY: 5,
-          ease: "none",
-          scrollTrigger: {
-            trigger: ".landing-hero",
-            start: "top top",
-            end: "bottom top",
-            scrub: 1.1,
-          },
-        });
-
-        gsap.to(".landing-manifesto-image", {
-          yPercent: -16,
-          scale: 1.08,
-          ease: "none",
-          scrollTrigger: {
-            trigger: ".landing-manifesto",
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true,
-          },
-        });
+      gsap.to(".studio-hero-art", {
+        yPercent: 10,
+        scale: 1.08,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".studio-hero",
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
       });
 
-      gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((element, index) => {
+      gsap.to(".studio-orbit-one", {
+        rotation: 360,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".studio-hero",
+          start: "top top",
+          end: "bottom top",
+          scrub: 1,
+        },
+      });
+
+      gsap.to(".studio-orbit-two", {
+        rotation: -270,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".studio-hero",
+          start: "top top",
+          end: "bottom top",
+          scrub: 1.4,
+        },
+      });
+
+      gsap.utils.toArray<HTMLElement>("[data-studio-reveal]").forEach((element, index) => {
         gsap.fromTo(
           element,
-          { y: 42, opacity: 0 },
+          { y: 56, opacity: 0, filter: "blur(8px)" },
           {
             y: 0,
             opacity: 1,
-            duration: 0.9,
-            delay: (index % 3) * 0.06,
+            filter: "blur(0px)",
+            duration: 1,
+            delay: (index % 3) * 0.07,
             ease: "power4.out",
-            scrollTrigger: {
-              trigger: element,
-              start: "top 86%",
-              once: true,
-            },
+            scrollTrigger: { trigger: element, start: "top 86%", once: true },
           },
         );
       });
 
+      gsap.to(".studio-manifesto-word", {
+        color: "#eaf3ea",
+        stagger: 0.14,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".studio-manifesto",
+          start: "top 72%",
+          end: "bottom 46%",
+          scrub: true,
+        },
+      });
+
       desktop.add("(min-width: 768px)", () => {
-        const stackCards = gsap.utils.toArray<HTMLElement>(".landing-stack-card");
-        stackCards.forEach((card, index) => {
-          if (index === stackCards.length - 1) return;
-
-          ScrollTrigger.create({
-            trigger: card,
-            start: "top top",
-            endTrigger: stackCards[stackCards.length - 1],
-            end: "top top",
-            pin: true,
-            pinSpacing: false,
-          });
-
-          gsap.to(card, {
-            scale: 0.92,
-            opacity: 0.56,
-            ease: "none",
-            scrollTrigger: {
-              trigger: stackCards[index + 1],
-              start: "top bottom",
-              end: "top top",
-              scrub: true,
+        gsap.utils.toArray<HTMLElement>("[data-sequence-item]").forEach((item, index) => {
+          gsap.fromTo(
+            item,
+            { xPercent: index % 2 === 0 ? -8 : 8, opacity: 0 },
+            {
+              xPercent: 0,
+              opacity: 1,
+              duration: 0.9,
+              ease: "power4.out",
+              scrollTrigger: { trigger: item, start: "top 84%", once: true },
             },
-          });
+          );
         });
 
-        gsap.utils.toArray<HTMLElement>("[data-tilt]").forEach((element) => {
-          const rotateX = gsap.quickTo(element, "rotationX", {
-            duration: 0.72,
-            ease: "power3.out",
-          });
-          const rotateY = gsap.quickTo(element, "rotationY", {
-            duration: 0.72,
-            ease: "power3.out",
-          });
-          const lift = gsap.quickTo(element, "z", {
-            duration: 0.72,
-            ease: "power3.out",
-          });
-
+        gsap.utils.toArray<HTMLElement>("[data-studio-tilt]").forEach((element) => {
+          const rotateX = gsap.quickTo(element, "rotationX", { duration: 0.7, ease: "power3.out" });
+          const rotateY = gsap.quickTo(element, "rotationY", { duration: 0.7, ease: "power3.out" });
           const onPointerMove = (event: PointerEvent) => {
             const bounds = element.getBoundingClientRect();
-            const x = (event.clientX - bounds.left) / bounds.width - 0.5;
-            const y = (event.clientY - bounds.top) / bounds.height - 0.5;
-            rotateX(y * -7);
-            rotateY(x * 9);
-            lift(18);
+            rotateX(((event.clientY - bounds.top) / bounds.height - 0.5) * -8);
+            rotateY(((event.clientX - bounds.left) / bounds.width - 0.5) * 10);
           };
-
           const onPointerLeave = () => {
             rotateX(0);
             rotateY(0);
-            lift(0);
           };
-
           element.addEventListener("pointermove", onPointerMove);
           element.addEventListener("pointerleave", onPointerLeave);
-
           cleanupListeners.push(() => {
             element.removeEventListener("pointermove", onPointerMove);
             element.removeEventListener("pointerleave", onPointerLeave);
@@ -218,337 +161,331 @@ export function LandingPage({
   }, []);
 
   return (
-    <div ref={pageRef} className="landing-page">
-      <header className="landing-nav" aria-label="Primary navigation">
-        <div className="landing-nav-inner">
-          <Link href="/" className="landing-brand" aria-label="Mathios home">
-            <BrandMark className="landing-brand-mark" priority />
-            <span className="landing-brand-name">Mathios</span>
+    <div ref={pageRef} className="studio-page">
+      <header className="studio-nav" aria-label="Primary navigation">
+        <div className="studio-nav-core">
+          <Link href="/" className="studio-brand" aria-label="Mathios home">
+            <BrandMark className="studio-brand-mark" priority />
+            <span>Mathios</span>
           </Link>
-
-          <nav className="landing-nav-links" aria-label="Landing page navigation">
-            <a href="#method">How it works</a>
-            <a href="#workspace">The subjects</a>
-            <a href="#rhythm">Daily rhythm</a>
+          <nav className="studio-nav-links" aria-label="Landing page navigation">
+            <a href="#systems">The system</a>
+            <a href="#practice">The practice</a>
+            <a href="#begin">Start here</a>
           </nav>
-
-          <div className="landing-nav-actions">
-            {signInHref ? (
-              <Link className="landing-nav-sign-in" href={signInHref as never}>
-                Sign in
-              </Link>
-            ) : null}
-            <Link className="landing-cta landing-cta-nav" href={primaryHref as never}>
+          <div className="studio-nav-actions">
+            {signInHref ? <Link href={signInHref as never}>Sign in</Link> : null}
+            <Link className="studio-cta studio-cta-small" href={primaryHref as never}>
               <span>{primaryLabel}</span>
-              <CtaIcon />
+              <CtaArrow />
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="landing-main">
-        <section className="landing-hero" aria-labelledby="landing-title">
-          <div className="landing-container landing-hero-grid">
-            <div className="landing-hero-copy">
-              <p className="landing-hero-kicker">A learning system for curious minds</p>
-              <h1 id="landing-title" className="landing-hero-title">
-                Learn in layers, not loops.
+      <main className="studio-main">
+        <section className="studio-hero" aria-labelledby="landing-title">
+          <div className="studio-hero-grid">
+            <div className="studio-hero-copy-wrap">
+              <p className="studio-kicker studio-hero-reveal">The learning observatory</p>
+              <h1
+                id="landing-title"
+                className="studio-hero-title"
+                aria-label="Study the question from every angle"
+              >
+                <span className="studio-hero-line">
+                  <span className="studio-hero-reveal">Study the question</span>
+                </span>
+                <span className="studio-hero-line studio-hero-line-offset">
+                  <span className="studio-hero-reveal">from every angle.</span>
+                </span>
               </h1>
-              <p className="landing-hero-lede">
-                A focused science library that turns one daily session into a path you can keep.
-              </p>
-              <div className="landing-hero-actions">
-                <Link className="landing-cta landing-cta-primary" href={primaryHref as never}>
-                  <span>{primaryLabel}</span>
-                  <CtaIcon />
-                </Link>
-                <a className="landing-cta landing-cta-quiet" href="#method">
-                  <span>Explore the method</span>
-                  <span className="landing-quiet-arrow" aria-hidden="true">
-                    ↓
-                  </span>
-                </a>
+              <div className="studio-hero-copy">
+                <p>
+                  Mathios connects lessons, practice, notes, and experiments into one living field
+                  of study.
+                </p>
+                <div className="studio-hero-actions">
+                  <Link className="studio-cta" href={primaryHref as never}>
+                    <span>{primaryLabel}</span>
+                    <CtaArrow />
+                  </Link>
+                  <a className="studio-text-link" href="#systems">
+                    See the system
+                  </a>
+                </div>
               </div>
             </div>
 
-            <div className="landing-hero-visual-shell landing-bezel" data-tilt>
-              <div className="landing-hero-visual-core">
-                <div className="landing-hero-layer landing-hero-visual-orbit" aria-hidden="true">
+            <div className="studio-hero-orbital-shell" data-studio-tilt>
+              <div className="studio-hero-orbital-core">
+                <div className="studio-orbit studio-orbit-one" aria-hidden="true">
                   <span />
                 </div>
-                <div className="landing-hero-layer landing-hero-visual-ring" aria-hidden="true" />
+                <div className="studio-orbit studio-orbit-two" aria-hidden="true">
+                  <span />
+                </div>
+                <div className="studio-orbit studio-orbit-three" aria-hidden="true">
+                  <span />
+                </div>
                 <Image
                   src="/landing/mathios-hero-spatial.png"
-                  alt="Translucent geometric forms arranged on a midnight-blue plinth"
+                  alt="Translucent geometric forms on a midnight-blue plinth"
                   fill
                   priority
-                  sizes="(max-width: 767px) 100vw, 56vw"
-                  className="landing-hero-visual-image"
+                  sizes="(max-width: 767px) 100vw, 52vw"
+                  className="studio-hero-art"
                 />
-                <div className="landing-hero-visual-wash" aria-hidden="true" />
+                <div className="studio-hero-vignette" aria-hidden="true" />
               </div>
             </div>
           </div>
         </section>
 
-        <section
-          id="workspace"
-          className="landing-subject-strip"
-          aria-label="Subjects in the Mathios library"
-        >
-          <div className="landing-container landing-subject-strip-inner">
-            <span className="landing-subject-strip-lead">One library across</span>
-            <div className="landing-subject-list">
-              {subjects.map((subject) => (
-                <span key={subject}>{subject}</span>
-              ))}
-            </div>
+        <section className="studio-signal" aria-label="Subjects in the Mathios library">
+          <div className="studio-signal-track">
+            <span>Ideas compound</span>
+            <i>×</i>
+            {subjects.map((subject) => (
+              <span key={subject}>{subject}</span>
+            ))}
+            <i>×</i>
+            <span>Ideas compound</span>
+            <i>×</i>
           </div>
         </section>
 
-        <section
-          id="method"
-          className="landing-section landing-method"
-          aria-labelledby="method-title"
-        >
-          <div className="landing-container">
-            <div className="landing-section-heading" data-reveal>
-              <h2 id="method-title">Make the next idea easy to find.</h2>
-              <p>
-                Prepared courses, visible reasoning, and the right amount of practice keep the
-                learning thread intact.
-              </p>
-            </div>
-
-            <div className="landing-bento" aria-label="How Mathios supports learning">
-              <article
-                className="landing-bezel landing-bento-card landing-bento-card-large"
-                data-reveal
-                data-tilt
-              >
-                <div className="landing-bento-core">
-                  <div className="landing-bento-image-wrap">
-                    <Image
-                      src="/landing/mathios-hero.png"
-                      alt="A geometry notebook and translucent triangle on a deep blue desk"
-                      fill
-                      sizes="(max-width: 767px) 100vw, 58vw"
-                      className="landing-cover-image"
-                    />
-                  </div>
-                  <div className="landing-bento-copy">
-                    <span className="landing-bento-word">Understand</span>
-                    <h3>Stay with the why.</h3>
-                    <p>Explanations keep the reasoning visible, not buried under the answer.</p>
-                  </div>
-                </div>
-              </article>
-
-              <article
-                className="landing-bezel landing-bento-card landing-bento-card-dark"
-                data-reveal
-                data-tilt
-              >
-                <div className="landing-bento-core">
-                  <div className="landing-equation" aria-hidden="true">
-                    <span>idea</span>
-                    <i>→</i>
-                    <span>pattern</span>
-                    <i>→</i>
-                    <span>fluency</span>
-                  </div>
-                  <div className="landing-bento-copy">
-                    <span className="landing-bento-word">Follow</span>
-                    <h3>A path with a point.</h3>
-                    <p>Courses and roadmaps make the sequence feel considered.</p>
-                  </div>
-                </div>
-              </article>
-
-              <article
-                className="landing-bezel landing-bento-card landing-bento-card-accent"
-                data-reveal
-                data-tilt
-              >
-                <div className="landing-bento-core">
-                  <div className="landing-orbit-glyph" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  <div className="landing-bento-copy">
-                    <span className="landing-bento-word">Return</span>
-                    <h3>Small sessions add up.</h3>
-                    <p>A daily rhythm makes progress easier to notice and easier to keep.</p>
-                  </div>
-                </div>
-              </article>
-
-              <article
-                className="landing-bezel landing-bento-card landing-bento-card-study"
-                data-reveal
-                data-tilt
-              >
-                <div className="landing-bento-core">
-                  <div className="landing-bento-image-wrap landing-bento-image-wrap-study">
-                    <Image
-                      src="/landing/mathios-study.png"
-                      alt="A parabola drawn on paper beside a translucent ruler and pencil"
-                      fill
-                      sizes="(max-width: 767px) 100vw, 34vw"
-                      className="landing-cover-image"
-                    />
-                  </div>
-                  <div className="landing-bento-copy">
-                    <span className="landing-bento-word">Test</span>
-                    <h3>Make the idea move.</h3>
-                  </div>
-                </div>
-              </article>
-
-              <article
-                className="landing-bezel landing-bento-card landing-bento-card-thread"
-                data-reveal
-                data-tilt
-              >
-                <div className="landing-bento-core">
-                  <div className="landing-thread-lines" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  <div className="landing-bento-copy">
-                    <span className="landing-bento-word">Keep</span>
-                    <h3>Your notes belong in the picture.</h3>
-                    <p>Add context, save the useful parts, and return when the idea is ready.</p>
-                  </div>
-                </div>
-              </article>
-            </div>
-          </div>
-        </section>
-
-        <section id="rhythm" className="landing-journey" aria-labelledby="journey-title">
-          <div className="landing-container landing-journey-heading" data-reveal>
-            <h2 id="journey-title">Let the path reveal itself.</h2>
-            <p>
-              Learning works better when the next move is close, the context stays visible, and each
-              session leaves something useful behind.
-            </p>
+        <section id="systems" className="studio-systems" aria-labelledby="systems-title">
+          <div className="studio-section-head" data-studio-reveal>
+            <p className="studio-kicker">A field, not a feed</p>
+            <h2 id="systems-title">Every thought gets somewhere to go.</h2>
           </div>
 
-          <div className="landing-journey-stack">
-            <article className="landing-stack-card">
-              <div className="landing-bezel landing-stack-card-frame" data-tilt>
-                <div className="landing-stack-card-core">
-                  <div className="landing-stack-card-media">
-                    <Image
-                      src="/landing/mathios-study.png"
-                      alt="A geometric curve drawn across a paper study"
-                      fill
-                      sizes="(max-width: 767px) 100vw, 48vw"
-                      className="landing-cover-image"
-                    />
-                  </div>
-                  <div className="landing-stack-card-copy">
-                    <span className="landing-stack-card-label">Read</span>
-                    <h3>Start with the shape of the idea.</h3>
-                    <p>Prepared lessons give the concept enough room to make sense.</p>
-                  </div>
+          <div className="studio-bento" aria-label="Ways Mathios supports learning">
+            <article
+              className="studio-bezel studio-bento-large"
+              data-studio-reveal
+              data-studio-tilt
+            >
+              <div className="studio-bento-core studio-bento-image">
+                <Image
+                  src="/landing/mathios-hero.png"
+                  alt="Geometry notebook and translucent triangle"
+                  fill
+                  sizes="(max-width: 767px) 100vw, 58vw"
+                />
+                <div className="studio-bento-wash" />
+                <div className="studio-bento-copy">
+                  <p>Connection</p>
+                  <h3>See where an idea came from, then chase where it leads.</h3>
                 </div>
               </div>
             </article>
-
-            <article className="landing-stack-card">
-              <div className="landing-bezel landing-stack-card-frame" data-tilt>
-                <div className="landing-stack-card-core">
-                  <div className="landing-stack-card-media">
-                    <Image
-                      src="/landing/mathios-hero.png"
-                      alt="A compass resting beside a geometry notebook"
-                      fill
-                      sizes="(max-width: 767px) 100vw, 48vw"
-                      className="landing-cover-image"
-                    />
-                  </div>
-                  <div className="landing-stack-card-copy">
-                    <span className="landing-stack-card-label">Practice</span>
-                    <h3>Give the idea somewhere to land.</h3>
-                    <p>Exercises and feedback turn recognition into something you can use.</p>
-                  </div>
+            <article className="studio-bezel studio-bento-dark" data-studio-reveal data-studio-tilt>
+              <div className="studio-bento-core studio-equation-card">
+                <div className="studio-equation" aria-hidden="true">
+                  <span>observe</span>
+                  <b>→</b>
+                  <span>model</span>
+                  <b>→</b>
+                  <span>test</span>
+                </div>
+                <div className="studio-bento-copy">
+                  <p>Structure</p>
+                  <h3>Turn a loose curiosity into a route with momentum.</h3>
                 </div>
               </div>
             </article>
-
-            <article className="landing-stack-card">
-              <div className="landing-bezel landing-stack-card-frame" data-tilt>
-                <div className="landing-stack-card-core landing-stack-card-core-spatial">
-                  <div className="landing-stack-spatial" aria-hidden="true">
-                    <span className="landing-stack-spatial-orbit landing-stack-spatial-orbit-one" />
-                    <span className="landing-stack-spatial-orbit landing-stack-spatial-orbit-two" />
-                    <span className="landing-stack-spatial-core" />
-                    <span className="landing-stack-spatial-ray landing-stack-spatial-ray-one" />
-                    <span className="landing-stack-spatial-ray landing-stack-spatial-ray-two" />
-                  </div>
-                  <div className="landing-stack-card-copy">
-                    <span className="landing-stack-card-label">Explore</span>
-                    <h3>See the system from another angle.</h3>
-                    <p>Simulations and virtual laboratories let understanding become tangible.</p>
-                  </div>
+            <article className="studio-bezel studio-bento-lime" data-studio-reveal data-studio-tilt>
+              <div className="studio-bento-core studio-constellation-card">
+                <div className="studio-constellation" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <i />
+                  <i />
+                  <i />
+                </div>
+                <div className="studio-bento-copy">
+                  <p>Return</p>
+                  <h3>Come back to the thought while it is still warm.</h3>
                 </div>
               </div>
             </article>
-          </div>
-        </section>
-
-        <section className="landing-manifesto" aria-labelledby="manifesto-title">
-          <div className="landing-container landing-manifesto-inner" data-reveal>
-            <h2 id="manifesto-title">
-              A good lesson{" "}
-              <span className="landing-inline-image">
+            <article
+              className="studio-bezel studio-bento-study"
+              data-studio-reveal
+              data-studio-tilt
+            >
+              <div className="studio-bento-core studio-bento-image">
                 <Image
                   src="/landing/mathios-study.png"
-                  alt=""
+                  alt="Parabola study on paper beside a translucent ruler"
                   fill
-                  sizes="180px"
-                  className="landing-manifesto-image"
+                  sizes="(max-width: 767px) 100vw, 34vw"
                 />
-              </span>{" "}
-              changes what you notice next.
-            </h2>
-            <p>Keep the useful idea. Let the rest become part of the background.</p>
+                <div className="studio-bento-wash" />
+                <div className="studio-bento-copy">
+                  <p>Practice</p>
+                  <h3>Let the idea move through your hands.</h3>
+                </div>
+              </div>
+            </article>
           </div>
         </section>
 
-        <section className="landing-final" aria-labelledby="final-title">
-          <div className="landing-container landing-final-inner" data-reveal>
-            <div className="landing-final-copy">
-              <p className="landing-final-kicker">The library is ready</p>
-              <h2 id="final-title">Make curiosity part of the day.</h2>
-              <p>Pick a subject, find the next useful idea, and give it ten focused minutes.</p>
-            </div>
-            <Link
-              className="landing-cta landing-cta-primary landing-cta-final"
-              href={primaryHref as never}
+        <section className="studio-manifesto" aria-labelledby="manifesto-title">
+          <div className="studio-manifesto-orbit" aria-hidden="true" />
+          <div className="studio-manifesto-inner">
+            <p className="studio-kicker">The real advantage</p>
+            <h2 id="manifesto-title">
+              {manifesto.map((word, index) => (
+                <span className="studio-manifesto-word" key={`${word}-${index}`}>
+                  {word}{" "}
+                </span>
+              ))}
+            </h2>
+          </div>
+        </section>
+
+        <section id="practice" className="studio-sequence" aria-labelledby="practice-title">
+          <div className="studio-sequence-intro" data-studio-reveal>
+            <p className="studio-kicker">The daily sequence</p>
+            <h2 id="practice-title">Move through the subject, not around it.</h2>
+            <p>One complete loop helps a new idea settle into a durable habit.</p>
+          </div>
+
+          <div className="studio-sequence-flow" aria-label="A four-step daily learning sequence">
+            <article
+              className="studio-sequence-item studio-sequence-image"
+              data-sequence-item
+              data-studio-tilt
             >
-              <span>{primaryLabel}</span>
-              <CtaIcon />
-            </Link>
+              <span className="studio-sequence-number">01</span>
+              <div className="studio-sequence-visual">
+                <Image
+                  src="/landing/mathios-study.png"
+                  alt="A carefully annotated mathematics study"
+                  fill
+                  sizes="(max-width: 767px) 100vw, 58vw"
+                />
+              </div>
+              <div className="studio-sequence-copy">
+                <h3>Meet the shape.</h3>
+                <p>Start with a clear explanation and enough context to see the idea whole.</p>
+              </div>
+            </article>
+            <article
+              className="studio-sequence-item studio-sequence-model"
+              data-sequence-item
+              data-studio-tilt
+            >
+              <span className="studio-sequence-number">02</span>
+              <div className="studio-sequence-visual studio-model-lines" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+                <i />
+                <b>?</b>
+              </div>
+              <div className="studio-sequence-copy">
+                <h3>Find the pattern.</h3>
+                <p>Trace the relationships that make the next move feel inevitable.</p>
+              </div>
+            </article>
+            <article
+              className="studio-sequence-item studio-sequence-test"
+              data-sequence-item
+              data-studio-tilt
+            >
+              <span className="studio-sequence-number">03</span>
+              <div className="studio-sequence-visual studio-test-signal" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+                <span>try it</span>
+              </div>
+              <div className="studio-sequence-copy">
+                <h3>Give it friction.</h3>
+                <p>Practice changes a familiar pattern into something you can actually use.</p>
+              </div>
+            </article>
+            <article
+              className="studio-sequence-item studio-sequence-spatial"
+              data-sequence-item
+              data-studio-tilt
+            >
+              <span className="studio-sequence-number">04</span>
+              <div className="studio-sequence-visual">
+                <Image
+                  src="/landing/mathios-hero-spatial.png"
+                  alt="Spatial learning forms on an inky surface"
+                  fill
+                  sizes="(max-width: 767px) 100vw, 58vw"
+                />
+              </div>
+              <div className="studio-sequence-copy">
+                <h3>Change the angle.</h3>
+                <p>Simulations and laboratories let the same thought become tangible.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section className="studio-thread" aria-labelledby="thread-title">
+          <div className="studio-thread-heading" data-studio-reveal>
+            <p className="studio-kicker">Designed to hold attention</p>
+            <h2 id="thread-title">One continuous thread, from first question to useful memory.</h2>
+          </div>
+          <div className="studio-thread-map" data-studio-reveal>
+            <div className="studio-thread-line" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
+            <article className="studio-thread-note studio-thread-note-read">
+              <span>Read</span>
+              <h3>Make room for the why.</h3>
+              <p>Keep the reasoning with the answer.</p>
+            </article>
+            <article className="studio-thread-note studio-thread-note-test">
+              <span>Test</span>
+              <h3>Let the subject answer back.</h3>
+              <p>Questions and simulations reveal what is really understood.</p>
+            </article>
+            <article className="studio-thread-note studio-thread-note-keep">
+              <span>Keep</span>
+              <h3>Bring the useful part forward.</h3>
+              <p>Notes turn the next session into a continuation.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="begin" className="studio-final" aria-labelledby="begin-title">
+          <div className="studio-final-grid" data-studio-reveal>
+            <div>
+              <p className="studio-kicker">Open the field</p>
+              <h2 id="begin-title">Let curiosity set the direction.</h2>
+            </div>
+            <div className="studio-final-action">
+              <p>A library for the questions that keep following you around.</p>
+              <Link className="studio-cta studio-cta-dark" href={primaryHref as never}>
+                <span>{primaryLabel}</span>
+                <CtaArrow />
+              </Link>
+            </div>
           </div>
         </section>
       </main>
 
-      <footer className="landing-footer">
-        <div className="landing-container landing-footer-inner">
-          <Link href="/" className="landing-brand" aria-label="Mathios home">
-            <BrandMark className="landing-brand-mark" />
-            <span className="landing-brand-name">Mathios</span>
-          </Link>
-          <p>Science learning with room for your own notes.</p>
-          <a className="landing-footer-top" href="#landing-title">
-            Back to top <span aria-hidden="true">↑</span>
-          </a>
-        </div>
+      <footer className="studio-footer">
+        <Link href="/" className="studio-brand" aria-label="Mathios home">
+          <BrandMark className="studio-brand-mark" />
+          <span>Mathios</span>
+        </Link>
+        <p>Science learning, with a longer memory.</p>
+        <a href="#landing-title">Back to the beginning</a>
       </footer>
     </div>
   );

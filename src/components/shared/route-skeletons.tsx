@@ -58,6 +58,49 @@ export function LandingSkeleton() {
   );
 }
 
+export function AuthSkeleton() {
+  return (
+    <div className="auth-page" role="status" aria-live="polite">
+      <span className="sr-only">Loading account form</span>
+      <div className="auth-page-grid">
+        <section className="auth-page-intro">
+          <div className="flex items-center gap-3">
+            <BrandMark className="h-10 w-10" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+          <Skeleton className="mt-24 h-3 w-40" />
+          <Skeleton className="mt-7 h-16 w-full max-w-md" />
+          <Skeleton className="mt-3 h-16 w-4/5 max-w-sm" />
+          <Skeleton className="mt-8 h-4 w-full max-w-md" />
+          <Skeleton className="mt-3 h-4 w-4/5 max-w-md" />
+          <Skeleton className="mt-10 h-4 w-32" />
+        </section>
+        <section className="auth-page-form" aria-label="Loading account form">
+          <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-soft">
+            <Skeleton className="h-7 w-24" />
+            <Skeleton className="mt-3 h-4 w-4/5" />
+            <div className="mt-7 space-y-5">
+              <div>
+                <Skeleton className="h-3 w-14" />
+                <Skeleton className="mt-2 h-10 w-full rounded-xl" />
+              </div>
+              <div>
+                <div className="flex justify-between">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="mt-2 h-10 w-full rounded-xl" />
+              </div>
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="mx-auto h-3 w-44" />
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
 export function DashboardSkeleton({ label = "Loading overview" }: { label?: string } = {}) {
   return (
     <Status label={label}>
@@ -216,5 +259,174 @@ export function SearchSkeleton() {
         ))}
       </div>
     </Status>
+  );
+}
+
+export function ContentStudioSkeleton() {
+  return (
+    <Status label="Loading content studio">
+      <Skeleton className="h-3 w-36" />
+      <div className="mt-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div className="w-full max-w-2xl">
+          <Skeleton className="h-3 w-52" />
+          <Skeleton className="mt-4 h-10 w-64" />
+          <Skeleton className="mt-3 h-4 w-full" />
+          <Skeleton className="mt-2 h-4 w-4/5" />
+        </div>
+        <Skeleton className="h-6 w-28 rounded-full" />
+      </div>
+      <div className="mt-7 rounded-2xl border border-border/70 bg-card p-6 shadow-soft">
+        <Skeleton className="h-5 w-72" />
+        <Skeleton className="mt-3 h-3 w-3/5" />
+        <div className="mt-6 grid gap-6 xl:grid-cols-[0.82fr_1.18fr]">
+          <FormFields count={5} />
+          <div>
+            <Skeleton className="h-10 w-full rounded-xl" />
+            <div className="mt-4 space-y-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton key={index} className="h-24 w-full rounded-xl" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-6 grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+        <PanelWithFields count={6} />
+        <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-soft">
+          <Skeleton className="h-5 w-56" />
+          <Skeleton className="mt-3 h-3 w-4/5" />
+          <Skeleton className="mt-7 h-80 w-full rounded-xl" />
+        </div>
+      </div>
+    </Status>
+  );
+}
+
+export function FormPageSkeleton({ label = "Loading form" }: { label?: string } = {}) {
+  return (
+    <Status label={label}>
+      <div className="mx-auto max-w-3xl">
+        <Skeleton className="h-3 w-32" />
+        <div className="mt-6 rounded-2xl border border-border/70 bg-card p-6 shadow-soft">
+          <Skeleton className="h-6 w-56" />
+          <Skeleton className="mt-3 h-4 w-full" />
+          <Skeleton className="mt-2 h-4 w-4/5" />
+          <Skeleton className="mt-7 h-24 w-full rounded-xl" />
+          <div className="mt-7">
+            <FormFields count={6} />
+          </div>
+        </div>
+      </div>
+    </Status>
+  );
+}
+
+export function NotesSkeleton() {
+  return (
+    <Status label="Loading personal knowledge base">
+      <Skeleton className="h-3 w-44" />
+      <div className="mt-7 grid min-h-[34rem] gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
+        <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-soft">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-6 w-28" />
+            <Skeleton className="h-9 w-9 rounded-xl" />
+          </div>
+          <Skeleton className="mt-5 h-10 w-full rounded-xl" />
+          <div className="mt-5 space-y-3">
+            {Array.from({ length: 7 }).map((_, index) => (
+              <Skeleton key={index} className="h-12 w-full rounded-xl" />
+            ))}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-soft">
+          <Skeleton className="h-8 w-2/5" />
+          <Skeleton className="mt-4 h-4 w-3/5" />
+          <Skeleton className="mt-7 h-64 w-full rounded-xl" />
+          <div className="mt-5 flex gap-3">
+            <Skeleton className="h-10 w-28 rounded-xl" />
+            <Skeleton className="h-10 w-24 rounded-xl" />
+          </div>
+        </div>
+      </div>
+    </Status>
+  );
+}
+
+export function PlannerSkeleton() {
+  return (
+    <Status label="Loading study planner">
+      <Skeleton className="h-3 w-32" />
+      <div className="mt-7 flex items-end justify-between gap-4">
+        <div>
+          <Skeleton className="h-9 w-52" />
+          <Skeleton className="mt-3 h-4 w-80" />
+        </div>
+        <Skeleton className="h-10 w-36 rounded-xl" />
+      </div>
+      <div className="mt-7 grid gap-5 xl:grid-cols-[0.34fr_0.66fr]">
+        <PanelWithFields count={5} />
+        <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-soft">
+          <div className="flex justify-between">
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-9 w-28 rounded-xl" />
+          </div>
+          <div className="mt-6 grid grid-cols-7 gap-2">
+            {Array.from({ length: 7 }).map((_, index) => (
+              <div key={index}>
+                <Skeleton className="mx-auto h-3 w-8" />
+                <Skeleton className="mt-3 h-72 w-full rounded-xl" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Status>
+  );
+}
+
+export function GraphSkeleton() {
+  return (
+    <Status label="Loading knowledge graph">
+      <Skeleton className="h-3 w-36" />
+      <div className="mt-7 max-w-3xl">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="mt-5 h-10 w-72" />
+        <Skeleton className="mt-3 h-4 w-full" />
+        <Skeleton className="mt-2 h-4 w-4/5" />
+      </div>
+      <div className="mt-8 rounded-2xl border border-border/70 bg-card p-5 shadow-soft">
+        <div className="flex flex-wrap gap-3">
+          <Skeleton className="h-10 w-44 rounded-xl" />
+          <Skeleton className="h-10 w-40 rounded-xl" />
+          <Skeleton className="h-10 w-40 rounded-xl" />
+        </div>
+        <Skeleton className="mt-5 h-[32rem] w-full rounded-xl" />
+      </div>
+    </Status>
+  );
+}
+
+function FormFields({ count }: { count: number }) {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: count }).map((_, index) => (
+        <div key={index}>
+          <Skeleton className="h-3 w-28" />
+          <Skeleton className={cn("mt-2 w-full rounded-xl", index % 4 === 1 ? "h-24" : "h-10")} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PanelWithFields({ count }: { count: number }) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-soft">
+      <Skeleton className="h-5 w-48" />
+      <Skeleton className="mt-3 h-3 w-4/5" />
+      <div className="mt-7">
+        <FormFields count={count} />
+      </div>
+    </div>
   );
 }

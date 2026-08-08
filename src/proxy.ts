@@ -11,10 +11,12 @@ import { getNeonAuth, isNeonAuthConfigured } from "@/lib/auth/server";
 
 const NEON_AUTH_SESSION_VERIFIER_PARAM = "neon_auth_session_verifier";
 const NEON_AUTH_SESSION_CHALLENGE_COOKIE = "__Secure-neon-auth.session_challange";
+const PUBLIC_ROUTE_HEADER = "x-mathios-public-route";
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const requestId = normalizeRequestId(request.headers.get("x-request-id")) ?? crypto.randomUUID();
   const requestHeaders = new Headers(request.headers);
+  requestHeaders.delete(PUBLIC_ROUTE_HEADER);
   requestHeaders.set("x-request-id", requestId);
   const headers = new Headers({ "x-request-id": requestId });
   const pathname = request.nextUrl.pathname;
@@ -24,6 +26,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     NEON_AUTH_SESSION_VERIFIER_PARAM,
   );
   const hasNeonAuthSessionChallenge = request.cookies.has(NEON_AUTH_SESSION_CHALLENGE_COOKIE);
+  if (isPublicPage && !hasNeonAuthSessionVerifier) {
+    requestHeaders.set(PUBLIC_ROUTE_HEADER, "1");
+  }
 
   let response: NextResponse;
   if (
@@ -61,7 +66,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)", "/api/:path*"],
+  matcher: ["/((?!_next/|favicon.ico|.*\\..*).*)", "/api/:path*"],
 };
 
 function rateLimitedResponse(

@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { AuthenticationError, ApplicationError } from "@/domain/errors/application-error";
+import { cache } from "react";
 import type { IdentityRepository } from "@/domain/ports/identity-repository";
 import { getIdentityRepository } from "@/infrastructure/database/repositories/identity-repository";
 import { env } from "@/lib/env";
@@ -182,8 +183,13 @@ export function getAuthProvider(repository?: IdentityRepository): AuthProvider {
 export async function getCurrentSession(
   repository?: IdentityRepository,
 ): Promise<AuthSession | null> {
-  return getAuthProvider(repository).getSession();
+  if (repository) return getAuthProvider(repository).getSession();
+  return getCachedCurrentSession();
 }
+
+const getCachedCurrentSession = cache(async (): Promise<AuthSession | null> =>
+  getAuthProvider().getSession(),
+);
 
 async function cookiesSafe(): Promise<Awaited<
   ReturnType<typeof import("next/headers").cookies>

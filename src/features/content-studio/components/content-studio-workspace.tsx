@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import type { CourseCatalogEntry } from "@/domain/course/types";
 import type { GradeRecord, SubjectRecord } from "@/domain/curriculum/types";
 import type { GeneratedLessonBlock, LessonDraft } from "@/features/content-studio/schemas";
+import { SourceBookImportPanel } from "@/features/content-studio/components/source-book-import-panel";
 
 interface Props {
   subjects: readonly SubjectRecord[];
@@ -132,6 +133,13 @@ export function ContentStudioWorkspace({ subjects, grades, courses, aiEnabled }:
           {notice}
         </div>
       ) : null}
+
+      <SourceBookImportPanel
+        subjects={subjects}
+        grades={grades}
+        courses={courses}
+        aiEnabled={aiEnabled}
+      />
 
       <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
         <Card>

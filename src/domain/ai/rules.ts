@@ -32,8 +32,8 @@ export const DEFAULT_AI_SETTINGS: Omit<AiSettingsInput, "remoteApiKey"> = {
 export const AI_LIMITS = {
   instructionCharacters: 4000,
   learnerContextCharacters: 3000,
-  sourceCharacters: 6000,
-  totalGroundingCharacters: 18000,
+  sourceCharacters: 9000,
+  totalGroundingCharacters: 24000,
   outputCharacters: 16000,
   maxTokens: 4096,
   minTokens: 128,
@@ -69,6 +69,8 @@ const TASK_INSTRUCTIONS: Record<AiTask, string> = {
     "Suggest a realistic short study sequence with prerequisites, practice, review, and a check for understanding.",
   "lesson-draft":
     "Create a structured lesson draft as JSON for an author to review. Never claim that the draft is official or ready to publish.",
+  "source-lesson-draft":
+    "Split supplied source pages into level-appropriate structured lesson drafts as JSON for an author to review. Preserve page citations and never publish automatically.",
 };
 
 const TASK_LABELS: Record<AiTask, string> = {
@@ -86,6 +88,7 @@ const TASK_LABELS: Record<AiTask, string> = {
   "natural-language-search": "Natural-language search",
   "study-plan-suggestion": "Study-plan suggestion",
   "lesson-draft": "Lesson draft",
+  "source-lesson-draft": "Source lesson draft",
 };
 
 export function taskInstruction(task: AiTask): string {
@@ -221,6 +224,7 @@ export function normalizeGenerationInput(input: AiGenerationInput): AiGeneration
     ...(input.learnerContext
       ? { learnerContext: boundedText(input.learnerContext, AI_LIMITS.learnerContextCharacters) }
       : {}),
+    ...(input.grounding ? { grounding: sanitizeGroundingSources(input.grounding) } : {}),
   };
 }
 

@@ -10,7 +10,7 @@ import { defaultSettings } from "@/features/settings/service";
 
 export default async function OnboardingPage() {
   const repository = getIdentityRepository();
-  const session = await getCurrentSession(repository).catch(() => null);
+  const session = await getCurrentSession().catch(() => null);
   if (!session) redirect("/profiles");
   const response = await repository.getOnboarding(session.principal.profileId);
   const settings =

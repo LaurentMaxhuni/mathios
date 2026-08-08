@@ -37,6 +37,7 @@ describe("database migrations", () => {
         "0017_phase17_classrooms.sql",
         "0018_phase18_deployment_hardening.sql",
         "0019_neon_auth.sql",
+        "0020_content_source_ingestion.sql",
       ]);
       expect(second.applied).toEqual([]);
       expect(second.skipped).toEqual([
@@ -60,6 +61,7 @@ describe("database migrations", () => {
         "0017_phase17_classrooms.sql",
         "0018_phase18_deployment_hardening.sql",
         "0019_neon_auth.sql",
+        "0020_content_source_ingestion.sql",
       ]);
       expect(database.prepare("SELECT key FROM app_metadata").all()).toEqual([]);
       expect(
@@ -170,6 +172,11 @@ describe("database migrations", () => {
         "assignment_submissions",
         "grading_rubrics",
         "teacher_feedback",
+        "source_documents",
+        "source_document_pages",
+        "content_import_jobs",
+        "source_chunks",
+        "content_import_items",
       ]) {
         expect(
           database

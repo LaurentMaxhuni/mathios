@@ -74,13 +74,16 @@ export class NeonAuthProvider implements AuthProvider {
     const user = session?.user;
     if (!user?.id) return null;
 
-    const profile = await this.repository.ensureExternalProfile({
-      userId: user.id,
-      identifier: user.email?.trim() || `neon-auth:${user.id}`,
-      authMode: "neon-auth",
-      displayName: displayNameFor(user),
-    });
-    const principal = await this.repository.getPrincipalByProfileId(profile.id);
+    let principal = await this.repository.getPrincipalByUserId(user.id);
+    if (!principal) {
+      const profile = await this.repository.ensureExternalProfile({
+        userId: user.id,
+        identifier: user.email?.trim() || `neon-auth:${user.id}`,
+        authMode: "neon-auth",
+        displayName: displayNameFor(user),
+      });
+      principal = await this.repository.getPrincipalByProfileId(profile.id);
+    }
     return {
       principal: toPrincipal(principal, user.id),
       expiresAt: sessionExpiry(session?.session?.expiresAt),

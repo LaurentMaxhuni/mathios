@@ -19,6 +19,7 @@ export const AI_TASKS = [
   "natural-language-search",
   "study-plan-suggestion",
   "lesson-draft",
+  "source-lesson-draft",
 ] as const;
 export type AiTask = (typeof AI_TASKS)[number];
 
@@ -121,6 +122,7 @@ export interface AiGenerationInput {
   conceptId?: string;
   gradeId?: string;
   learnerContext?: string;
+  grounding?: readonly AiGroundingSource[];
 }
 
 export interface AiDashboardData {
