@@ -498,7 +498,7 @@ export class SqlAnalyticsRepository implements AnalyticsRepository {
         `SELECT ss.id, ss.scheduled_date, ss.status, ss.duration_minutes, ss.completed_at, i.item_type, i.source_id, i.title, i.subject_id
          FROM study_sessions ss JOIN study_plan_items i ON i.id = ss.plan_item_id
          WHERE ss.profile_id = $1 AND ((ss.scheduled_date >= $2 AND ss.scheduled_date < $3) OR (ss.completed_at >= $4 AND ss.completed_at < $5))
-         ORDER BY COALESCE(ss.completed_at, ss.scheduled_date) DESC, ss.id`,
+         ORDER BY COALESCE(ss.completed_at, ss.scheduled_date::timestamptz) DESC, ss.id`,
         [profileId, range.from, range.to, from, to],
       ),
       this.rows<DbRow>(

@@ -19,11 +19,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
   title: {
-    default: "Mathios · Science workspace",
-    template: "%s · Mathios",
+    default: "Mathios - Daily science learning",
+    template: "%s - Mathios",
   },
-  description: "A connected science learning workspace for concepts, practice, and experiments.",
+  description:
+    "A calm daily learning app for mathematics, physics, chemistry, biology, and astronomy.",
   icons: {
     icon: [
       {
@@ -33,6 +35,18 @@ export const metadata: Metadata = {
       },
     ],
     apple: "/brand/mathios-logo.png",
+  },
+  openGraph: {
+    title: "Mathios - Daily science learning",
+    description:
+      "A calm daily learning app for mathematics, physics, chemistry, biology, and astronomy.",
+    type: "website",
+    images: [
+      {
+        url: "/landing/mathios-hero-spatial.png",
+        alt: "Translucent geometric forms arranged on a midnight-blue plinth",
+      },
+    ],
   },
 };
 

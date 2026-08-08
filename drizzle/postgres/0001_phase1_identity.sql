@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS user_settings (
   default_grade TEXT,
   default_curriculum TEXT,
   preferred_subjects TEXT NOT NULL DEFAULT '[]',
-  study_session_duration INTEGER NOT NULL DEFAULT 25 CHECK (study_session_duration BETWEEN 5 AND 180),
+  study_session_duration INTEGER NOT NULL DEFAULT 15 CHECK (study_session_duration BETWEEN 5 AND 180),
   week_start_day INTEGER NOT NULL DEFAULT 1 CHECK (week_start_day BETWEEN 0 AND 6),
   formula_rendering TEXT NOT NULL DEFAULT 'accessible' CHECK (formula_rendering IN ('rendered', 'accessible', 'plain')),
   accessibility_preferences TEXT NOT NULL DEFAULT '{}',

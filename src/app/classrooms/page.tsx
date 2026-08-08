@@ -1,14 +1,21 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { ClassroomDashboardWorkspace } from "@/features/classrooms/components/classroom-dashboard";
 import { getClassroomDashboard } from "@/features/classrooms/service";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
 export default async function ClassroomsPage() {
   const session = await getCurrentSession().catch(() => null);
   if (!session) redirect("/profiles");
+  if (
+    !env.COLLABORATION_ENABLED &&
+    !session.principal.permissions.includes("manage_application_settings")
+  ) {
+    notFound();
+  }
   const dashboard = await getClassroomDashboard(session.principal);
   const canCreateClass =
     session.principal.roles.includes("administrator") ||

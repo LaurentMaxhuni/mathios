@@ -25,6 +25,7 @@ export default async function SubjectsPage({
   const repository = getCurriculumRepository();
   const session = await getCurrentSession().catch(() => null);
   if (!session) redirect("/profiles");
+  if (!canManageStructure(session.principal)) redirect("/learn");
   const query = await searchParams;
   const [subjects, curricula] = await Promise.all([
     repository.listSubjects(),

@@ -154,7 +154,7 @@ export const DEFAULT_USER_SETTINGS: Omit<
   defaultGrade: null,
   defaultCurriculum: null,
   preferredSubjects: [],
-  studySessionDuration: 25,
+  studySessionDuration: 15,
   weekStartDay: 1,
   formulaRendering: "accessible",
   accessibilityPreferences: DEFAULT_ACCESSIBILITY_PREFERENCES,

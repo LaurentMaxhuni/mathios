@@ -5,39 +5,28 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import {
-  Activity,
   BarChart3,
-  CalendarDays,
-  BrainCircuit,
   BookOpen,
-  BookMarked,
-  ClipboardCheck,
-  FlaskConical,
-  Gauge,
-  GitBranch,
+  BrainCircuit,
   Home,
-  Network,
-  Route,
-  School,
-  Settings2,
-  Sparkles,
-  Orbit,
-  StickyNote,
+  LogOut,
+  MoreHorizontal,
+  Settings,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getFocusableElements } from "@/lib/focus";
+import { ProfileAvatar } from "@/components/shared/profile-avatar";
 import { BrandMark } from "@/components/shared/brand-mark";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { signOutAction } from "@/features/auth/actions";
 import type { AuthMode, AuthenticatedPrincipal } from "@/infrastructure/auth/auth-provider";
 
-type NavigationSection = "workspace" | "learn" | "plan" | "explore" | "insights" | "settings";
+type NavigationSection = "primary" | "settings";
 
 const navigationSections: Array<{ id: NavigationSection; label: string }> = [
-  { id: "workspace", label: "Workspace" },
-  { id: "learn", label: "Learn" },
-  { id: "plan", label: "Plan" },
-  { id: "explore", label: "Explore" },
-  { id: "insights", label: "Insights" },
+  { id: "primary", label: "Learn" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -46,63 +35,15 @@ type NavigationItem = {
   label: string;
   icon: typeof Home;
   section: NavigationSection;
-  requiresAnalytics?: boolean;
-  requiresContentAuthor?: boolean;
 };
 
 const navigation: NavigationItem[] = [
-  { href: "/" as const, label: "Overview", icon: Home, section: "workspace" },
-  { href: "/curricula" as const, label: "Curricula", icon: BookOpen, section: "learn" },
-  { href: "/courses" as const, label: "Courses", icon: BookMarked, section: "learn" },
-  {
-    href: "/content-studio" as const,
-    label: "Content studio",
-    icon: Sparkles,
-    section: "learn",
-    requiresContentAuthor: true,
-  },
-  { href: "/concepts" as const, label: "Concepts", icon: Network, section: "learn" },
-  { href: "/exercises" as const, label: "Exercises", icon: BrainCircuit, section: "learn" },
-  {
-    href: "/assessments" as const,
-    label: "Assessments",
-    icon: ClipboardCheck,
-    section: "learn",
-  },
-  { href: "/mastery" as const, label: "Mastery", icon: Gauge, section: "learn" },
-  {
-    href: "/recommendations" as const,
-    label: "Recommendations",
-    icon: Sparkles,
-    section: "plan",
-  },
-  { href: "/roadmaps" as const, label: "Roadmaps", icon: GitBranch, section: "plan" },
-  { href: "/personalized-paths" as const, label: "My paths", icon: Route, section: "plan" },
-  {
-    href: "/planner" as const,
-    label: "Study planner",
-    icon: CalendarDays,
-    section: "plan",
-  },
-  { href: "/simulations" as const, label: "Simulations", icon: Orbit, section: "explore" },
-  { href: "/laboratories" as const, label: "Laboratory", icon: FlaskConical, section: "explore" },
-  { href: "/notes" as const, label: "Knowledge base", icon: StickyNote, section: "explore" },
-  { href: "/ai" as const, label: "AI studio", icon: Sparkles, section: "explore" },
-  { href: "/classrooms" as const, label: "Classrooms", icon: School, section: "explore" },
-  {
-    href: "/analytics" as const,
-    label: "Learning analytics",
-    icon: BarChart3,
-    section: "insights",
-  },
-  {
-    href: "/analytics/teacher" as const,
-    label: "Teacher analytics",
-    icon: BarChart3,
-    section: "insights",
-    requiresAnalytics: true,
-  },
-  { href: "/settings" as const, label: "Settings", icon: Settings2, section: "settings" },
+  { href: "/dashboard" as const, label: "Today", icon: Home, section: "primary" },
+  { href: "/learn" as const, label: "Learn", icon: BookOpen, section: "primary" },
+  { href: "/practice" as const, label: "Practice", icon: BrainCircuit, section: "primary" },
+  { href: "/progress" as const, label: "Progress", icon: BarChart3, section: "primary" },
+  { href: "/more" as const, label: "More", icon: MoreHorizontal, section: "primary" },
+  { href: "/settings" as const, label: "Settings", icon: Settings, section: "settings" },
 ];
 
 interface SidebarProps {
@@ -124,19 +65,9 @@ export function Sidebar({
   const sidebarRef = React.useRef<HTMLElement>(null);
   const closeButtonRef = React.useRef<HTMLButtonElement>(null);
   const restoreFocusRef = React.useRef<HTMLElement | null>(null);
-  const canAuthorContent = Boolean(
-    principal?.permissions.includes("edit_content") &&
-    principal.roles.some((role) => ["administrator", "content-creator", "teacher"].includes(role)),
-  );
-  const visibleNavigation = navigation.filter(
-    (item) =>
-      (!item.requiresAnalytics || principal?.permissions.includes("view_analytics")) &&
-      (!item.requiresContentAuthor || canAuthorContent),
-  );
-  const settingsNavigation = visibleNavigation.filter((item) => item.section === "settings");
-  const activeHref = visibleNavigation
+  const settingsNavigation = navigation.filter((item) => item.section === "settings");
+  const activeHref = navigation
     .filter((item) => {
-      if (item.href === "/") return pathname === "/";
       return pathname === item.href || pathname.startsWith(`${item.href}/`);
     })
     .sort((left, right) => right.href.length - left.href.length)[0]?.href;
@@ -206,19 +137,23 @@ export function Sidebar({
         id="primary-navigation"
         aria-label="Primary navigation"
         className={cn(
-          "app-sidebar fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r px-4 py-5 shadow-2xl backdrop-blur transition-transform lg:static lg:z-auto lg:translate-x-0 lg:shadow-none",
+          "app-sidebar fixed inset-y-0 left-0 z-40 flex h-dvh w-72 flex-col border-r px-4 py-5 shadow-2xl backdrop-blur transition-transform lg:sticky lg:top-0 lg:z-auto lg:translate-x-0 lg:shadow-none",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <div className="flex items-center justify-between px-3">
-          <Link href="/" className="group flex items-center gap-3" onClick={onMobileClose}>
+          <Link
+            href={"/dashboard" as never}
+            className="group flex items-center gap-3"
+            onClick={onMobileClose}
+          >
             <BrandMark className="app-brand-mark h-10 w-10 rounded-xl shadow-sm transition-transform group-hover:-rotate-6" />
             <span>
               <span className="app-brand-name block text-sm font-bold tracking-[0.2em]">
                 MATHIOS
               </span>
               <span className="app-brand-caption block text-[0.68rem] uppercase tracking-[0.18em]">
-                Science workspace
+                Daily science learning
               </span>
             </span>
           </Link>
@@ -237,7 +172,7 @@ export function Sidebar({
           <nav aria-label="Primary navigation links" className="space-y-5">
             {navigationSections.map((section) => {
               if (section.id === "settings") return null;
-              const sectionNavigation = visibleNavigation.filter(
+                const sectionNavigation = navigation.filter(
                 (item) => item.section === section.id,
               );
               if (!sectionNavigation.length) return null;
@@ -277,19 +212,44 @@ export function Sidebar({
           </nav>
         ) : null}
 
-        <div className="app-sidebar-footer mt-auto rounded-2xl border p-4">
-          <div className="app-sidebar-footer-title flex items-center gap-2 text-xs font-semibold">
-            <Activity className="h-3.5 w-3.5" aria-hidden="true" />
-            {authMode === "neon-auth" ? "Neon Auth identity" : "Local-first identity"}
-          </div>
-          <p className="app-sidebar-footer-copy mt-2 text-xs leading-relaxed">
-            {authMode === "neon-auth"
-              ? "Secure accounts, Google sign-in, permissions, settings, and onboarding are connected to Neon."
-              : "Profiles, permissions, settings, and onboarding stay available on this device."}
-          </p>
-          <p className="app-sidebar-footer-meta mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em]">
-            Phase 19 - Quality audit
-          </p>
+        <div className="app-sidebar-controls mt-3 shrink-0 border-t px-2 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.25rem)]">
+          {principal ? (
+            <>
+              <div className="flex min-w-0 items-center gap-3 px-1 py-2">
+                <ProfileAvatar avatar={principal.avatar ?? "orbit"} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{principal.displayName ?? "Learner"}</p>
+                  <p className="truncate text-[0.68rem] uppercase tracking-[0.14em] text-muted-foreground">
+                    {authMode === "neon-auth" ? "Account" : "Local profile"}
+                  </p>
+                </div>
+                {authMode === "neon-auth" ? (
+                  <Link
+                    href={"/account/settings" as never}
+                    className="rounded-lg p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                    aria-label="Open account settings"
+                    onClick={onMobileClose}
+                  >
+                    <Settings className="h-4 w-4" aria-hidden="true" />
+                  </Link>
+                ) : null}
+              </div>
+              <div className="mt-1 flex items-center gap-1">
+                <ThemeToggle profileId={principal.profileId} />
+                <form action={signOutAction} className="min-w-0 flex-1">
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-2 text-[var(--mathios-ink-text)] hover:bg-muted hover:text-foreground"
+                  >
+                    <LogOut className="h-4 w-4" aria-hidden="true" />
+                    {authMode === "neon-auth" ? "Sign out" : "Switch profile"}
+                  </Button>
+                </form>
+              </div>
+            </>
+          ) : null}
         </div>
       </aside>
     </>

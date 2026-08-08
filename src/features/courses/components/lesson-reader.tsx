@@ -214,6 +214,14 @@ function ProgressControls({ data }: { data: LessonReaderData }) {
         </Button>
         <ActionFeedback state={state} />
       </form>
+      {completed || state.ok ? (
+        <Link
+          href={"/dashboard" as never}
+          className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline"
+        >
+          See your next Today activity <ExternalLink className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      ) : null}
     </aside>
   );
 }

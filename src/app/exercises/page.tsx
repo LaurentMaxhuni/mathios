@@ -14,6 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function ExercisesPage() {
   const session = await getCurrentSession().catch(() => null);
   if (!session) redirect("/profiles");
+  if (!canAuthorExercises(session.principal)) redirect("/practice");
   const repository = getExerciseRepository();
   const sets = await repository.listExerciseSets();
   return (

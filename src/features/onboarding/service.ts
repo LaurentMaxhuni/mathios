@@ -22,9 +22,9 @@ export async function saveOnboarding(
   const now = new Date().toISOString();
   const updatedProfile: ProfileRecord = {
     ...profile,
-    currentCurriculum: input.curriculum,
-    currentGrade: input.currentGrade,
-    targetGrade: input.targetGrade,
+    currentCurriculum: input.curriculum || null,
+    currentGrade: input.currentGrade || null,
+    targetGrade: input.targetGrade || null,
     updatedAt: now,
   };
   await repository.updateProfile(profile.id, {
@@ -42,10 +42,10 @@ export async function saveOnboarding(
     theme: currentSettings.theme,
     reducedMotion: currentSettings.reducedMotion,
     textSize: currentSettings.textSize,
-    defaultGrade: input.currentGrade,
-    defaultCurriculum: input.curriculum,
+    defaultGrade: input.currentGrade || null,
+    defaultCurriculum: input.curriculum || null,
     preferredSubjects: input.subjects,
-    studySessionDuration: currentSettings.studySessionDuration,
+    studySessionDuration: input.dailyGoalMinutes,
     weekStartDay: currentSettings.weekStartDay,
     formulaRendering: currentSettings.formulaRendering,
     accessibilityPreferences: currentSettings.accessibilityPreferences,

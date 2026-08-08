@@ -1,5 +1,5 @@
-import { DashboardSkeleton } from "@/components/shared/route-skeletons";
+import { LandingSkeleton } from "@/components/shared/route-skeletons";
 
 export default function Loading() {
-  return <DashboardSkeleton />;
+  return <LandingSkeleton />;
 }

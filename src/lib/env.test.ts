@@ -10,6 +10,7 @@ describe("parseEnv", () => {
     expect(config.AUTH_MODE).toBe("neon-auth");
     expect(config.STORAGE_PROVIDER).toBe("local");
     expect(config.AI_PROVIDER).toBe("disabled");
+    expect(config.COLLABORATION_ENABLED).toBe(false);
   });
 
   it("rejects invalid provider configuration", () => {

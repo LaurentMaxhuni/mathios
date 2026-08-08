@@ -144,7 +144,7 @@ export const userSettings = pgTable("user_settings", {
   defaultGrade: text("default_grade"),
   defaultCurriculum: text("default_curriculum"),
   preferredSubjects: text("preferred_subjects").notNull().default("[]"),
-  studySessionDuration: integer("study_session_duration").notNull().default(25),
+  studySessionDuration: integer("study_session_duration").notNull().default(15),
   weekStartDay: integer("week_start_day").notNull().default(1),
   formulaRendering: text("formula_rendering").notNull().default("accessible"),
   accessibilityPreferences: text("accessibility_preferences").notNull().default("{}"),
