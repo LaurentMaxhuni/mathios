@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { BrandMark } from "@/components/shared/brand-mark";
 
 function Status({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -23,6 +24,36 @@ function CardSkeleton({ className }: { className?: string }) {
       <Skeleton className="mt-3 h-3 w-full" />
       <Skeleton className="mt-2 h-3 w-4/5" />
       <Skeleton className="mt-7 h-3 w-1/3" />
+    </div>
+  );
+}
+
+export function LandingSkeleton() {
+  return (
+    <div className="landing-page min-h-[100dvh]" role="status" aria-live="polite">
+      <span className="sr-only">Loading Mathios</span>
+      <div className="landing-container py-6 sm:py-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <BrandMark className="h-9 w-9 rounded-xl" />
+            <Skeleton className="h-4 w-24 rounded-xl" />
+          </div>
+          <Skeleton className="h-10 w-32 rounded-xl" />
+        </div>
+        <div className="grid gap-10 py-16 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:py-24">
+          <div>
+            <Skeleton className="h-3 w-44" />
+            <Skeleton className="mt-6 h-14 w-full max-w-xl" />
+            <Skeleton className="mt-4 h-4 w-full max-w-lg" />
+            <Skeleton className="mt-2 h-4 w-4/5 max-w-lg" />
+            <div className="mt-8 flex gap-3">
+              <Skeleton className="h-11 w-36 rounded-xl" />
+              <Skeleton className="h-11 w-32 rounded-xl" />
+            </div>
+          </div>
+          <Skeleton className="aspect-[4/3] w-full rounded-3xl" />
+        </div>
+      </div>
     </div>
   );
 }

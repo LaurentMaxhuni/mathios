@@ -6,26 +6,18 @@ import { CircleCheck, Menu, Search } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
-import { ProfileAvatar } from "@/components/shared/profile-avatar";
-import { signOutAction } from "@/features/auth/actions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { AuthMode, AuthenticatedPrincipal } from "@/infrastructure/auth/auth-provider";
 
 interface HeaderProps {
   mobileNavigationOpen: boolean;
   onMobileMenuOpen: () => void;
   mobileMenuButtonRef: React.RefObject<HTMLButtonElement | null>;
-  authMode: AuthMode;
-  principal: AuthenticatedPrincipal | null;
 }
 
 export function Header({
   mobileMenuButtonRef,
   mobileNavigationOpen,
   onMobileMenuOpen,
-  authMode,
-  principal,
 }: HeaderProps) {
   const reduceMotion = useReducedMotion();
 
@@ -67,7 +59,7 @@ export function Header({
             className="h-4 w-4 transition-transform group-hover:scale-105"
             aria-hidden="true"
           />
-          <span>Search workspace</span>
+          <span>Search</span>
           <kbd className="hidden rounded-md border border-border/70 bg-background/60 px-1.5 py-0.5 text-[0.65rem] font-normal sm:inline">
             ⌘ K
           </kbd>
@@ -79,42 +71,8 @@ export function Header({
           className="hidden items-center gap-1.5 border border-accent/20 bg-accent/10 sm:inline-flex"
         >
           <CircleCheck className="h-3 w-3" aria-hidden="true" />
-          {authMode === "neon-auth" ? "Neon Auth" : "Local mode"}
+          Ready to learn
         </Badge>
-        {principal ? (
-          <div className="hidden items-center gap-2 md:flex">
-            {authMode === "neon-auth" ? (
-              <Link
-                href={"/account/settings" as never}
-                className="inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-muted"
-                aria-label="Open account settings"
-              >
-                <ProfileAvatar avatar={principal.avatar ?? "orbit"} size="sm" />
-                <span className="max-w-32 truncate">{principal.displayName ?? "Account"}</span>
-              </Link>
-            ) : (
-              <>
-                <ProfileAvatar avatar={principal.avatar ?? "orbit"} size="sm" />
-                <span className="max-w-32 truncate text-sm font-medium">
-                  {principal.displayName}
-                </span>
-                <form action={signOutAction}>
-                  <Button type="submit" variant="ghost" size="sm">
-                    Switch profile
-                  </Button>
-                </form>
-              </>
-            )}
-          </div>
-        ) : null}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="inline-flex">
-              <ThemeToggle />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>Toggle theme</TooltipContent>
-        </Tooltip>
       </div>
     </motion.header>
   );

@@ -34,7 +34,7 @@ export function NeonAuthUIBoundary({ children }: { children: React.ReactNode }) 
       replace={replace}
       onSessionChange={() => router.refresh()}
       social={{ providers: ["google"] }}
-      redirectTo="/"
+      redirectTo="/dashboard"
       Link={AuthLink}
     >
       {children}

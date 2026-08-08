@@ -13,9 +13,22 @@ export function ProfilePreferenceSync({
   settings: UserSettingsRecord | null;
 }) {
   const { setTheme } = useTheme();
+  const setThemeRef = React.useRef(setTheme);
+
+  React.useEffect(() => {
+    setThemeRef.current = setTheme;
+  }, [setTheme]);
+
+  const profileId = principal?.profileId ?? settings?.profileId ?? null;
+  const savedTheme = settings?.theme ?? principal?.preferredTheme ?? "system";
+
+  React.useEffect(() => {
+    if (!profileId) return;
+    setThemeRef.current(savedTheme);
+  }, [profileId, savedTheme]);
+
   React.useEffect(() => {
     if (!principal && !settings) return;
-    setTheme(settings?.theme ?? principal?.preferredTheme ?? "system");
     const root = document.documentElement;
     root.dataset.textSize = settings?.textSize ?? "medium";
     root.dataset.reducedMotion = settings?.reducedMotion ? "true" : "false";
@@ -30,6 +43,6 @@ export function ProfilePreferenceSync({
     root.dataset.underlineLinks = settings?.accessibilityPreferences.underlineLinks
       ? "true"
       : "false";
-  }, [principal, setTheme, settings]);
+  }, [principal, profileId, settings]);
   return null;
 }

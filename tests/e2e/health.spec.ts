@@ -4,15 +4,13 @@ test.describe.configure({ mode: "serial" });
 
 test("provided learning library is the primary starting point", async ({ page, request }) => {
   await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Learn in layers, not loops." })).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Your next idea is already here." }),
+    page.getByText("focused science library that turns one daily session"),
   ).toBeVisible();
+  await expect(page.getByText("One library across")).toBeVisible();
   await expect(
-    page.getByText("lessons, concepts, practice, simulations, and experiments"),
-  ).toBeVisible();
-  await expect(page.getByText("Included from day one")).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Start with the library, not a blank page." }),
+    page.getByRole("heading", { name: "Make the next idea easy to find." }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Start learning" }).first()).toHaveAttribute(
     "href",
@@ -67,12 +65,17 @@ test("local profile setup, PIN sign-in, and settings are usable offline", async 
   await expect(page).toHaveURL(/\/auth\/sign-in\?profileId=/);
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
-  await expect(
-    page.getByRole("heading", { name: "Your science library is ready, E2E Learner." }),
-  ).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Start with provided content" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Browse course library" }).first()).toBeVisible();
+  await expect(page).toHaveURL("/dashboard");
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Learn in layers, not loops." })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open dashboard" }).first()).toHaveAttribute(
+    "href",
+    "/dashboard",
+  );
+  await page.goto("/dashboard");
+  await expect(page.getByRole("heading", { name: /A small step in/ })).toBeVisible();
+  await expect(page.getByText("Daily goal")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Browse all learning" })).toBeVisible();
 
   await page.goto("/settings");
   await page.getByLabel("Default curriculum").fill("Local curriculum");
@@ -92,7 +95,7 @@ test("Phase 2 curriculum, grade, subject, and management explorers are usable", 
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/curricula");
   await expect(
@@ -150,7 +153,7 @@ test("Phase 3 course catalog, lesson reader, progress, and authoring surfaces ar
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/courses");
   await expect(
@@ -185,7 +188,7 @@ test("Phase 4 concepts, prerequisite graph, and authoring surfaces are usable", 
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/concepts");
   await expect(
@@ -231,7 +234,7 @@ test("Phase 5 exercise player, validation APIs, and authoring surfaces are usabl
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/exercises");
   await expect(page.getByRole("heading", { name: "Practice that explains itself." })).toBeVisible();
@@ -274,7 +277,7 @@ test("Phase 6 assessment catalog, timed workflow, and authoring surface are usab
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/assessments");
   await expect(
@@ -310,13 +313,13 @@ test("Phase 7 mastery dashboard, explainable detail, recommendations, and review
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/mastery");
-  await expect(page.getByRole("heading", { name: "See what is sticking." })).toBeVisible();
-  await expect(page.getByText("Concepts assessed")).toBeVisible();
-  await expect(page.getByText("Mastery by subject")).toBeVisible();
-  await expect(page.getByText("Mastery by grade range")).toBeVisible();
+  await expect(page).toHaveURL("/progress");
+  await expect(page.getByRole("heading", { name: "Notice what is sticking." })).toBeVisible();
+  await expect(page.getByText("Study streak")).toBeVisible();
+  await expect(page.getByText("By subject")).toBeVisible();
 
   await page.goto("/mastery/subjects");
   await expect(page.getByRole("heading", { name: "Subject mastery map" })).toBeVisible();
@@ -353,7 +356,7 @@ test("Phase 8 roadmaps, prerequisite progress, personalized paths, and APIs are 
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/roadmaps");
   await expect(page.getByRole("heading", { name: "Interdisciplinary roadmaps" })).toBeVisible();
@@ -429,7 +432,7 @@ test("Phase 9 simulation catalog, interactive player, lesson link, and session A
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/simulations");
   await expect(page.getByRole("heading", { name: "Simulations" })).toBeVisible();
@@ -471,7 +474,7 @@ test("Phase 10 laboratory workspace records data, analyzes it, and exports a rep
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/laboratories");
   await expect(page.getByRole("heading", { name: "Virtual laboratory" })).toBeVisible();
@@ -539,7 +542,7 @@ test("Phase 11 study planner generates a calendar rhythm and records completion"
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/planner");
   await expect(
@@ -578,7 +581,7 @@ test("Phase 12 notes, captures, search, and personal map are usable", async ({ p
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/notes");
   await expect(page.getByRole("heading", { name: "Personal knowledge base" })).toBeVisible();
@@ -637,7 +640,7 @@ test("Phase 13 global search ranks local content and exposes discovery filters",
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/search");
   await expect(page.getByRole("heading", { name: "Find the next idea." })).toBeVisible();
@@ -673,14 +676,15 @@ test("Phase 14 learner and teacher analytics summarize local activity", async ({
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
-  await expect(page.getByRole("heading", { name: "Learning dashboard" })).toBeVisible();
-  await expect(page.getByText("Weekly study progress").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: /A small step in/ })).toBeVisible();
+  await expect(page.getByText("Daily goal").first()).toBeVisible();
 
   await page.goto("/analytics");
-  await expect(page.getByRole("heading", { name: "Learning analytics" })).toBeVisible();
-  await expect(page.getByText("Study consistency")).toBeVisible();
+  await expect(page).toHaveURL("/progress");
+  await expect(page.getByRole("heading", { name: "Notice what is sticking." })).toBeVisible();
+  await expect(page.getByText("Study streak")).toBeVisible();
   const learnerResponse = await page.evaluate(async () => {
     const response = await fetch("/api/analytics/learner");
     return { ok: response.ok, body: await response.json() };
@@ -712,7 +716,7 @@ test("Phase 15 portability workspace exports data and rejects invalid restores s
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/portability");
   await expect(page.getByRole("heading", { name: "Import, export & backup" })).toBeVisible();
@@ -759,7 +763,7 @@ test("Phase 16 AI studio stays disabled safely and preserves core learning acces
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/ai");
   await expect(page.getByRole("heading", { name: "AI studio" })).toBeVisible();
@@ -798,7 +802,7 @@ test("AI content studio generates and saves a reviewable lesson draft", async ({
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   const mockAiBaseUrl = process.env.E2E_MOCK_AI_BASE_URL ?? "http://127.0.0.1:11434";
   const settings = await page.evaluate(async (localBaseUrl) => {
@@ -867,7 +871,7 @@ test("Phase 17 classroom workspace creates a class, assignment, invitation, and 
   await page.getByRole("link", { name: "Select" }).click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/classrooms");
   await expect(page.getByRole("heading", { name: "Classroom command center" })).toBeVisible();
@@ -958,7 +962,7 @@ test("Phase 19 shell navigation preserves keyboard focus and document structure"
   await page.getByRole("link", { name: "Select" }).first().click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   const skipLink = page.getByRole("link", { name: "Skip to main content" });
   await expect(skipLink).toBeAttached();
@@ -992,7 +996,7 @@ test("Phase 19 semantic alternatives and status surfaces are exposed", async ({ 
   await page.getByRole("link", { name: "Select" }).first().click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/dashboard");
 
   await page.goto("/search");
   await expect(page.getByRole("combobox", { name: /search/i })).toBeVisible();
@@ -1004,4 +1008,62 @@ test("Phase 19 semantic alternatives and status surfaces are exposed", async ({ 
   await page.goto("/lessons/lesson-describing-motion");
   await expect(page.getByRole("progressbar", { name: "Lesson completion" })).toBeVisible();
   await expect(page.locator('[role="math"]').first()).toBeVisible();
+});
+
+test("Today keeps the learner loop focused and lets learners switch subjects", async ({ page }) => {
+  await page.goto("/profiles");
+  await page.getByRole("link", { name: "Select" }).first().click();
+  await page.getByLabel("PIN or password").fill("1234");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL("/dashboard");
+  await expect(page.getByRole("heading", { name: /A small step in/ })).toBeVisible();
+
+  const primaryNavigation = page.getByRole("navigation", { name: "Primary navigation links" });
+  await expect(primaryNavigation.getByRole("link", { name: "Today", exact: true })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(page.getByText("Neon Auth identity")).toHaveCount(0);
+  await expect(page.locator(".app-sidebar-controls")).toBeVisible();
+  for (const label of ["Today", "Learn", "Practice", "Progress", "More"]) {
+    await expect(primaryNavigation.getByRole("link", { name: label, exact: true })).toBeVisible();
+  }
+  await expect(
+    primaryNavigation.getByRole("link", { name: /Classroom|Teacher|Manage/ }),
+  ).toHaveCount(0);
+
+  const subjectChooser = page.getByRole("combobox", { name: "Active subject" }).first();
+  await subjectChooser.selectOption({ label: "Physics" });
+  await page.getByRole("button", { name: "Use subject" }).first().click();
+  await expect(page.getByRole("status")).toContainText("Active subject updated.");
+  await page.reload();
+  await expect(subjectChooser).toHaveValue("subject-physics");
+
+  const html = page.locator("html");
+  const startsDark = await html.evaluate((element) => element.classList.contains("dark"));
+  if (!startsDark) {
+    await page.getByRole("button", { name: "Switch to dark theme" }).click();
+    await expect(html).toHaveClass(/dark/);
+  }
+  await page.getByRole("button", { name: "Switch to light theme" }).click();
+  await expect(html).toHaveClass(/light/);
+  await expect(page.getByRole("button", { name: "Switch to dark theme" })).toHaveAttribute(
+    "aria-busy",
+    "false",
+  );
+  await page.reload();
+  await expect(html).toHaveClass(/light/);
+
+  await page.goto("/more");
+  await expect(page.getByRole("heading", { name: "Tools for when you want them." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Manage content" })).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/dashboard");
+  await page.getByRole("button", { name: "Open navigation" }).click();
+  await expect(page.locator(".app-sidebar-controls")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Switch profile" })).toBeVisible();
+  const mobileNavigation = page.getByRole("navigation", { name: "Mobile navigation" });
+  await expect(mobileNavigation.getByRole("link", { name: "Today" })).toBeVisible();
+  await expect(mobileNavigation.getByRole("link", { name: "More" })).toBeVisible();
 });

@@ -29,7 +29,7 @@ export async function signInAction(
   } catch (error) {
     return actionStateFromError(error);
   }
-  redirect("/");
+  redirect("/dashboard" as never);
 }
 
 export async function signOutAction(): Promise<void> {

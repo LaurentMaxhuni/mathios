@@ -6,21 +6,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { OnboardingForm } from "@/features/onboarding/components/onboarding-form";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getIdentityRepository } from "@/infrastructure/database/repositories/identity-repository";
+import { defaultSettings } from "@/features/settings/service";
 
 export default async function OnboardingPage() {
   const repository = getIdentityRepository();
   const session = await getCurrentSession(repository).catch(() => null);
   if (!session) redirect("/profiles");
   const response = await repository.getOnboarding(session.principal.profileId);
+  const settings =
+    (await repository.getSettings(session.principal.profileId)) ??
+    defaultSettings(session.principal.profileId);
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
       <Breadcrumbs current="Onboarding" />
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Optional learning preferences</CardTitle>
+          <CardTitle>Set up your daily learning</CardTitle>
           <CardDescription>
-            Mathios already includes the learning library. These preferences only help prioritize
-            the provided material; you can skip them and start learning now.
+            Choose a subject and a small daily goal. Grade and curriculum details are optional and
+            only help make course suggestions more relevant.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -32,11 +36,11 @@ export default async function OnboardingPage() {
                 content yourself.
               </p>
             </div>
-            <Link href="/courses" className={buttonVariants({ variant: "outline", size: "sm" })}>
-              Browse course library
+            <Link href="/learn" className={buttonVariants({ variant: "outline", size: "sm" })}>
+              Choose from all subjects
             </Link>
           </div>
-          <OnboardingForm response={response} />
+          <OnboardingForm response={response} dailyGoalMinutes={settings.studySessionDuration} />
         </CardContent>
       </Card>
     </div>

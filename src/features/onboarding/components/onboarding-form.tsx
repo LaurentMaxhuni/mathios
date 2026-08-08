@@ -26,7 +26,13 @@ const days = [
   [6, "Saturday"],
 ] as const;
 
-export function OnboardingForm({ response }: { response: OnboardingResponseRecord | null }) {
+export function OnboardingForm({
+  response,
+  dailyGoalMinutes,
+}: {
+  response: OnboardingResponseRecord | null;
+  dailyGoalMinutes: number;
+}) {
   const [state, formAction, pending] = React.useActionState(
     saveOnboardingAction,
     initialActionState,
@@ -39,41 +45,38 @@ export function OnboardingForm({ response }: { response: OnboardingResponseRecor
         <section className="grid gap-5 sm:grid-cols-2" aria-labelledby="pathway-heading">
           <div className="sm:col-span-2">
             <h2 id="pathway-heading" className="text-base font-semibold">
-              Optional starting preferences
+              Your learning context
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              The course and concept library is already provided. Use these fields only if you want
-              Mathios to prioritize a particular starting point.
+              Start with the subject you want. Add a level or curriculum only if it helps you choose
+              the right starting point.
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="curriculum">Preferred curriculum lens</Label>
+            <Label htmlFor="curriculum">Curriculum (optional)</Label>
             <Input
               id="curriculum"
               name="curriculum"
               defaultValue={response?.curriculum ?? ""}
               placeholder="e.g. Kosovo Curriculum"
-              required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="currentGrade">Current level</Label>
+            <Label htmlFor="currentGrade">Level or grade (optional)</Label>
             <Input
               id="currentGrade"
               name="currentGrade"
               defaultValue={response?.currentGrade ?? ""}
               placeholder="e.g. Grade 8"
-              required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="targetGrade">Target level</Label>
+            <Label htmlFor="targetGrade">Target level (optional)</Label>
             <Input
               id="targetGrade"
               name="targetGrade"
               defaultValue={response?.targetGrade ?? ""}
               placeholder="e.g. Grade 10"
-              required
             />
           </div>
         </section>
@@ -81,7 +84,7 @@ export function OnboardingForm({ response }: { response: OnboardingResponseRecor
         <fieldset>
           <legend className="text-base font-semibold">Subjects</legend>
           <p className="mt-1 text-sm text-muted-foreground">
-            Choose the provided subjects you want to keep close at hand.
+            Your first choice becomes the active subject in Today. You can switch any time.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {subjects.map(([value, label]) => (
@@ -108,7 +111,7 @@ export function OnboardingForm({ response }: { response: OnboardingResponseRecor
               Focus and rhythm
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Optional focus areas help prioritize the existing material. Put one per line.
+              Optional focus areas can shape what you return to. Put one per line.
             </p>
           </div>
           <div className="space-y-2 sm:col-span-2">
@@ -120,8 +123,21 @@ export function OnboardingForm({ response }: { response: OnboardingResponseRecor
               rows={4}
               placeholder="Understand algebraic equations\nBuild confidence with physics problems"
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              required
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dailyGoalMinutes">Daily goal</Label>
+            <select
+              id="dailyGoalMinutes"
+              name="dailyGoalMinutes"
+              defaultValue={dailyGoalMinutes}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="10">10 minutes</option>
+              <option value="15">15 minutes</option>
+              <option value="20">20 minutes</option>
+              <option value="30">30 minutes</option>
+            </select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="weeklyStudyTimeMinutes">Weekly study time</Label>
@@ -154,7 +170,7 @@ export function OnboardingForm({ response }: { response: OnboardingResponseRecor
         </section>
 
         <fieldset>
-          <legend className="text-base font-semibold">Preferred study days</legend>
+          <legend className="text-base font-semibold">Preferred study days (optional)</legend>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {days.map(([value, label]) => (
               <label

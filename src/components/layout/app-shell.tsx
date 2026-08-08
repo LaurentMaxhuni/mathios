@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { SkipLink } from "@/components/layout/skip-link";
 import { ProfilePreferenceSync } from "@/components/layout/profile-preference-sync";
+import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { usePathname } from "next/navigation";
 import type { UserSettingsRecord } from "@/domain/identity/types";
 import type { AuthenticatedPrincipal } from "@/infrastructure/auth/auth-provider";
@@ -29,7 +30,10 @@ export function AppShell({
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
   const isStandaloneRoute =
-    pathname === "/auth" || pathname?.startsWith("/auth/") || (!principal && pathname === "/");
+    pathname === "/" ||
+    pathname === "/auth" ||
+    pathname?.startsWith("/auth/") ||
+    (!principal && (pathname === "/profiles" || pathname?.startsWith("/profiles/")));
 
   if (isStandaloneRoute) {
     return (
@@ -38,7 +42,7 @@ export function AppShell({
         <main id="main-content" tabIndex={-1}>
           <motion.div
             key={pathname ?? "standalone"}
-            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.16, 1, 0.3, 1] }}
           >
@@ -50,7 +54,7 @@ export function AppShell({
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-[100dvh]">
       <SkipLink />
       <Sidebar
         mobileOpen={mobileOpen}
@@ -64,8 +68,6 @@ export function AppShell({
           mobileNavigationOpen={mobileOpen}
           mobileMenuButtonRef={mobileMenuButtonRef}
           onMobileMenuOpen={openMobileNavigation}
-          authMode={authMode}
-          principal={principal}
         />
         <main id="main-content" className="app-main flex-1" tabIndex={-1}>
           <motion.div
@@ -77,6 +79,7 @@ export function AppShell({
             {children}
           </motion.div>
         </main>
+        <MobileBottomNav />
       </div>
       <ProfilePreferenceSync principal={principal} settings={settings} />
     </div>

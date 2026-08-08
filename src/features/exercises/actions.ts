@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { ValidationError } from "@/domain/errors/application-error";
 import { actionStateFromError, actionStateFromZod, type ActionState } from "@/lib/action-state";
@@ -7,6 +8,8 @@ import { formBoolean, formNumber, formString } from "@/lib/form-data";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
 import { getExerciseRepository } from "@/infrastructure/database/repositories/exercise-repository";
 import { getMasteryRepository } from "@/infrastructure/database/repositories/mastery-repository";
+import { getAnalyticsRepository } from "@/infrastructure/database/repositories/analytics-repository";
+import { trackActivityEvent } from "@/features/analytics/service";
 import {
   completeExerciseAttempt,
   createExerciseSet,
@@ -284,6 +287,25 @@ export async function submitQuestionAnswerAction(
         profileId: principal.profileId,
       },
       getExerciseRepository(),
+    );
+    const isCorrect = submitted.result.status === "correct";
+    await trackActivityEvent(
+      {
+        id: isCorrect
+          ? `activity-practice-correct-${parsed.data.attemptId}-${parsed.data.questionId}`
+          : `activity-practice-${randomUUID()}`,
+        profileId: principal.profileId,
+        eventType: "question-attempt",
+        resourceType: "question",
+        resourceId: parsed.data.questionId,
+        score: submitted.result.score,
+        isCorrect,
+        dedupeKey: isCorrect
+          ? `practice-correct:${parsed.data.attemptId}:${parsed.data.questionId}`
+          : null,
+        metadata: isCorrect ? { points: 5 } : {},
+      },
+      getAnalyticsRepository(),
     );
     return {
       ok: submitted.result.status === "correct",

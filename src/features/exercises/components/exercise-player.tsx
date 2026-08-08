@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   CheckCircle2,
   ChevronLeft,
@@ -333,6 +334,12 @@ export function ExercisePlayer({ detail, questions }: ExercisePlayerProps) {
           <CardDescription>{message}</CardDescription>
         </CardHeader>
         <CardContent>
+          <Link
+            href={"/dashboard" as never}
+            className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline"
+          >
+            See your next Today activity
+          </Link>
           <Button variant="outline" onClick={() => window.location.reload()}>
             Try again
           </Button>
