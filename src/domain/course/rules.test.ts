@@ -21,4 +21,24 @@ describe("Phase 3 lesson rules", () => {
     expect(calculateCompletionPercentage(0, 1)).toBe(0);
     expect(calculateCompletionPercentage(4, 9)).toBe(100);
   });
+
+  it("requires a usable prompt, choices, and answer for quick checks", () => {
+    expect(() => validateBlockPayload("quick-check", { prompt: "Choose one" })).toThrow(
+      ValidationError,
+    );
+    expect(() =>
+      validateBlockPayload("quick-check", {
+        prompt: "Choose one",
+        choices: ["A", "B"],
+        correctIndex: 2,
+      }),
+    ).toThrow(ValidationError);
+    expect(() =>
+      validateBlockPayload("quick-check", {
+        prompt: "Choose one",
+        choices: ["A", "B"],
+        correctIndex: 1,
+      }),
+    ).not.toThrow();
+  });
 });

@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Home, MoreHorizontal, BarChart3, BrainCircuit } from "lucide-react";
+import { BookOpen, MoreHorizontal, BarChart3, BrainCircuit, Route } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const items = [
-  ["/dashboard", "Today", Home],
-  ["/learn", "Learn", BookOpen],
+  ["/dashboard", "Path", Route],
+  ["/learn", "Library", BookOpen],
   ["/practice", "Practice", BrainCircuit],
   ["/progress", "Progress", BarChart3],
   ["/more", "More", MoreHorizontal],

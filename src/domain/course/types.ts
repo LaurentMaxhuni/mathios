@@ -48,6 +48,7 @@ export const LESSON_BLOCK_TYPES = [
   "audio",
   "exercise-reference",
   "simulation-reference",
+  "quick-check",
   "tabs",
   "accordion",
   "comparison",
@@ -273,6 +274,12 @@ export interface LessonReaderData {
   subjectName: string;
   version: LessonVersionRecord;
   progress: LessonProgressRecord | null;
+  coursePath?: {
+    position: number;
+    total: number;
+    previousLesson: Pick<LessonRecord, "id" | "title"> | null;
+    nextLesson: Pick<LessonRecord, "id" | "title"> | null;
+  };
   simulationLinks?: readonly {
     simulationId: string;
     simulationTitle: string;

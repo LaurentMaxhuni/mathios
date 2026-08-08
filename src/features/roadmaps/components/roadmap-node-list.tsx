@@ -52,7 +52,7 @@ export function RoadmapNodeList({
   return (
     <div className="space-y-3">
       <ActionFeedback state={state} />
-      {pending ? <p className="text-xs text-muted-foreground">Saving node orderâ€¦</p> : null}
+      {pending ? <p className="text-xs text-muted-foreground">Saving node order…</p> : null}
       {orderedNodes.map((node) => (
         <div
           key={node.id}
@@ -83,7 +83,7 @@ export function RoadmapNodeList({
                 {node.isCheckpoint ? <Badge variant="success">checkpoint</Badge> : null}
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {node.nodeKey} Â· {node.type} Â· {node.referenceId ?? "milestone"} Â· order{" "}
+                {node.nodeKey} · {node.type} · {node.referenceId ?? "milestone"} · order{" "}
                 {node.sortOrder}
               </p>
             </div>

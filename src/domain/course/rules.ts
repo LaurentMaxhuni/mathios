@@ -55,6 +55,25 @@ export function validateBlockPayload(type: LessonBlockType, payload: LessonBlock
     const altText = typeof payload.altText === "string" ? payload.altText.trim() : "";
     if (!altText) throw new ValidationError(`${type} blocks need alternative text.`);
   }
+  if (type === "quick-check") {
+    const prompt = typeof payload.prompt === "string" ? payload.prompt.trim() : "";
+    const choices = Array.isArray(payload.choices)
+      ? payload.choices.filter(
+          (choice): choice is string => typeof choice === "string" && !!choice.trim(),
+        )
+      : [];
+    const correctIndex = payload.correctIndex;
+    if (!prompt) throw new ValidationError("Quick checks need a prompt.");
+    if (choices.length < 2) throw new ValidationError("Quick checks need at least two choices.");
+    if (
+      typeof correctIndex !== "number" ||
+      !Number.isInteger(correctIndex) ||
+      correctIndex < 0 ||
+      correctIndex >= choices.length
+    ) {
+      throw new ValidationError("Quick checks need a valid correct choice.");
+    }
+  }
 }
 
 export function validateLessonForPublishing(

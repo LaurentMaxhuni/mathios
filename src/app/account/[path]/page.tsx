@@ -1,5 +1,5 @@
-import { AccountView } from "@neondatabase/auth-ui";
 import { accountViewPaths } from "@neondatabase/auth-ui/server";
+import { AccountViewClient } from "@/features/auth/components/account-view";
 
 export const dynamicParams = false;
 
@@ -11,7 +11,7 @@ export default async function AccountPage({ params }: { params: Promise<{ path: 
   const { path } = await params;
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:px-10 lg:py-12">
-      <AccountView path={path} />
+      <AccountViewClient path={path} />
     </main>
   );
 }

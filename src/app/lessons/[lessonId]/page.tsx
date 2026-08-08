@@ -34,20 +34,48 @@ export default async function LessonReaderPage({
     },
     getAnalyticsRepository(),
   );
+  const [simulationLinks, courseDetail] = await Promise.all([
+    getSimulationRepository().listLessonSimulations(lessonId),
+    repository.getCourseDetail(reader.course.id),
+  ]);
+  const pathLessons =
+    courseDetail?.modules.flatMap((module) =>
+      module.lessons.filter((lesson) => lesson.status !== "archived"),
+    ) ?? [];
+  const pathIndex = pathLessons.findIndex((lesson) => lesson.id === lessonId);
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
+    <div className="mx-auto w-full max-w-[1280px] px-4 py-5 sm:px-6 sm:py-7 lg:px-10 lg:py-10">
       <Breadcrumbs current={reader.lesson.title} />
-      <div className="mt-7">
+      <div className="mt-5">
         <LessonReader
           data={{
             ...reader,
-            simulationLinks: (await getSimulationRepository().listLessonSimulations(lessonId)).map(
-              (link) => ({
-                simulationId: link.simulationId ?? "",
-                simulationTitle: link.simulationTitle ?? link.lessonTitle,
-                instructions: link.instructions,
-              }),
-            ),
+            coursePath:
+              pathIndex >= 0
+                ? {
+                    position: pathIndex + 1,
+                    total: pathLessons.length,
+                    previousLesson:
+                      pathIndex > 0
+                        ? {
+                            id: pathLessons[pathIndex - 1].id,
+                            title: pathLessons[pathIndex - 1].title,
+                          }
+                        : null,
+                    nextLesson:
+                      pathIndex < pathLessons.length - 1
+                        ? {
+                            id: pathLessons[pathIndex + 1].id,
+                            title: pathLessons[pathIndex + 1].title,
+                          }
+                        : null,
+                  }
+                : undefined,
+            simulationLinks: simulationLinks.map((link) => ({
+              simulationId: link.simulationId ?? "",
+              simulationTitle: link.simulationTitle ?? link.lessonTitle,
+              instructions: link.instructions,
+            })),
           }}
         />
       </div>

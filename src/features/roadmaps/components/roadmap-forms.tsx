@@ -51,7 +51,7 @@ function Submit({
   return (
     <Button type="submit" disabled={pending}>
       {icon}
-      {pending ? "Savingâ€¦" : label}
+      {pending ? "Saving…" : label}
     </Button>
   );
 }
@@ -194,7 +194,7 @@ export function RoadmapStatusForm({
         disabled={pending}
       >
         {pending
-          ? "Updatingâ€¦"
+          ? "Updating…"
           : (label ?? (next === "published" ? "Publish roadmap" : "Create draft version"))}
       </Button>
       <ActionFeedback state={state} />
@@ -233,7 +233,7 @@ export function GeneratePathForm({ roadmapId }: { roadmapId: string }) {
       <ActionFeedback state={state} />
       <Button type="submit" variant="outline" disabled={pending}>
         <Sparkles className="h-4 w-4" aria-hidden="true" />
-        {pending ? "Building pathâ€¦" : "Generate personalized path"}
+        {pending ? "Building path…" : "Generate personalized path"}
       </Button>
     </form>
   );
@@ -266,7 +266,7 @@ export function ProgressForm({
         variant={nextStatus === "completed" ? "default" : "outline"}
         disabled={pending || progress?.status === "locked"}
       >
-        {pending ? "Savingâ€¦" : nextStatus === "completed" ? "Mark complete" : "Reopen node"}
+        {pending ? "Saving…" : nextStatus === "completed" ? "Mark complete" : "Reopen node"}
         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
       </Button>
       <ActionFeedback state={state} />
@@ -511,7 +511,7 @@ export function DeleteRoadmapNodeForm({
       <input type="hidden" name="roadmapId" value={roadmapId} />
       <Button type="submit" variant="ghost" size="sm" disabled={pending}>
         <Trash2 className="h-4 w-4" aria-hidden="true" />
-        {pending ? "Removingâ€¦" : "Remove"}
+        {pending ? "Removing…" : "Remove"}
       </Button>
       <ActionFeedback state={state} />
     </form>
@@ -532,7 +532,7 @@ export function DeleteRoadmapEdgeForm({
       <input type="hidden" name="roadmapId" value={roadmapId} />
       <Button type="submit" variant="ghost" size="sm" disabled={pending}>
         <Trash2 className="h-4 w-4" aria-hidden="true" />
-        {pending ? "Removingâ€¦" : "Remove"}
+        {pending ? "Removing…" : "Remove"}
       </Button>
       <ActionFeedback state={state} />
     </form>
@@ -589,7 +589,7 @@ export function DeleteRoadmapSubjectForm({
       <input type="hidden" name="roadmapId" value={roadmapId} />
       <input type="hidden" name="subjectId" value={subjectId} />
       <Button type="submit" variant="ghost" size="sm" disabled={pending}>
-        {pending ? "Removingâ€¦" : "Remove"}
+        {pending ? "Removing…" : "Remove"}
       </Button>
       <ActionFeedback state={state} />
     </form>
@@ -646,7 +646,7 @@ export function DeleteRoadmapPrerequisiteForm({
       <input type="hidden" name="roadmapId" value={roadmapId} />
       <input type="hidden" name="prerequisiteRoadmapId" value={prerequisiteRoadmapId} />
       <Button type="submit" variant="ghost" size="sm" disabled={pending}>
-        {pending ? "Removingâ€¦" : "Remove"}
+        {pending ? "Removing…" : "Remove"}
       </Button>
       <ActionFeedback state={state} />
     </form>

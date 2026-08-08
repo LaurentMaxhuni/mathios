@@ -61,7 +61,7 @@ export default async function RoadmapDetailPage({
             <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Roadmap catalog
           </RoadmapLink>
           <p className="eyebrow mt-5">
-            {detail.subjects.map((subject) => subject.subjectName).join(" Â· ") ||
+            {detail.subjects.map((subject) => subject.subjectName).join(" · ") ||
               "Cross-subject path"}
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -74,7 +74,7 @@ export default async function RoadmapDetailPage({
         <div className="flex flex-wrap gap-2">
           <Badge variant="success">{detail.roadmap.status}</Badge>
           <Badge variant="outline">
-            {detail.nodes.length} nodes Â· {detail.roadmap.estimatedDurationMinutes} min
+            {detail.nodes.length} nodes · {detail.roadmap.estimatedDurationMinutes} min
           </Badge>
           {author ? (
             <RoadmapLink
@@ -133,14 +133,14 @@ export default async function RoadmapDetailPage({
                     </div>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       {node.description ||
-                        `${node.type.replaceAll("-", " ")} Â· ${node.estimatedDurationMinutes} minutes`}
+                        `${node.type.replaceAll("-", " ")} · ${node.estimatedDurationMinutes} minutes`}
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                       {node.subjectName ? <span>{node.subjectName}</span> : null}
                       {node.referenceTitle ? <span>{node.referenceTitle}</span> : null}
                       {progress ? (
                         <span>
-                          {progress.status} Â· {progress.completionPercentage}%
+                          {progress.status} · {progress.completionPercentage}%
                         </span>
                       ) : null}
                     </div>
@@ -218,7 +218,7 @@ export default async function RoadmapDetailPage({
                   <div className="rounded-lg bg-accent/10 p-3 text-sm">
                     <strong>{path.estimatedDurationMinutes} minutes</strong>
                     {path.estimatedWeeks
-                      ? ` Â· about ${path.estimatedWeeks} week${path.estimatedWeeks === 1 ? "" : "s"}`
+                      ? ` · about ${path.estimatedWeeks} week${path.estimatedWeeks === 1 ? "" : "s"}`
                       : ""}
                   </div>
                   <p className="text-sm text-muted-foreground">

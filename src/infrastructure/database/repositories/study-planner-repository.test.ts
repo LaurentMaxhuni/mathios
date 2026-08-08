@@ -72,7 +72,12 @@ describe("study planner repository and learner flow", () => {
       expect(result.plan.sessions.length).toBeGreaterThan(0);
       expect(result.plan.conflicts).toHaveLength(0);
 
-      const original = result.plan.sessions[0];
+      const original = result.plan.sessions.find(
+        (candidate) =>
+          result.plan.items.find((item) => item.id === candidate.planItemId)?.itemType === "lesson",
+      );
+      expect(original).toBeDefined();
+      if (!original) throw new Error("Expected the course plan to include a lesson session.");
       const moved = await rescheduleStudySession(
         "profile-planner",
         original.id,

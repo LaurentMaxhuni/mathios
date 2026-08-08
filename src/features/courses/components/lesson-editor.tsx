@@ -50,6 +50,12 @@ const templatePayload: Record<string, Record<string, unknown>> = {
     mistake: "Describe the tempting error.",
     correction: "Explain how to avoid it.",
   },
+  "quick-check": {
+    prompt: "What is the best answer?",
+    choices: ["First choice", "Second choice", "Third choice"],
+    correctIndex: 0,
+    feedback: "Explain why this choice is useful.",
+  },
 };
 
 function payloadFor(type: string, block?: LessonBlockRecord) {

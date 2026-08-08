@@ -11,6 +11,7 @@ import {
   Home,
   LogOut,
   MoreHorizontal,
+  Route,
   Settings,
   X,
 } from "lucide-react";
@@ -26,7 +27,7 @@ import type { AuthMode, AuthenticatedPrincipal } from "@/infrastructure/auth/aut
 type NavigationSection = "primary" | "settings";
 
 const navigationSections: Array<{ id: NavigationSection; label: string }> = [
-  { id: "primary", label: "Learn" },
+  { id: "primary", label: "Your journey" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -38,8 +39,8 @@ type NavigationItem = {
 };
 
 const navigation: NavigationItem[] = [
-  { href: "/dashboard" as const, label: "Today", icon: Home, section: "primary" },
-  { href: "/learn" as const, label: "Learn", icon: BookOpen, section: "primary" },
+  { href: "/dashboard" as const, label: "Path", icon: Route, section: "primary" },
+  { href: "/learn" as const, label: "Library", icon: BookOpen, section: "primary" },
   { href: "/practice" as const, label: "Practice", icon: BrainCircuit, section: "primary" },
   { href: "/progress" as const, label: "Progress", icon: BarChart3, section: "primary" },
   { href: "/more" as const, label: "More", icon: MoreHorizontal, section: "primary" },
@@ -153,7 +154,7 @@ export function Sidebar({
                 MATHIOS
               </span>
               <span className="app-brand-caption block text-[0.68rem] uppercase tracking-[0.18em]">
-                Daily science learning
+                Learn one step ahead
               </span>
             </span>
           </Link>
@@ -172,9 +173,7 @@ export function Sidebar({
           <nav aria-label="Primary navigation links" className="space-y-5">
             {navigationSections.map((section) => {
               if (section.id === "settings") return null;
-                const sectionNavigation = navigation.filter(
-                (item) => item.section === section.id,
-              );
+              const sectionNavigation = navigation.filter((item) => item.section === section.id);
               if (!sectionNavigation.length) return null;
               return (
                 <div key={section.id}>
@@ -218,7 +217,9 @@ export function Sidebar({
               <div className="flex min-w-0 items-center gap-3 px-1 py-2">
                 <ProfileAvatar avatar={principal.avatar ?? "orbit"} size="sm" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{principal.displayName ?? "Learner"}</p>
+                  <p className="truncate text-sm font-semibold">
+                    {principal.displayName ?? "Learner"}
+                  </p>
                   <p className="truncate text-[0.68rem] uppercase tracking-[0.14em] text-muted-foreground">
                     {authMode === "neon-auth" ? "Account" : "Local profile"}
                   </p>

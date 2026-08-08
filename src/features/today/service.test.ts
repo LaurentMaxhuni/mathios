@@ -195,6 +195,9 @@ describe("Today orchestration", () => {
     );
     expect(dashboard.primaryActivity?.kind).toBe("resume");
     expect(dashboard.primaryActivity?.href).toBe("/lessons/lesson-1");
+    expect(
+      dashboard.activities.filter((activity) => activity.href === "/lessons/lesson-1"),
+    ).toHaveLength(1);
   });
 
   it("shows a subject chooser instead of an empty learner state", async () => {
@@ -205,6 +208,96 @@ describe("Today orchestration", () => {
     );
     expect(dashboard.needsSubjectChoice).toBe(true);
     expect(dashboard.activities).toHaveLength(0);
+  });
+
+  it("turns source books into visible lesson missions on the dashboard", async () => {
+    const physics = subject("subject-physics", "physics", "Physics");
+    const sourceCourse = {
+      id: "course-open-science-phys-1419",
+      slug: "open-science-physics-phys-1419",
+      title: "College Physics",
+      description: "A structured mission pack.",
+      subjectId: physics.id,
+      status: "published" as const,
+    };
+    const firstMission = {
+      id: "lesson-open-science-phys-1419",
+      moduleId: "module-open-science-phys-1419",
+      slug: "mission-1",
+      title: "Mission 1: Measurement",
+      summary: "Build one clear idea.",
+      sortOrder: 0,
+      estimatedDurationMinutes: 5,
+      status: "published" as const,
+      currentVersionNumber: 1,
+      publishedVersionId: "version-1",
+      createdByProfileId: null,
+      createdAt: "",
+      updatedAt: "",
+    };
+    const deps = dependencies(source([physics]));
+    const courseRepository = deps.courseRepository as unknown as {
+      listCourses: ReturnType<typeof vi.fn>;
+      getCourseDetail: ReturnType<typeof vi.fn>;
+    };
+    courseRepository.listCourses = vi.fn(async () => [
+      {
+        ...sourceCourse,
+        subjectName: physics.name,
+        subjectSlug: physics.slug,
+        moduleCount: 1,
+        lessonCount: 1,
+        curriculumIds: [],
+        gradeIds: [],
+        difficulty: "balanced" as const,
+        estimatedDurationMinutes: 5,
+        gradeMinId: null,
+        gradeMaxId: null,
+        courseImage: null,
+        isRequired: false,
+        createdByProfileId: null,
+        createdAt: "",
+        updatedAt: "",
+      },
+    ]);
+    courseRepository.getCourseDetail = vi.fn(async () => ({
+      ...sourceCourse,
+      subjectName: physics.name,
+      subjectSlug: physics.slug,
+      curricula: [],
+      grades: [],
+      prerequisites: [],
+      objectiveIds: [],
+      modules: [
+        {
+          id: firstMission.moduleId,
+          courseId: sourceCourse.id,
+          title: "Quick start",
+          description: "",
+          sortOrder: 0,
+          estimatedStudyTimeMinutes: 5,
+          assessmentReference: null,
+          isArchived: false,
+          createdAt: "",
+          updatedAt: "",
+          lessons: [firstMission],
+          objectiveIds: [],
+          prerequisiteModuleIds: [],
+        },
+      ],
+    }));
+
+    const dashboard = await getTodayDashboard("profile-1", deps, "2026-08-06T10:00:00.000Z");
+
+    expect(dashboard.sourceMissions).toEqual([
+      expect.objectContaining({
+        courseId: sourceCourse.id,
+        completedMissionCount: 0,
+        coreMissionCount: 1,
+        nextMission: expect.objectContaining({ id: firstMission.id }),
+      }),
+    ]);
+    expect(dashboard.primaryActivity?.href).toBe(`/lessons/${firstMission.id}`);
   });
 
   it("derives deduplicated point values from recorded events and counts a current streak", () => {
