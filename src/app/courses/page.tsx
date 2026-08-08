@@ -13,7 +13,6 @@ export default async function CoursesPage() {
   const session = await getCurrentSession().catch(() => null);
   if (!session) redirect("/profiles");
   const author = canAuthorCourses(session.principal);
-  if (!author) redirect("/learn");
   const courses = await getCourseRepository().listCourses({
     status: author ? undefined : "published",
   });

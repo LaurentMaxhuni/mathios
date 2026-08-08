@@ -17,6 +17,25 @@ export interface TodayActivity {
   resumeBlockId?: string | null;
 }
 
+export interface TodaySourceMission {
+  courseId: string;
+  courseTitle: string;
+  courseDescription: string;
+  subjectId: string;
+  subjectName: string;
+  href: string;
+  completedMissionCount: number;
+  coreMissionCount: number;
+  completedCoreMissionCount: number;
+  totalMissionCount: number;
+  nextMission: {
+    id: string;
+    title: string;
+    summary: string;
+    estimatedMinutes: number;
+  } | null;
+}
+
 export interface TodayDashboardData {
   profile: { id: string; displayName: string };
   activeSubject: AnalyticsSubject | null;
@@ -29,4 +48,5 @@ export interface TodayDashboardData {
   learningPoints: number;
   dailyPlanCompleted: boolean;
   needsSubjectChoice: boolean;
+  sourceMissions: readonly TodaySourceMission[];
 }

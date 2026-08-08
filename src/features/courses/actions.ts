@@ -611,6 +611,9 @@ export async function saveLessonProgressAction(
       revalidatePath("/mastery");
       revalidatePath("/recommendations");
       revalidatePath("/review-queue");
+      revalidatePath("/dashboard");
+      revalidatePath("/courses");
+      revalidatePath(`/lessons/${parsed.data.lessonId}`);
     }
     return { ok: true, message: "Progress saved." };
   } catch (error) {

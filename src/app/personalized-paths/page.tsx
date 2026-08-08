@@ -30,7 +30,7 @@ export default async function PersonalizedPathsPage() {
       <Breadcrumbs current="Personalized paths" />
       <div className="mt-6 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
-          <p className="eyebrow">Adaptive sequencing Â· Phase 8</p>
+          <p className="eyebrow">Adaptive sequencing · Phase 8</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
             Personalized learning paths
           </h1>

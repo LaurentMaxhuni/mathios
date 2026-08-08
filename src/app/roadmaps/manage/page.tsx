@@ -51,7 +51,7 @@ export default async function RoadmapManagementPage({
           >
             <ArrowRight className="h-4 w-4 rotate-180" aria-hidden="true" /> Roadmap catalog
           </RoadmapLink>
-          <p className="eyebrow mt-5">Content governance Â· Phase 8</p>
+          <p className="eyebrow mt-5">Content governance · Phase 8</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Roadmap studio</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
             Compose reusable cross-subject paths, validate dependencies, and preview the learner
@@ -107,7 +107,7 @@ export default async function RoadmapManagementPage({
                     </Badge>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {roadmap.nodeCount} nodes Â· {roadmap.requiredNodeCount} required Â·{" "}
+                    {roadmap.nodeCount} nodes · {roadmap.requiredNodeCount} required ·{" "}
                     {roadmap.checkpointCount} checkpoints
                   </p>
                 </div>

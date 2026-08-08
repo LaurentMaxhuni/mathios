@@ -73,9 +73,11 @@ test("local profile setup, PIN sign-in, and settings are usable offline", async 
     "/dashboard",
   );
   await page.goto("/dashboard");
-  await expect(page.getByRole("heading", { name: /A small step in/ })).toBeVisible();
-  await expect(page.getByText("Daily goal")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Browse all learning" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /One clear move|Choose your first learning route/ }),
+  ).toBeVisible();
+  await expect(page.getByText("Quest time")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Browse all packs/ })).toBeVisible();
 
   await page.goto("/settings");
   await page.getByLabel("Default curriculum").fill("Local curriculum");
@@ -171,6 +173,22 @@ test("Phase 3 course catalog, lesson reader, progress, and authoring surfaces ar
   await expect(page.locator('[role="math"]')).toBeVisible();
   await page.getByRole("button", { name: "Mark lesson complete" }).click();
   await expect(page.getByRole("status")).toContainText("Progress saved.");
+
+  await page.goto("/courses/course-open-science-chem-38132");
+  await expect(page.getByRole("heading", { name: "Quick start · 15 min" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Go deeper · optional 45 min" })).toBeVisible();
+  await page.getByRole("link", { name: /Mission 1: Essential Ideas of Chemistry/ }).click();
+  await expect(
+    page.getByRole("heading", { name: /Mission 1: Essential Ideas of Chemistry/ }),
+  ).toBeVisible();
+  await page
+    .getByRole("group", { name: /strongest first move/i })
+    .getByRole("button")
+    .first()
+    .click();
+  await expect(page.getByText(/^Correct/)).toBeVisible();
+  await page.getByRole("button", { name: "Finish mission" }).click();
+  await expect(page.getByText("Progress saved.")).toBeVisible();
 
   await page.goto("/courses/manage");
   await expect(page.getByRole("heading", { name: "Course studio" })).toBeVisible();
@@ -460,7 +478,7 @@ test("Phase 9 simulation catalog, interactive player, lesson link, and session A
   await expect(page.getByText("Result saved to your learning history.")).toBeVisible();
 
   await page.goto("/lessons/lesson-constant-acceleration");
-  await expect(page.getByRole("heading", { name: "Explore with a simulation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Test the idea in a simulation" })).toBeVisible();
   await expect(page.getByRole("link", { name: "One-dimensional motion" })).toHaveAttribute(
     "href",
     "/simulations/simulation-one-dimensional-motion",
@@ -678,8 +696,10 @@ test("Phase 14 learner and teacher analytics summarize local activity", async ({
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page).toHaveURL("/dashboard");
 
-  await expect(page.getByRole("heading", { name: /A small step in/ })).toBeVisible();
-  await expect(page.getByText("Daily goal").first()).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /One clear move|Choose your first learning route/ }),
+  ).toBeVisible();
+  await expect(page.getByText("Quest time").first()).toBeVisible();
 
   await page.goto("/analytics");
   await expect(page).toHaveURL("/progress");
@@ -1010,22 +1030,24 @@ test("Phase 19 semantic alternatives and status surfaces are exposed", async ({ 
   await expect(page.locator('[role="math"]').first()).toBeVisible();
 });
 
-test("Today keeps the learner loop focused and lets learners switch subjects", async ({ page }) => {
+test("Path keeps the learner loop focused and lets learners switch subjects", async ({ page }) => {
   await page.goto("/profiles");
   await page.getByRole("link", { name: "Select" }).first().click();
   await page.getByLabel("PIN or password").fill("1234");
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page).toHaveURL("/dashboard");
-  await expect(page.getByRole("heading", { name: /A small step in/ })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /One clear move|Choose your first learning route/ }),
+  ).toBeVisible();
 
   const primaryNavigation = page.getByRole("navigation", { name: "Primary navigation links" });
-  await expect(primaryNavigation.getByRole("link", { name: "Today", exact: true })).toHaveAttribute(
+  await expect(primaryNavigation.getByRole("link", { name: "Path", exact: true })).toHaveAttribute(
     "aria-current",
     "page",
   );
   await expect(page.getByText("Neon Auth identity")).toHaveCount(0);
   await expect(page.locator(".app-sidebar-controls")).toBeVisible();
-  for (const label of ["Today", "Learn", "Practice", "Progress", "More"]) {
+  for (const label of ["Path", "Library", "Practice", "Progress", "More"]) {
     await expect(primaryNavigation.getByRole("link", { name: label, exact: true })).toBeVisible();
   }
   await expect(
@@ -1064,6 +1086,6 @@ test("Today keeps the learner loop focused and lets learners switch subjects", a
   await expect(page.locator(".app-sidebar-controls")).toBeVisible();
   await expect(page.getByRole("button", { name: "Switch profile" })).toBeVisible();
   const mobileNavigation = page.getByRole("navigation", { name: "Mobile navigation" });
-  await expect(mobileNavigation.getByRole("link", { name: "Today" })).toBeVisible();
+  await expect(mobileNavigation.getByRole("link", { name: "Path" })).toBeVisible();
   await expect(mobileNavigation.getByRole("link", { name: "More" })).toBeVisible();
 });

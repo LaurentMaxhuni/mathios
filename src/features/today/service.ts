@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto";
 import type { ActivityEventRecord, AnalyticsDateRange } from "@/domain/analytics/types";
-import type { TodayActivity, TodayActivityKind, TodayDashboardData } from "@/domain/today/types";
+import type {
+  TodayActivity,
+  TodayActivityKind,
+  TodayDashboardData,
+  TodaySourceMission,
+} from "@/domain/today/types";
 import type { IdentityRepository } from "@/domain/ports/identity-repository";
 import type { AnalyticsRepository } from "@/domain/ports/analytics-repository";
 import type { CourseRepository } from "@/domain/ports/course-repository";
@@ -118,6 +123,10 @@ function activity(
   return { id: `${kind}:${input.href}`, kind, ...input };
 }
 
+function isSourceMissionCourse(courseId: string): boolean {
+  return courseId.startsWith("course-open-science-");
+}
+
 export async function getTodayDashboard(
   profileId: string,
   dependencies: TodayDependencies = defaultDependencies(),
@@ -147,6 +156,7 @@ export async function getTodayDashboard(
     ? source.lessonProgress.filter((progress) => progress.subjectId === activeSubject.id)
     : [];
   const activities: TodayActivity[] = [];
+  let sourceMissions: TodaySourceMission[] = [];
 
   const incomplete = [...subjectProgress]
     .filter((progress) => !isComplete(progress))
@@ -251,38 +261,107 @@ export async function getTodayDashboard(
         lessons.every((lesson) => isComplete(progressByLesson.get(lesson.id) ?? null)),
       );
     };
-    for (const course of orderedCourses) {
-      const detail = await getDetail(course.id);
-      if (!detail) continue;
-      const lessons = orderedLessons(detail);
-      if (
-        !lessons.length ||
-        lessons.every((lesson) => isComplete(progressByLesson.get(lesson.id) ?? null))
-      )
-        continue;
-      const prerequisitesReady = await Promise.all(
-        detail.prerequisites.map((prerequisite) =>
-          courseIsComplete(prerequisite.prerequisiteCourseId),
-        ),
-      ).then((results) => results.every(Boolean));
-      if (!prerequisitesReady) continue;
-      const nextLesson = lessons.find(
-        (lesson) => !isComplete(progressByLesson.get(lesson.id) ?? null),
+    const sourceCourseProgress = new Map<string, number>();
+    for (const progress of subjectProgress) {
+      if (!isSourceMissionCourse(progress.courseId)) continue;
+      const viewedAt = Date.parse(progress.lastViewedAt ?? progress.updatedAt);
+      sourceCourseProgress.set(
+        progress.courseId,
+        Math.max(sourceCourseProgress.get(progress.courseId) ?? 0, viewedAt),
       );
-      if (!nextLesson) continue;
-      activities.push(
-        activity("next-lesson", {
-          title: nextLesson.title,
-          description: course.description || "Take the next short step in your subject.",
-          href: `/lessons/${nextLesson.id}`,
-          subjectId: activeSubject.id,
-          subjectName: activeSubject.name,
-          estimatedMinutes: Math.max(5, nextLesson.estimatedDurationMinutes || 10),
-          reason: `Next in ${course.title}`,
-          completed: false,
-        }),
+    }
+    const sourceCourses = orderedCourses
+      .filter((course) => isSourceMissionCourse(course.id))
+      .sort(
+        (left, right) =>
+          (sourceCourseProgress.get(right.id) ?? 0) - (sourceCourseProgress.get(left.id) ?? 0) ||
+          left.title.localeCompare(right.title) ||
+          left.id.localeCompare(right.id),
       );
-      break;
+    const sourceMissionDetails = await Promise.all(
+      sourceCourses.slice(0, 6).map(async (course) => ({
+        course,
+        detail: await getDetail(course.id),
+      })),
+    );
+    sourceMissions = sourceMissionDetails
+      .flatMap(({ course, detail }) => {
+        if (!detail) return [];
+        const lessons = orderedLessons(detail);
+        if (!lessons.length) return [];
+        const coreLessons = lessons.filter(
+          (lesson) =>
+            detail.modules.find((module) => module.id === lesson.moduleId)?.sortOrder === 0,
+        );
+        const nextMission = lessons.find(
+          (lesson) => !isComplete(progressByLesson.get(lesson.id) ?? null),
+        );
+        return [
+          {
+            courseId: course.id,
+            courseTitle: course.title,
+            courseDescription: course.description,
+            subjectId: course.subjectId,
+            subjectName: activeSubject.name,
+            href: `/courses/${course.id}`,
+            completedMissionCount: lessons.filter((lesson) =>
+              isComplete(progressByLesson.get(lesson.id) ?? null),
+            ).length,
+            coreMissionCount: coreLessons.length,
+            completedCoreMissionCount: coreLessons.filter((lesson) =>
+              isComplete(progressByLesson.get(lesson.id) ?? null),
+            ).length,
+            totalMissionCount: lessons.length,
+            nextMission: nextMission
+              ? {
+                  id: nextMission.id,
+                  title: nextMission.title,
+                  summary: nextMission.summary,
+                  estimatedMinutes: nextMission.estimatedDurationMinutes,
+                }
+              : null,
+          } satisfies TodaySourceMission,
+        ];
+      })
+      .slice(0, 3);
+
+    if (!activities.some((item) => item.kind === "resume")) {
+      for (const course of [
+        ...sourceCourses,
+        ...orderedCourses.filter((course) => !isSourceMissionCourse(course.id)),
+      ]) {
+        const detail = await getDetail(course.id);
+        if (!detail) continue;
+        const lessons = orderedLessons(detail);
+        if (
+          !lessons.length ||
+          lessons.every((lesson) => isComplete(progressByLesson.get(lesson.id) ?? null))
+        )
+          continue;
+        const prerequisitesReady = await Promise.all(
+          detail.prerequisites.map((prerequisite) =>
+            courseIsComplete(prerequisite.prerequisiteCourseId),
+          ),
+        ).then((results) => results.every(Boolean));
+        if (!prerequisitesReady) continue;
+        const nextLesson = lessons.find(
+          (lesson) => !isComplete(progressByLesson.get(lesson.id) ?? null),
+        );
+        if (!nextLesson) continue;
+        activities.push(
+          activity("next-lesson", {
+            title: nextLesson.title,
+            description: course.description || "Take the next short step in your subject.",
+            href: `/lessons/${nextLesson.id}`,
+            subjectId: activeSubject.id,
+            subjectName: activeSubject.name,
+            estimatedMinutes: Math.max(5, nextLesson.estimatedDurationMinutes || 10),
+            reason: `Next in ${course.title}`,
+            completed: false,
+          }),
+        );
+        break;
+      }
     }
   }
 
@@ -311,6 +390,7 @@ export async function getTodayDashboard(
     learningPoints: calculateLearningPoints(source.events),
     dailyPlanCompleted,
     needsSubjectChoice: !activeSubject,
+    sourceMissions,
   };
 }
 

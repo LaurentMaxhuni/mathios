@@ -32,7 +32,7 @@ export default async function RoadmapsPage() {
       <Breadcrumbs current="Roadmaps" />
       <div className="mt-6 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
-          <p className="eyebrow">Interdisciplinary learning Â· Phase 8</p>
+          <p className="eyebrow">Interdisciplinary learning · Phase 8</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
             Interdisciplinary roadmaps
           </h1>
@@ -87,7 +87,7 @@ export default async function RoadmapsPage() {
                   <div className="mt-5 flex items-center justify-between border-t pt-4 text-sm">
                     <span className="text-muted-foreground">
                       <Layers3 className="mr-1 inline h-4 w-4" aria-hidden="true" />
-                      {roadmap.nodeCount} nodes Â· {roadmap.estimatedDurationMinutes} min
+                      {roadmap.nodeCount} nodes · {roadmap.estimatedDurationMinutes} min
                     </span>
                     <ArrowRight
                       className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-accent"
@@ -96,7 +96,7 @@ export default async function RoadmapsPage() {
                   </div>
                   {active ? (
                     <div className="mt-3 rounded-lg bg-accent/10 px-3 py-2 text-xs text-accent">
-                      {active.summary.percentage}% complete Â·{" "}
+                      {active.summary.percentage}% complete ·{" "}
                       {active.summary.nextNodeId ? "Next step ready" : "Path complete"}
                     </div>
                   ) : null}

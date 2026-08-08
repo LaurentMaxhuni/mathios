@@ -3,6 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { openScienceBookSeed } from "@/infrastructure/database/open-science-books";
 import { phase20TopicSeed } from "@/infrastructure/database/phase20-content";
 import {
   assessmentQuestionSeed,
@@ -34,8 +35,8 @@ import {
   runSeed,
 } from "@/infrastructure/database/seed";
 
-describe("Phase 20 seed data", () => {
-  it("installs the assessment catalog and reusable curriculum structure and is safe to re-run", async () => {
+describe("Seed data", () => {
+  it("installs the curriculum and open-book catalog and is safe to re-run", async () => {
     const directory = await mkdtemp(path.join(os.tmpdir(), "mathios-seed-"));
     const databaseUrl = `file:${path.join(directory, "seed.db")}`;
     let database: Database.Database | undefined;
@@ -185,7 +186,57 @@ describe("Phase 20 seed data", () => {
       });
       expect(
         database.prepare("SELECT value FROM app_metadata WHERE key = 'seed_version'").get(),
-      ).toEqual({ value: "phase-20" });
+      ).toEqual({ value: "phase-20-open-science-missions" });
+      expect(openScienceBookSeed).toHaveLength(141);
+      expect(
+        database
+          .prepare("SELECT COUNT(*) AS count FROM courses WHERE id LIKE 'course-open-science-%'")
+          .get(),
+      ).toEqual({ count: openScienceBookSeed.length });
+      const chemistryBook = openScienceBookSeed.find((book) => book.id === "chem-3482");
+      expect(chemistryBook).toBeDefined();
+      expect(
+        database
+          .prepare("SELECT title, subject_id FROM courses WHERE id = ?")
+          .get(`course-open-science-${chemistryBook!.id}`),
+      ).toEqual({ title: chemistryBook!.title, subject_id: "subject-chemistry" });
+      expect(
+        database
+          .prepare("SELECT type, payload FROM lesson_blocks WHERE id = ?")
+          .get(`block-open-science-${chemistryBook!.id}-pdf`),
+      ).toEqual({
+        type: "callout",
+        payload: expect.not.stringContaining(chemistryBook!.pdfUrl),
+      });
+      expect(
+        database
+          .prepare("SELECT type, payload FROM lesson_blocks WHERE id = ?")
+          .get(`block-open-science-${chemistryBook!.id}-practice`),
+      ).toEqual({
+        type: "example",
+        payload: expect.stringContaining('"steps"'),
+      });
+      expect(
+        database
+          .prepare("SELECT COUNT(*) AS count FROM modules WHERE course_id = ?")
+          .get(`course-open-science-${chemistryBook!.id}`),
+      ).toEqual({ count: 2 });
+      expect(
+        database
+          .prepare("SELECT COUNT(*) AS count FROM lessons WHERE module_id IN (?, ?)")
+          .get(
+            `module-open-science-${chemistryBook!.id}`,
+            `module-open-science-${chemistryBook!.id}-deep-dive`,
+          ),
+      ).toEqual({ count: 6 });
+      expect(
+        database
+          .prepare("SELECT type, payload FROM lesson_blocks WHERE id = ?")
+          .get(`block-open-science-${chemistryBook!.id}-metadata`),
+      ).toEqual({
+        type: "quick-check",
+        payload: expect.stringContaining('"correctIndex"'),
+      });
       expect(
         database
           .prepare("SELECT COUNT(*) AS count FROM courses WHERE id LIKE 'course-phase20-%'")

@@ -65,7 +65,7 @@ export default async function RoadmapEditPage({
             <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Roadmap studio
           </RoadmapLink>
           <p className="eyebrow mt-5">
-            Version {detail.version.versionNumber} Â· {detail.version.status}
+            Version {detail.version.versionNumber} · {detail.version.status}
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
             {detail.roadmap.title}

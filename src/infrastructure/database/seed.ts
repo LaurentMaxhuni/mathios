@@ -3,6 +3,15 @@ import postgres, { type Sql } from "postgres";
 import { DEFAULT_MASTERY_RULES, DEFAULT_RECOMMENDATION_RULES } from "@/domain/mastery/types";
 import { publicSimulationDefinition, simulationRegistry } from "@/domain/simulation/registry";
 import { laboratoryActivitySeed } from "@/infrastructure/database/laboratory-seed";
+import {
+  openScienceBookBlockSeed,
+  openScienceBookCourseCurriculumSeed,
+  openScienceBookCourseGradeSeed,
+  openScienceBookCourseSeed,
+  openScienceBookLessonSeed,
+  openScienceBookModuleSeed,
+  openScienceBookSectionSeed,
+} from "@/infrastructure/database/open-science-book-missions";
 import * as phase20 from "@/infrastructure/database/phase20-content";
 import { env } from "@/lib/env";
 import { resolveSqliteFilename } from "@/infrastructure/database/client";
@@ -10,7 +19,7 @@ import { runMigrations } from "@/infrastructure/database/migrations";
 
 const foundationSeed = [
   ["installation_name", "Mathios local installation"],
-  ["seed_version", "phase-20"],
+  ["seed_version", "phase-20-open-science-missions"],
 ] as const;
 
 export const simulationSeed = simulationRegistry.map((simulation) => ({
@@ -600,7 +609,11 @@ const baseCourseSeed = [
   },
 ] as const;
 
-export const courseSeed = [...baseCourseSeed, ...phase20.phase20CourseSeed] as const;
+export const courseSeed = [
+  ...baseCourseSeed,
+  ...phase20.phase20CourseSeed,
+  ...openScienceBookCourseSeed,
+] as const;
 
 const baseCourseCurriculumSeed = [
   ["course-physics-motion", "curriculum-kosovo"],
@@ -611,6 +624,7 @@ const baseCourseCurriculumSeed = [
 export const courseCurriculumSeed = [
   ...baseCourseCurriculumSeed,
   ...phase20.phase20CourseCurriculumSeed,
+  ...openScienceBookCourseCurriculumSeed,
 ] as const;
 
 const baseCourseGradeSeed = [
@@ -619,7 +633,11 @@ const baseCourseGradeSeed = [
   ["course-astronomy-observation", "grade-10", false, 0],
 ] as const;
 
-export const courseGradeSeed = [...baseCourseGradeSeed, ...phase20.phase20CourseGradeSeed] as const;
+export const courseGradeSeed = [
+  ...baseCourseGradeSeed,
+  ...phase20.phase20CourseGradeSeed,
+  ...openScienceBookCourseGradeSeed,
+] as const;
 
 const baseCourseObjectiveSeed = [
   ["course-physics-motion", "objective-kosovo-grade-8-subject-physics", 0],
@@ -654,7 +672,11 @@ const baseModuleSeed = [
   },
 ] as const;
 
-export const moduleSeed = [...baseModuleSeed, ...phase20.phase20ModuleSeed] as const;
+export const moduleSeed = [
+  ...baseModuleSeed,
+  ...phase20.phase20ModuleSeed,
+  ...openScienceBookModuleSeed,
+] as const;
 
 const baseLessonSeed = [
   {
@@ -698,7 +720,11 @@ const baseLessonSeed = [
   },
 ] as const;
 
-export const lessonSeed = [...baseLessonSeed, ...phase20.phase20LessonSeed] as const;
+export const lessonSeed = [
+  ...baseLessonSeed,
+  ...phase20.phase20LessonSeed,
+  ...openScienceBookLessonSeed,
+] as const;
 
 const baseSectionSeed = [
   [
@@ -759,7 +785,11 @@ const baseSectionSeed = [
   ],
 ] as const;
 
-export const sectionSeed = [...baseSectionSeed, ...phase20.phase20SectionSeed] as const;
+export const sectionSeed = [
+  ...baseSectionSeed,
+  ...phase20.phase20SectionSeed,
+  ...openScienceBookSectionSeed,
+] as const;
 
 const baseBlockSeed = [
   [
@@ -875,7 +905,11 @@ const baseBlockSeed = [
   ],
 ] as const;
 
-export const blockSeed = [...baseBlockSeed, ...phase20.phase20BlockSeed] as const;
+export const blockSeed = [
+  ...baseBlockSeed,
+  ...phase20.phase20BlockSeed,
+  ...openScienceBookBlockSeed,
+] as const;
 
 const baseLessonObjectiveSeed = [
   ["lesson-describing-motion", "objective-kosovo-grade-8-subject-physics", 0],
