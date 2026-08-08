@@ -80,7 +80,7 @@ describe("SqlIdentityRepository", () => {
       expect(principal?.permissions).toContain("manage_users");
       expect(await repository.getSettings(profile.id)).toMatchObject({
         theme: "dark",
-        studySessionDuration: 25,
+        studySessionDuration: 15,
       });
     } finally {
       raw.close();

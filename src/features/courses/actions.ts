@@ -604,6 +604,7 @@ export async function saveLessonProgressAction(
           resourceId: parsed.data.lessonId,
           durationSeconds: parsed.data.timeSpentSeconds,
           dedupeKey: `lesson-completion:${parsed.data.lessonId}`,
+          metadata: { points: 20 },
         },
         analyticsRepository,
       );

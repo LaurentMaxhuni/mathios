@@ -13,7 +13,9 @@ export default async function TeacherAnalyticsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const session = await getCurrentSession().catch(() => null);
-  if (!session || !session.principal.permissions.includes("view_analytics")) redirect("/");
+  if (!session || !session.principal.permissions.includes("view_analytics")) {
+    redirect("/dashboard" as never);
+  }
   const values = await searchParams;
   const parsed = analyticsRangeSchema.safeParse({
     from: typeof values.from === "string" ? values.from : undefined,

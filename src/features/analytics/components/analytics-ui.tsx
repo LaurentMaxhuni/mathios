@@ -429,7 +429,7 @@ export function LearnerAnalyticsWorkspace({ data }: { data: LearnerAnalyticsData
           </p>
         </div>
         <Link
-          href="/"
+          href={"/dashboard" as never}
           className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline"
         >
           Back to dashboard <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -672,7 +672,7 @@ export function TeacherAnalyticsWorkspace({ data }: { data: TeacherAnalyticsData
           </p>
         </div>
         <Link
-          href="/"
+          href={"/dashboard" as never}
           className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline"
         >
           Back to overview <ArrowRight className="h-4 w-4" aria-hidden="true" />

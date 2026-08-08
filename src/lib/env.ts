@@ -50,6 +50,7 @@ const envSchema = z.object({
   AUTH_MODE: z
     .enum(["neon-auth", "local-profile", "local-credential", "hosted"])
     .default("neon-auth"),
+  COLLABORATION_ENABLED: booleanEnv.default(false),
   NEON_AUTH_BASE_URL: optionalUrl,
   NEON_AUTH_COOKIE_SECRET: z.preprocess(
     (value) => (value === "" ? undefined : value),

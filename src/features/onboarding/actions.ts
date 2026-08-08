@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { actionStateFromError, actionStateFromZod, type ActionState } from "@/lib/action-state";
 import { formLines, formNumber, formNumbers, formString, formStrings } from "@/lib/form-data";
 import { getCurrentSession } from "@/infrastructure/auth/local-auth-provider";
@@ -16,6 +17,7 @@ function onboardingFormData(formData: FormData) {
     subjects: formStrings(formData, "subjects"),
     learningGoals: formLines(formString(formData, "learningGoals")),
     weeklyStudyTimeMinutes: formNumber(formData, "weeklyStudyTimeMinutes"),
+    dailyGoalMinutes: formNumber(formData, "dailyGoalMinutes"),
     preferredStudyDays: formNumbers(formData, "preferredStudyDays"),
     difficultyPreference: formString(formData, "difficultyPreference") ?? "balanced",
   };
@@ -45,4 +47,5 @@ export async function skipOnboardingAction(): Promise<void> {
   await skipOnboarding(session, repository);
   revalidatePath("/", "layout");
   revalidatePath("/onboarding");
+  redirect("/learn");
 }
